@@ -51,5 +51,7 @@
 	<string>This app needs location access to show your current location on the map.</string>
 	<key>io.flutter.embedded_views_preview</key>
 	<true/>
+	<key>GoogleMapsAPIKey</key>
+	<string>AIzaSyBcA7Yq13sDyx-8nrLn0y0XMjY6xVcYVlE</string>
 </dict>
 </plist>
