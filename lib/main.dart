@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
+import 'package:muvam_rider/shared/presentation/screens/splash_screen.dart';
 import 'package:provider/provider.dart';
-import 'screens/splash_screen.dart';
-import 'constants/theme_manager.dart';
-import 'providers/auth_provider.dart';
+import 'core/constants/theme_manager.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -35,7 +35,9 @@ class MyApp extends StatelessWidget {
               title: 'Muvam',
               theme: themeManager.lightTheme,
               darkTheme: themeManager.darkTheme,
-              themeMode: themeManager.isDarkMode ? ThemeMode.dark : ThemeMode.light,
+              themeMode: themeManager.isDarkMode
+                  ? ThemeMode.dark
+                  : ThemeMode.light,
               home: const SplashScreen(),
             );
           },
