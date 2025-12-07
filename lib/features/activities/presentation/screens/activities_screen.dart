@@ -154,8 +154,16 @@ class ActivitiesScreenState extends State<ActivitiesScreen> {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) =>
-                      HistoryCompletedScreen(price: '₦12,000'),
+                  builder: (context) => HistoryCompletedScreen(
+                    ride: {
+                      'ID': '12345',
+                      'Price': '12000',
+                      'PickupAddress': 'Sample Pickup Location',
+                      'DestAddress': 'Ikeja, Lagos',
+                      'PaymentMethod': 'card',
+                    },
+                    acceptedData: {'tip': 500},
+                  ),
                 ),
               ),
             ),
@@ -182,7 +190,16 @@ class ActivitiesScreenState extends State<ActivitiesScreen> {
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => HistoryCompletedScreen(price: '₦8,500'),
+                  builder: (context) => HistoryCompletedScreen(
+                    ride: {
+                      'ID': '12347',
+                      'Price': '8500',
+                      'PickupAddress': 'Sample Pickup Location',
+                      'DestAddress': 'Port Harcourt, Rivers',
+                      'PaymentMethod': 'wallet',
+                    },
+                    acceptedData: {'tip': 300},
+                  ),
                 ),
               ),
             ),

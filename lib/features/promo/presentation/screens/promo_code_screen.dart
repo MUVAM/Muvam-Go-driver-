@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 
 class PromoCodeScreen extends StatelessWidget {

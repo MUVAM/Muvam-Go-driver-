@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
+import 'package:muvam_rider/features/home/data/provider/driver_provider.dart';
 import 'package:muvam_rider/shared/presentation/screens/splash_screen.dart';
 import 'package:provider/provider.dart';
 import 'core/constants/theme_manager.dart';
@@ -12,6 +13,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (context) => ThemeManager()),
         ChangeNotifierProvider(create: (context) => AuthProvider()),
+        ChangeNotifierProvider(create: (context) => DriverProvider()),
       ],
       child: const MyApp(),
     ),

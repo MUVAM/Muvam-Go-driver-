@@ -5,6 +5,7 @@ import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/delete_account_screen.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/edit_full_name_screen.dart';
 import 'package:muvam_rider/features/profile/presentation/widgets/profile_field.dart';
+import 'package:muvam_rider/features/profile/presentation/screens/update_location_screen.dart';
 import 'package:muvam_rider/features/ratings/presentation/screens/ratings_screen.dart';
 import 'package:muvam_rider/features/vehicles/presentation/screens/my_cars_screen.dart';
 
@@ -152,6 +153,20 @@ class ProfileScreen extends StatelessWidget {
                     ),
                     SizedBox(height: 15.h),
                     ProfileField(label: 'State', value: 'Lagos'),
+                    SizedBox(height: 15.h),
+                    ProfileField(
+                      label: 'Location',
+                      value: 'Update your location',
+                      hasEdit: true,
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => UpdateLocationScreen(),
+                          ),
+                        );
+                      },
+                    ),
                     SizedBox(height: 30.h),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,

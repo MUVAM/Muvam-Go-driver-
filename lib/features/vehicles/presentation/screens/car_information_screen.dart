@@ -1,10 +1,14 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/text_styles.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
+import 'package:muvam_rider/core/services/api_service.dart';
 import 'package:muvam_rider/features/home/presentation/screens/home_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/car_text_field.dart';
 
 class CarInformationScreen extends StatefulWidget {
@@ -15,12 +19,14 @@ class CarInformationScreen extends StatefulWidget {
 }
 
 class _CarInformationScreenState extends State<CarInformationScreen> {
-  final TextEditingController carNameController = TextEditingController();
-  final TextEditingController carModelController = TextEditingController();
-  final TextEditingController carYearController = TextEditingController();
-  final TextEditingController licensePlateController = TextEditingController();
-  final TextEditingController carColorController = TextEditingController();
-  final TextEditingController acController = TextEditingController();
+  final TextEditingController makeController = TextEditingController();
+  final TextEditingController modelTypeController = TextEditingController();
+  final TextEditingController seatsController = TextEditingController();
+  final TextEditingController yearController = TextEditingController();
+  final TextEditingController licenseNumberController = TextEditingController();
+  File? vehiclePhoto;
+  bool isLoading = false;
+  final ImagePicker _picker = ImagePicker();
 
   @override
   Widget build(BuildContext context) {
@@ -61,65 +67,90 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
                 ),
                 SizedBox(height: 30.h),
                 CarTextField(
-                  label: 'Car Name',
-                  controller: carNameController,
-                  hasDropdown: true,
+                  label: 'Make',
+                  controller: makeController,
                 ),
                 SizedBox(height: 20.h),
                 CarTextField(
-                  label: 'Car Model',
-                  controller: carModelController,
-                  hasDropdown: true,
+                  label: 'Model Type',
+                  controller: modelTypeController,
                 ),
                 SizedBox(height: 20.h),
                 CarTextField(
-                  label: 'Car Year',
-                  controller: carYearController,
-                  hasDropdown: true,
+                  label: 'Number of Seats',
+                  controller: seatsController,
                 ),
                 SizedBox(height: 20.h),
                 CarTextField(
-                  label: 'License Plate',
-                  controller: licensePlateController,
+                  label: 'Year',
+                  controller: yearController,
                 ),
                 SizedBox(height: 20.h),
                 CarTextField(
-                  label: 'Car Color',
-                  controller: carColorController,
-                  hasDropdown: true,
+                  label: 'License Number',
+                  controller: licenseNumberController,
                 ),
                 SizedBox(height: 20.h),
-                CarTextField(
-                  label: 'AC',
-                  controller: acController,
-                  hasDropdown: true,
+                GestureDetector(
+                  onTap: _pickVehiclePhoto,
+                  child: Container(
+                    width: 353.w,
+                    height: 120.h,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.grey.shade300),
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: vehiclePhoto != null
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(8.r),
+                            child: Image.file(
+                              vehiclePhoto!,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                        : Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.camera_alt,
+                                size: 40.sp,
+                                color: Colors.grey,
+                              ),
+                              SizedBox(height: 8.h),
+                              Text(
+                                'Upload Vehicle Photo',
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14.sp,
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
                 ),
                 SizedBox(height: 40.h),
                 GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const HomeScreen(),
-                      ),
-                    );
-                  },
+                  onTap: isLoading ? null : _registerVehicle,
                   child: Container(
                     width: 353.w,
                     height: 48.h,
                     decoration: BoxDecoration(
-                      color: Color(ConstColors.mainColor),
+                      color: isLoading
+                          ? Colors.grey
+                          : Color(ConstColors.mainColor),
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: Center(
-                      child: Text(
-                        'Continue',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      child: isLoading
+                          ? CircularProgressIndicator(color: Colors.white)
+                          : Text(
+                              'Continue',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                     ),
                   ),
                 ),
@@ -130,5 +161,70 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _pickVehiclePhoto() async {
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        vehiclePhoto = File(image.path);
+      });
+    }
+  }
+
+  Future<void> _registerVehicle() async {
+    if (makeController.text.isEmpty ||
+        modelTypeController.text.isEmpty ||
+        seatsController.text.isEmpty ||
+        yearController.text.isEmpty ||
+        licenseNumberController.text.isEmpty ||
+        vehiclePhoto == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please fill all fields and upload vehicle photo')),
+      );
+      return;
+    }
+
+    setState(() {
+      isLoading = true;
+    });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (token != null) {
+        final result = await ApiService.registerVehicle(
+          make: makeController.text,
+          modelType: modelTypeController.text,
+          seats: seatsController.text,
+          year: yearController.text,
+          licenseNumber: licenseNumberController.text,
+          vehiclePhotoFile: vehiclePhoto!,
+          token: token,
+        );
+
+        if (result['success'] == true) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const HomeScreen(),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(result['message'] ?? 'Registration failed')),
+          );
+        }
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e')),
+      );
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 }

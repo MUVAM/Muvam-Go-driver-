@@ -1,61 +1,142 @@
 import 'dart:convert';
-import 'package:muvam_rider/features/auth/data/models/auth_models.dart';
+import 'dart:io';
+import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'api_service.dart';
+import '../constants/url_constants.dart';
 
 class AuthService {
   static const String _tokenKey = 'auth_token';
-  static const String _userDataKey = 'user_data';
-  static const String _lastLoginKey = 'last_login_time';
 
-  Future<void> sendOtp(String phone) async {
-    final result = await ApiService.sendOtp(phone);
-    if (result['success'] != true) {
-      throw Exception(result['message'] ?? 'Failed to send OTP');
-    }
-  }
-
-  Future<void> resendOtp(String phone) async {
-    final result = await ApiService.resendOtp(phone);
-    if (result['success'] != true) {
-      throw Exception(result['message'] ?? 'Failed to resend OTP');
-    }
-  }
-
-  Future<VerifyOtpResponse> verifyOtp(String code, String phone) async {
-    final result = await ApiService.verifyOtp(phone, code);
-    if (result['success'] == true) {
-      final response = VerifyOtpResponse.fromJson(result['data']);
-      await _saveToken(response.token);
-      return response;
-    } else {
-      throw Exception(result['message'] ?? 'Invalid OTP');
-    }
-  }
-
-  Future<RegisterUserResponse> registerUser(RegisterUserRequest request) async {
-    final result = await ApiService.registerUser(
-      firstName: request.firstName,
-      middleName: request.middleName,
-      lastName: request.lastName,
-      email: request.email,
-      phoneNumber: request.phoneNumber,
-      dateOfBirth: request.dateOfBirth,
-      city: request.city,
-      location: request.location,
+  Future<Map<String, dynamic>> sendOtp(String phone) async {
+    final response = await http.post(
+      Uri.parse('${UrlConstants.baseUrl}${UrlConstants.sendOtp}'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'phone': phone}),
     );
-    if (result['success'] == true) {
-      final response = RegisterUserResponse.fromJson(result['data']);
-      await _saveToken(response.token);
-      return response;
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
     } else {
-      throw Exception(result['message'] ?? 'Registration failed');
+      throw Exception('Failed to send OTP');
     }
   }
 
-  Future<void> completeProfile(CompleteProfileRequest request) async {
-    // Implementation for complete profile API call
-    // This would call the complete profile endpoint
+  Future<Map<String, dynamic>> resendOtp(String phone) async {
+    final response = await http.post(
+      Uri.parse('${UrlConstants.baseUrl}${UrlConstants.resendOtp}'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'phone': phone}),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to resend OTP');
+    }
+  }
+
+  Future<Map<String, dynamic>> verifyOtp(String code, String phone) async {
+    final response = await http.post(
+      Uri.parse('${UrlConstants.baseUrl}${UrlConstants.verifyOtp}'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'code': code, 'phone': phone}),
+    );
+
+    if (response.statusCode == 200) {
+      final result = jsonDecode(response.body);
+      if (result['token'] != null) {
+        await _saveToken(result['token']);
+      }
+      return result;
+    } else {
+      throw Exception('Failed to verify OTP');
+    }
+  }
+
+  Future<Map<String, dynamic>> registerUser(Map<String, dynamic> userData) async {
+    final token = await getToken();
+    final response = await http.post(
+      Uri.parse('${UrlConstants.baseUrl}${UrlConstants.registerUser}'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode(userData),
+    );
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    } else {
+      throw Exception('Failed to register user');
+    }
+  }
+
+  Future<void> _saveToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_tokenKey, token);
+    await prefs.setString('last_login_time', DateTime.now().millisecondsSinceEpoch.toString());
+  }
+
+  Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_tokenKey);
+  }
+
+  Future<void> clearToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_tokenKey);
+  }
+
+  Future<Map<String, dynamic>> completeProfile(Map<String, dynamic> profileData) async {
+    final token = await getToken();
+    final uri = Uri.parse(
+      '${UrlConstants.baseUrl}${UrlConstants.completeProfile}',
+    );
+    final multipartRequest = http.MultipartRequest('POST', uri);
+
+    multipartRequest.headers['Authorization'] = 'Bearer $token';
+    profileData.forEach((key, value) {
+      if (value != null && key != 'profile_photo') {
+        multipartRequest.fields[key] = value.toString();
+      }
+    });
+
+    if (profileData['profile_photo'] != null) {
+      final file = File(profileData['profile_photo']);
+      multipartRequest.files.add(
+        await http.MultipartFile.fromPath('profile_photo', file.path),
+      );
+    }
+
+    final response = await multipartRequest.send();
+    final responseBody = await response.stream.bytesToString();
+
+    if (response.statusCode == 200) {
+      return jsonDecode(responseBody);
+    } else {
+      throw Exception('Failed to complete profile');
+    }
+  }
+
+  Future<bool> isTokenValid() async {
+    final token = await getToken();
+    return token != null && token.isNotEmpty;
+  }
+
+  Future<bool> isSessionExpired() async {
+    final prefs = await SharedPreferences.getInstance();
+    final lastLoginString = prefs.getString('last_login_time');
+    if (lastLoginString == null) return true;
+    
+    final lastLogin = int.tryParse(lastLoginString) ?? 0;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    final hoursSinceLogin = (now - lastLogin) / (1000 * 60 * 60);
+    return hoursSinceLogin > 2; // 2 hours session
+  }
+
+  Future<void> updateLastLoginTime() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('last_login_time', DateTime.now().millisecondsSinceEpoch.toString());
   }
 
   Future<void> saveUserData(
@@ -64,66 +145,17 @@ class AuthService {
     String email,
   ) async {
     final prefs = await SharedPreferences.getInstance();
-    final userData = {
-      'firstName': firstName,
-      'lastName': lastName,
-      'email': email,
-    };
-    await prefs.setString(_userDataKey, jsonEncode(userData));
+    await prefs.setString('first_name', firstName);
+    await prefs.setString('last_name', lastName);
+    await prefs.setString('email', email);
   }
 
   Future<Map<String, String?>> getUserData() async {
     final prefs = await SharedPreferences.getInstance();
-    final userDataString = prefs.getString(_userDataKey);
-    if (userDataString != null) {
-      final userData = jsonDecode(userDataString);
-      return {
-        'firstName': userData['firstName'],
-        'lastName': userData['lastName'],
-        'email': userData['email'],
-      };
-    }
-    return {};
-  }
-
-  Future<void> _saveToken(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, token);
-    await prefs.setString(_lastLoginKey, DateTime.now().toIso8601String());
-  }
-
-  Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_tokenKey);
-  }
-
-  Future<bool> isTokenValid() async {
-    final token = await getToken();
-    return token != null && token.isNotEmpty;
-  }
-
-  Future<void> clearToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
-    await prefs.remove(_userDataKey);
-    await prefs.remove(_lastLoginKey);
-  }
-
-  Future<bool> isSessionExpired() async {
-    final prefs = await SharedPreferences.getInstance();
-    final lastLoginString = prefs.getString(_lastLoginKey);
-
-    if (lastLoginString == null) return true;
-
-    final lastLogin = DateTime.parse(lastLoginString);
-    final now = DateTime.now();
-    final difference = now.difference(lastLogin);
-
-    return difference.inHours >= 2;
-  }
-
-  Future<void> updateLastLoginTime() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_lastLoginKey, DateTime.now().toIso8601String());
+    return {
+      'first_name': prefs.getString('first_name'),
+      'last_name': prefs.getString('last_name'),
+      'email': prefs.getString('email'),
+    };
   }
 }

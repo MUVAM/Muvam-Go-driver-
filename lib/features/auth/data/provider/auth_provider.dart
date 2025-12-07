@@ -7,14 +7,14 @@ class AuthProvider with ChangeNotifier {
 
   bool _isLoading = false;
   String? _errorMessage;
-  VerifyOtpResponse? _verifyOtpResponse;
-  RegisterUserResponse? _registerUserResponse;
+  Map<String, dynamic>? _verifyOtpResponse;
+  Map<String, dynamic>? _registerUserResponse;
   Map<String, String?> _userData = {};
 
   bool get isLoading => _isLoading;
   String? get errorMessage => _errorMessage;
-  VerifyOtpResponse? get verifyOtpResponse => _verifyOtpResponse;
-  RegisterUserResponse? get registerUserResponse => _registerUserResponse;
+  Map<String, dynamic>? get verifyOtpResponse => _verifyOtpResponse;
+  Map<String, dynamic>? get registerUserResponse => _registerUserResponse;
   Map<String, String?> get userData => _userData;
 
   void _setLoading(bool loading) {
@@ -72,7 +72,7 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> registerUser(RegisterUserRequest request) async {
+  Future<bool> registerUser(Map<String, dynamic> request) async {
     _setLoading(true);
     _setError(null);
 
@@ -87,16 +87,16 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  Future<bool> completeProfile(CompleteProfileRequest request) async {
+  Future<bool> completeProfile(Map<String, dynamic> request) async {
     _setLoading(true);
     _setError(null);
 
     try {
       await _authService.completeProfile(request);
       await _authService.saveUserData(
-        request.firstName,
-        request.lastName,
-        request.email,
+        request['firstName'] ?? '',
+        request['lastName'] ?? '',
+        request['email'] ?? '',
       );
       _userData = await _authService.getUserData();
       _setLoading(false);
@@ -125,7 +125,7 @@ class AuthProvider with ChangeNotifier {
     await _authService.updateLastLoginTime();
   }
 
-  bool get isNewUser => _verifyOtpResponse?.isNew ?? true;
+  bool get isNewUser => _verifyOtpResponse?['isNew'] ?? true;
 
   Future<void> logout() async {
     await _authService.clearToken();

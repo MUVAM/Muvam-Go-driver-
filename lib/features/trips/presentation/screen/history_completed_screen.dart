@@ -4,9 +4,14 @@ import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 
 class HistoryCompletedScreen extends StatelessWidget {
-  final String price;
+  final Map<String, dynamic> ride;
+  final Map<String, dynamic> acceptedData;
 
-  const HistoryCompletedScreen({super.key, required this.price});
+  const HistoryCompletedScreen({
+    super.key, 
+    required this.ride,
+    required this.acceptedData,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +37,7 @@ class HistoryCompletedScreen extends StatelessWidget {
               ),
               SizedBox(height: 20.h),
               Text(
-                'Booking Id: 12334567',
+                'Booking Id: ${ride['ID'] ?? 'N/A'}',
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontSize: 26.sp,
@@ -79,7 +84,7 @@ class HistoryCompletedScreen extends StatelessWidget {
                       child: Padding(
                         padding: EdgeInsets.only(left: 16.w),
                         child: Text(
-                          'Nsukka, Enugu',
+                          '${ride['PickupAddress'] ?? 'Unknown pickup'}',
                           style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 14.sp,
@@ -124,7 +129,7 @@ class HistoryCompletedScreen extends StatelessWidget {
                       child: Padding(
                         padding: EdgeInsets.only(left: 16.w),
                         child: Text(
-                          'Ikeja, Lagos',
+                          '${ride['DestAddress'] ?? 'Unknown destination'}',
                           style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 14.sp,
@@ -155,7 +160,7 @@ class HistoryCompletedScreen extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    price,
+                    '₦${ride['Price'] ?? '0'}',
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 18.sp,
@@ -181,7 +186,7 @@ class HistoryCompletedScreen extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '₦500',
+                    '₦${acceptedData['tip'] ?? 0}',
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 18.sp,
@@ -226,48 +231,51 @@ class HistoryCompletedScreen extends StatelessWidget {
                         ),
                         SizedBox(width: 10.w),
                         Text(
-                          'Pay with Card',
+                          '${_formatPaymentMethod(ride['PaymentMethod'])}',
                           style: TextStyle(
                             fontFamily: 'Inter',
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w400,
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w600,
                             color: Colors.black,
                           ),
                         ),
                       ],
                     ),
                     Text(
-                      '₦12,500',
+                      '₦${(double.tryParse(ride['Price']?.toString() ?? '0') ?? 0) + (double.tryParse(acceptedData['tip']?.toString() ?? '0') ?? 0)}',
                       style: TextStyle(
                         fontFamily: 'Inter',
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w700,
-                        color: Color(ConstColors.mainColor),
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black,
                       ),
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: 20.h),
-              Divider(thickness: 1, color: Colors.grey.shade300),
-              SizedBox(height: 20.h),
-              Text(
-                'Ride Status',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black,
-                ),
-              ),
-              SizedBox(height: 5.h),
-              Text(
-                'Completed',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 26.sp,
-                  fontWeight: FontWeight.w500,
-                  color: Color(ConstColors.mainColor),
+              Spacer(),
+              Container(
+                width: double.infinity,
+                height: 50.h,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Color(ConstColors.mainColor),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                  ),
+                  child: Text(
+                    'Done',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -275,5 +283,18 @@ class HistoryCompletedScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _formatPaymentMethod(String? method) {
+    if (method == null) return 'Cash';
+    switch (method.toLowerCase()) {
+      case 'card':
+        return 'Card Payment';
+      case 'wallet':
+        return 'Wallet';
+      case 'cash':
+      default:
+        return 'Cash';
+    }
   }
 }

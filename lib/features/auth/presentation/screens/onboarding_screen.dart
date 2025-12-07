@@ -10,7 +10,8 @@ import 'package:provider/provider.dart';
 import 'otp_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
-  const OnboardingScreen({super.key});
+  final String? serviceType;
+  const OnboardingScreen({super.key, this.serviceType});
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -43,7 +44,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => OtpScreen(phoneNumber: fullPhoneNumber),
+          builder: (context) => OtpScreen(
+            phoneNumber: fullPhoneNumber,
+            serviceType: widget.serviceType,
+          ),
         ),
       );
     } else {

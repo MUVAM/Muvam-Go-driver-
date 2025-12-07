@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
-import 'package:muvam_rider/features/auth/presentation/screens/phone_verification_screen.dart';
+import 'package:muvam_rider/features/auth/presentation/screens/onboarding_screen.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_selection_screen.dart';
 import 'package:muvam_rider/features/home/presentation/screens/home_screen.dart';
 import 'package:provider/provider.dart';
@@ -43,7 +43,7 @@ class _SplashScreenState extends State<SplashScreen>
     final hasToken = await authProvider.checkTokenValidity();
 
     if (!hasToken) {
-      // No token, go to signup
+      // No token, go to service selection
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -56,10 +56,10 @@ class _SplashScreenState extends State<SplashScreen>
     final isExpired = await authProvider.isSessionExpired();
 
     if (isExpired) {
-      // Session expired, go to phone verification
+      // Session expired, go to service selection
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => PhoneVerificationScreen()),
+        MaterialPageRoute(builder: (context) => RiderSignupSelectionScreen()),
       );
     } else {
       // Valid session, update login time and go to home

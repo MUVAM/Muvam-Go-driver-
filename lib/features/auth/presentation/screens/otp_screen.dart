@@ -2,12 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
+import '../../../../core/constants/images.dart';
+import '../../../../core/constants/colors.dart';
+import '../../../../core/constants/text_styles.dart';
+import '../../data/provider/auth_provider.dart';
+import '../../../home/presentation/screens/home_screen.dart';
 import 'create_account_screen.dart';
 
 class OtpScreen extends StatefulWidget {
   final String phoneNumber;
+  final String? serviceType;
 
-  const OtpScreen({super.key, required this.phoneNumber});
+  const OtpScreen({super.key, required this.phoneNumber, this.serviceType});
 
   @override
   State<OtpScreen> createState() => _OtpScreenState();
@@ -79,8 +85,10 @@ class _OtpScreenState extends State<OtpScreen> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) =>
-                CreateAccountScreen(phoneNumber: widget.phoneNumber),
+            builder: (context) => CreateAccountScreen(
+              phoneNumber: widget.phoneNumber,
+              serviceType: widget.serviceType,
+            ),
           ),
         );
       } else {
@@ -249,28 +257,14 @@ class _OtpScreenState extends State<OtpScreen> {
                                     ),
                                   ),
                           ),
-                    SizedBox(height: 20.h),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
-                      child: Text(
-                        'Edit my number',
-                        style: TextStyle(
-                          color: Color(ConstColors.mainColor),
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
                     SizedBox(height: 40.h),
                     GestureDetector(
-                      onTap: (isOtpComplete && !_isLoading) ? _verifyOtp : null,
+                      onTap: isOtpComplete && !_isLoading ? _verifyOtp : null,
                       child: Container(
-                        width: 353.w,
-                        height: 48.h,
+                        width: double.infinity,
+                        height: 50.h,
                         decoration: BoxDecoration(
-                          color: isOtpComplete
+                          color: isOtpComplete && !_isLoading
                               ? Color(ConstColors.mainColor)
                               : Color(ConstColors.fieldColor),
                           borderRadius: BorderRadius.circular(8.r),
@@ -279,7 +273,7 @@ class _OtpScreenState extends State<OtpScreen> {
                           child: _isLoading
                               ? CircularProgressIndicator(color: Colors.white)
                               : Text(
-                                  'Continue',
+                                  'Verify',
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 16.sp,

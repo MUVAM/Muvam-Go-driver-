@@ -7,7 +7,7 @@ import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/fonts.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
-import 'package:muvam_rider/features/home/presentation/screens/home_screen.dart';
+import 'package:muvam_rider/features/vehicles/presentation/screens/car_information_screen.dart';
 import '../widgets/kyc_tile.dart';
 
 class KycVerificationScreen extends StatefulWidget {
@@ -69,7 +69,7 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
     if (result['success'] == true) {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
+        MaterialPageRoute(builder: (context) => CarInformationScreen()),
         (route) => false,
       );
     } else {
