@@ -3,7 +3,7 @@ class UrlConstants {
   static const String webSocketUrl = "ws://44.222.121.219/api/v1/ws";
   static const String wsUrl = "ws://44.222.121.219/api/v1/ws";
 
-  static const String googleMapsApiKey = "AIzaSyD-nRzdn3Slmj5FgoHSPIq5B4sMZieWofs";
+  static const String googleMapsApiKey = "AIzaSyBcA7Yq13sDyx-8nrLn0y0XMjY6xVcYVlE";
   
   // Authentication endpoints
   static const String sendOtp = "/otp/send";

@@ -226,16 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     });
 
-    // Update driver location every 10 seconds
-    _locationUpdateTimer = Timer.periodic(Duration(seconds: 10), (timer) async {
-      final driverProvider = Provider.of<DriverProvider>(
-        context,
-        listen: false,
-      );
-      if (driverProvider.isOnline) {
-        _updateDriverLocation();
-      }
-    });
+    // Location update timer removed - will be added back later
 
     _sessionCheckTimer = Timer.periodic(Duration(minutes: 1), (timer) async {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -284,35 +275,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _updateDriverLocation() async {
-    try {
-      Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
-      );
-
-      print('=== BACKGROUND LOCATION UPDATE ===');
-      print('Driver Location: ${position.latitude}, ${position.longitude}');
-
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
-
-      if (token != null) {
-        final result = await ApiService.updateLocation(
-          token,
-          position.latitude,
-          position.longitude,
-        );
-        if (result['success'] == true) {
-          print('✅ Background location updated successfully');
-        } else {
-          print('❌ Background location update failed: ${result['message']}');
-        }
-      }
-    } catch (e) {
-      print('❌ Failed to get/update location: $e');
-    }
-    print('=== END BACKGROUND LOCATION UPDATE ===\n');
-  }
+  // _updateDriverLocation method removed - will be added back later
 
   Future<void> _acceptRide() async {
     if (_nearbyRides.isEmpty || _currentRideIndex >= _nearbyRides.length)

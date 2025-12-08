@@ -486,12 +486,24 @@ class ApiService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(responseBody);
         return {'success': true, 'data': data};
-      } else {
-        final error = jsonDecode(responseBody);
+      } else if (response.statusCode == 413) {
         return {
           'success': false,
-          'message': error['message'] ?? error['error'] ?? 'Upload failed',
+          'message': 'Files are too large. Please select smaller images (max 2MB each) and try again.',
         };
+      } else {
+        try {
+          final error = jsonDecode(responseBody);
+          return {
+            'success': false,
+            'message': error['message'] ?? error['error'] ?? 'Upload failed',
+          };
+        } catch (e) {
+          return {
+            'success': false,
+            'message': 'Upload failed. Status: ${response.statusCode}',
+          };
+        }
       }
     } catch (e) {
       print('UPLOAD ERROR: $e');
@@ -508,10 +520,26 @@ class ApiService {
     required String seats,
     required String year,
     required String licenseNumber,
-    required File vehiclePhotoFile,
+    required String color,
+    required String licensePlate,
+    required File registrationDoc,
+    required File insuranceDoc,
+    required List<File> vehiclePhotos,
     required String token,
   }) async {
     try {
+      print('=== REGISTER VEHICLE API DEBUG ===');
+      print('URL: $baseUrl${UrlConstants.registerVehicle}');
+      print('Token: ${token.substring(0, 20)}...');
+      print('Make: $make');
+      print('Model Type: $modelType');
+      print('Seats: $seats');
+      print('Year: $year');
+      print('License Number: $licenseNumber');
+      print('Color: $color');
+      print('License Plate: $licensePlate');
+      print('Vehicle Photos: ${vehiclePhotos.length}');
+      
       var request = http.MultipartRequest(
         'POST',
         Uri.parse('$baseUrl${UrlConstants.registerVehicle}'),
@@ -524,29 +552,66 @@ class ApiService {
       request.fields['seats'] = seats;
       request.fields['year'] = year;
       request.fields['license_number'] = licenseNumber;
+      request.fields['color'] = color;
+      request.fields['license_plate'] = licensePlate;
+
+      print('Request fields: ${request.fields}');
+      print('Request headers: ${request.headers}');
 
       request.files.add(
-        await http.MultipartFile.fromPath(
-          'vehicle_photo_file',
-          vehiclePhotoFile.path,
-        ),
+        await http.MultipartFile.fromPath('registration_doc', registrationDoc.path),
       );
+      request.files.add(
+        await http.MultipartFile.fromPath('insurance_doc', insuranceDoc.path),
+      );
+      for (var photo in vehiclePhotos) {
+        request.files.add(
+          await http.MultipartFile.fromPath('photos', photo.path),
+        );
+      }
+
+      print('Files added to request: ${request.files.length}');
+      print('Sending request...');
 
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
 
+      print('Response Status: ${response.statusCode}');
+      print('Response Headers: ${response.headers}');
+      print('Response Body: $responseBody');
+
       if (response.statusCode == 200 || response.statusCode == 201) {
+        print('✅ Vehicle registration successful');
         final data = jsonDecode(responseBody);
         return {'success': true, 'data': data};
-      } else {
-        final error = jsonDecode(responseBody);
+      } else if (response.statusCode == 413) {
+        print('❌ 413 Request Entity Too Large');
         return {
           'success': false,
-          'message': error['message'] ?? error['error'] ?? 'Vehicle registration failed',
+          'message': 'Vehicle photo is too large. Please select a smaller image (max 2MB).',
         };
+      } else {
+        print('❌ Vehicle registration failed with status: ${response.statusCode}');
+        try {
+          final error = jsonDecode(responseBody);
+          return {
+            'success': false,
+            'message': error['message'] ?? error['error'] ?? 'Vehicle registration failed',
+          };
+        } catch (parseError) {
+          print('❌ Failed to parse error response: $parseError');
+          return {
+            'success': false,
+            'message': 'Vehicle registration failed. Status: ${response.statusCode}',
+          };
+        }
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      print('❌ REGISTER VEHICLE API ERROR: $e');
+      print('Stack trace: $stackTrace');
       return {'success': false, 'message': 'Network error: $e'};
+    } finally {
+      print('=== END REGISTER VEHICLE API DEBUG ===\n');
     }
   }
 

@@ -77,6 +77,10 @@ class AuthService {
     await prefs.setString('last_login_time', DateTime.now().millisecondsSinceEpoch.toString());
   }
 
+  Future<void> saveToken(String token) async {
+    await _saveToken(token);
+  }
+
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_tokenKey);

@@ -147,12 +147,14 @@ class WebSocketService {
 
   void _handleMessage(dynamic message) {
     print('=== WEBSOCKET MESSAGE RECEIVED ===');
+    print('🚨🚨🚨 ACTUAL RAW WEBSOCKET MESSAGE START 🚨🚨🚨');
     print('📨 RAW MESSAGE: $message');
     print('📋 Message type: ${message.runtimeType}');
     print('📏 Message length: ${message.toString().length}');
     print('📄 FULL RAW MESSAGE CONTENT: ${message.toString()}');
     print('🔍 RAW MESSAGE AS STRING: "${message.toString()}"');
     print('🔍 RAW MESSAGE BYTES: ${message.toString().codeUnits}');
+    print('🚨🚨🚨 ACTUAL RAW WEBSOCKET MESSAGE END 🚨🚨🚨');
     
     if (message == null) {
       print('⚠️ Message is NULL');
