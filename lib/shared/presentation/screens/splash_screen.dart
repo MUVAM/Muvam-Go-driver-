@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/images.dart';
+import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
-import 'package:muvam_rider/features/auth/presentation/screens/onboarding_screen.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_selection_screen.dart';
 import 'package:muvam_rider/features/home/presentation/screens/home_screen.dart';
 import 'package:provider/provider.dart';
@@ -41,7 +41,7 @@ class _SplashScreenState extends State<SplashScreen>
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     final hasToken = await authProvider.checkTokenValidity();
-    print('HAS TOKEN+++$hasToken');
+    AppLogger.log('HAS TOKEN+++$hasToken');
 
     if (!hasToken) {
       // No token, go to service selection
