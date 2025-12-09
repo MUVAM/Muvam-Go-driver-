@@ -4203,8 +4203,9 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          HistoryCompletedScreen(ride: ride, acceptedData: {}),
+                      builder: (context) => HistoryCompletedScreen(
+                        rideId: ride[['ride_id'].toString()],
+                      ),
                     ),
                   );
                 },
