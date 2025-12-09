@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/constants/text_styles.dart';
+import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
 import 'package:muvam_rider/features/home/presentation/screens/home_screen.dart';
 import 'package:provider/provider.dart';
@@ -101,8 +102,9 @@ class _OtpScreenState extends State<OtpScreen> {
         );
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(authProvider.errorMessage ?? 'Invalid OTP')),
+      CustomFlushbar.showError(
+        context: context,
+        message: authProvider.errorMessage ?? 'Invalid OTP',
       );
     }
   }
@@ -120,14 +122,14 @@ class _OtpScreenState extends State<OtpScreen> {
 
     if (success) {
       startTimer();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('OTP sent successfully')));
+      CustomFlushbar.showOtpSuccess(
+        context: context,
+        message: 'OTP sent successfully',
+      );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(authProvider.errorMessage ?? 'Failed to resend OTP'),
-        ),
+      CustomFlushbar.showOtpSuccess(
+        context: context,
+        message: authProvider.errorMessage ?? 'Failed to resend OTP',
       );
     }
   }

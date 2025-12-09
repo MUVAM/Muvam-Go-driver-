@@ -6,6 +6,7 @@ import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/constants/text_styles.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
+import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:provider/provider.dart';
 import 'otp_screen.dart';
 
@@ -51,8 +52,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message'] ?? 'Failed to send OTP')),
+      CustomFlushbar.showError(
+        context: context,
+        message: result['message'] ?? 'Failed to send OTP',
       );
     }
   }
@@ -164,7 +166,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       ? _sendOtp
                       : null,
                   child: Container(
-                    width: 353.w,
+                    width: double.infinity,
                     height: 48.h,
                     decoration: BoxDecoration(
                       color: phoneController.text.isNotEmpty

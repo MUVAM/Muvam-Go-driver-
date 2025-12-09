@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
@@ -71,10 +72,7 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
                   ),
                 ),
                 SizedBox(height: 30.h),
-                CarTextField(
-                  label: 'Make',
-                  controller: makeController,
-                ),
+                CarTextField(label: 'Make', controller: makeController),
                 SizedBox(height: 20.h),
                 CarTextField(
                   label: 'Model Type',
@@ -86,20 +84,14 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
                   controller: seatsController,
                 ),
                 SizedBox(height: 20.h),
-                CarTextField(
-                  label: 'Year',
-                  controller: yearController,
-                ),
+                CarTextField(label: 'Year', controller: yearController),
                 SizedBox(height: 20.h),
                 CarTextField(
                   label: 'License Number',
                   controller: licenseNumberController,
                 ),
                 SizedBox(height: 20.h),
-                CarTextField(
-                  label: 'Color',
-                  controller: colorController,
-                ),
+                CarTextField(label: 'Color', controller: colorController),
                 SizedBox(height: 20.h),
                 CarTextField(
                   label: 'License Plate',
@@ -120,17 +112,29 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
                             children: [
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(8.r),
-                                child: Image.file(registrationDoc!, fit: BoxFit.cover, width: double.infinity),
+                                child: Image.file(
+                                  registrationDoc!,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                ),
                               ),
                               Positioned(
                                 top: 4.h,
                                 right: 4.w,
                                 child: GestureDetector(
-                                  onTap: () => setState(() => registrationDoc = null),
+                                  onTap: () =>
+                                      setState(() => registrationDoc = null),
                                   child: Container(
                                     padding: EdgeInsets.all(4.w),
-                                    decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                                    child: Icon(Icons.close, color: Colors.white, size: 16.sp),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                      size: 16.sp,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -139,9 +143,19 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
                         : Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.upload_file, size: 40.sp, color: Colors.grey),
+                              Icon(
+                                Icons.upload_file,
+                                size: 40.sp,
+                                color: Colors.grey,
+                              ),
                               SizedBox(height: 8.h),
-                              Text('Upload Registration Doc', style: TextStyle(color: Colors.grey, fontSize: 14.sp)),
+                              Text(
+                                'Upload Registration Doc',
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14.sp,
+                                ),
+                              ),
                             ],
                           ),
                   ),
@@ -161,17 +175,29 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
                             children: [
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(8.r),
-                                child: Image.file(insuranceDoc!, fit: BoxFit.cover, width: double.infinity),
+                                child: Image.file(
+                                  insuranceDoc!,
+                                  fit: BoxFit.cover,
+                                  width: double.infinity,
+                                ),
                               ),
                               Positioned(
                                 top: 4.h,
                                 right: 4.w,
                                 child: GestureDetector(
-                                  onTap: () => setState(() => insuranceDoc = null),
+                                  onTap: () =>
+                                      setState(() => insuranceDoc = null),
                                   child: Container(
                                     padding: EdgeInsets.all(4.w),
-                                    decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                                    child: Icon(Icons.close, color: Colors.white, size: 16.sp),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.close,
+                                      color: Colors.white,
+                                      size: 16.sp,
+                                    ),
                                   ),
                                 ),
                               ),
@@ -180,9 +206,19 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
                         : Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.upload_file, size: 40.sp, color: Colors.grey),
+                              Icon(
+                                Icons.upload_file,
+                                size: 40.sp,
+                                color: Colors.grey,
+                              ),
                               SizedBox(height: 8.h),
-                              Text('Upload Insurance Doc', style: TextStyle(color: Colors.grey, fontSize: 14.sp)),
+                              Text(
+                                'Upload Insurance Doc',
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 14.sp,
+                                ),
+                              ),
                             ],
                           ),
                   ),
@@ -201,24 +237,40 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
                         ? Wrap(
                             spacing: 8.w,
                             runSpacing: 8.h,
-                            children: vehiclePhotos.asMap().entries.map((entry) {
+                            children: vehiclePhotos.asMap().entries.map((
+                              entry,
+                            ) {
                               int index = entry.key;
                               File photo = entry.value;
                               return Stack(
                                 children: [
                                   ClipRRect(
                                     borderRadius: BorderRadius.circular(4.r),
-                                    child: Image.file(photo, width: 80.w, height: 80.h, fit: BoxFit.cover),
+                                    child: Image.file(
+                                      photo,
+                                      width: 80.w,
+                                      height: 80.h,
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
                                   Positioned(
                                     top: 2.h,
                                     right: 2.w,
                                     child: GestureDetector(
-                                      onTap: () => setState(() => vehiclePhotos.removeAt(index)),
+                                      onTap: () => setState(
+                                        () => vehiclePhotos.removeAt(index),
+                                      ),
                                       child: Container(
                                         padding: EdgeInsets.all(2.w),
-                                        decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle),
-                                        child: Icon(Icons.close, color: Colors.white, size: 12.sp),
+                                        decoration: BoxDecoration(
+                                          color: Colors.red,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          Icons.close,
+                                          color: Colors.white,
+                                          size: 12.sp,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -231,9 +283,19 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.camera_alt, size: 40.sp, color: Colors.grey),
+                                Icon(
+                                  Icons.camera_alt,
+                                  size: 40.sp,
+                                  color: Colors.grey,
+                                ),
                                 SizedBox(height: 8.h),
-                                Text('Upload Vehicle Photos', style: TextStyle(color: Colors.grey, fontSize: 14.sp)),
+                                Text(
+                                  'Upload Vehicle Photos',
+                                  style: TextStyle(
+                                    color: Colors.grey,
+                                    fontSize: 14.sp,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -303,7 +365,11 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
   }
 
   Future<void> _pickVehiclePhotos() async {
-    final List<XFile> images = await _picker.pickMultiImage(imageQuality: 40, maxWidth: 1280, maxHeight: 1280);
+    final List<XFile> images = await _picker.pickMultiImage(
+      imageQuality: 40,
+      maxWidth: 1280,
+      maxHeight: 1280,
+    );
     if (images.isNotEmpty) {
       setState(() {
         vehiclePhotos = images.map((img) => File(img.path)).toList();
@@ -319,7 +385,7 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
     print('Year: ${yearController.text}');
     print('License Number: ${licenseNumberController.text}');
     print('Vehicle Photo: ${vehiclePhoto?.path}');
-    
+
     if (makeController.text.isEmpty ||
         modelTypeController.text.isEmpty ||
         seatsController.text.isEmpty ||
@@ -331,12 +397,11 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
         insuranceDoc == null ||
         vehiclePhotos.length < 3) {
       print('❌ Validation failed - missing fields');
-      String message = vehiclePhotos.length < 3 
+      String message = vehiclePhotos.length < 3
           ? 'Please upload at least 3 vehicle photos'
           : 'Please fill all fields and upload all documents';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      CustomFlushbar.showError(context: context, message: message);
+
       return;
     }
 
@@ -349,7 +414,7 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
       print('🔍 Getting auth token from SharedPreferences...');
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
-      
+
       print('Token found: ${token != null}');
       if (token != null) {
         print('Token preview: ${token.substring(0, 20)}...');
@@ -380,40 +445,39 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
           print('✅ Vehicle registration successful - navigating to HomeScreen');
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(
-              builder: (context) => const HomeScreen(),
-            ),
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
           );
         } else {
           print('❌ Vehicle registration failed: ${result['message']}');
           String errorMessage = result['message'] ?? 'Registration failed';
-          
+
           // Handle authentication errors
-          if (errorMessage.contains('user not found') || errorMessage.contains('unauthorized')) {
+          if (errorMessage.contains('user not found') ||
+              errorMessage.contains('unauthorized')) {
             errorMessage = 'Your session has expired. Please login again.';
             // Clear the invalid token
             await prefs.remove('auth_token');
             // Navigate back to login screen
-            Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+            Navigator.pushNamedAndRemoveUntil(
+              context,
+              '/login',
+              (route) => false,
+            );
             return;
           }
-          
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(errorMessage)),
-          );
+          CustomFlushbar.showError(context: context, message: errorMessage);
         }
       } else {
         print('❌ No auth token found');
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Authentication token not found. Please login again.')),
+        CustomFlushbar.showError(
+          context: context,
+          message: 'Authentication token not found. Please login again.',
         );
       }
     } catch (e, stackTrace) {
       print('❌ EXCEPTION in _registerVehicle: $e');
       print('Stack trace: $stackTrace');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      CustomFlushbar.showError(context: context, message: 'Error: $e');
     } finally {
       print('🔄 Setting isLoading to false');
       setState(() {

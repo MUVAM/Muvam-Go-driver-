@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:provider/provider.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
@@ -13,7 +14,11 @@ class CreateAccountScreen extends StatefulWidget {
   final String phoneNumber;
   final String? serviceType;
 
-  const CreateAccountScreen({super.key, required this.phoneNumber, this.serviceType});
+  const CreateAccountScreen({
+    super.key,
+    required this.phoneNumber,
+    this.serviceType,
+  });
 
   @override
   State<CreateAccountScreen> createState() => _CreateAccountScreenState();
@@ -216,8 +221,9 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
         dobController.text.isEmpty ||
         locationController.text.isEmpty ||
         cityController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill all required fields')),
+      CustomFlushbar.showInfo(
+        context: context,
+        message: 'Please fill all required fields',
       );
       return;
     }
@@ -249,8 +255,9 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message'] ?? 'Registration failed')),
+      CustomFlushbar.showError(
+        context: context,
+        message: result['message'] ?? 'Registration failed',
       );
     }
   }

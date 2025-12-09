@@ -5,6 +5,7 @@ import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/services/socket_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
+import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/communication/data/models/chat_model.dart';
 import 'package:muvam_rider/features/communication/data/providers/chat_provider.dart';
 import 'package:provider/provider.dart';
@@ -164,14 +165,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
-        duration: const Duration(seconds: 3),
-      ),
-    );
+    CustomFlushbar.showError(context: context, message: message);
   }
 
   String _extractTime(String timestamp) {

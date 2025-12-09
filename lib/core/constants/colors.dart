@@ -7,4 +7,7 @@ class ConstColors {
   static const drawerAccountColor = 0xffBDBDBD;
   static const recentLocationColor = 0xffB1B1B1;
   static const blackColor = 0xff000000;
+  static const successColor = 0xFF4CAF50;
+  static const failureColor = 0xFFF44336;
+  static const whiteColor = 0xFFFFFFFF;
 }

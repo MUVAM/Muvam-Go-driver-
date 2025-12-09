@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -54,8 +55,9 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
     if (driverLicense == null ||
         vehicleRegistration == null ||
         insurance == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please upload all required documents')),
+      CustomFlushbar.showInfo(
+        context: context,
+        message: 'Please upload all required documents',
       );
       return;
     }
@@ -72,8 +74,9 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
     setState(() => _isLoading = false);
 
     if (result['success'] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Documents uploaded successfully!')),
+      CustomFlushbar.showSuccess(
+        context: context,
+        message: 'Documents uploaded successfully!',
       );
       Navigator.pushAndRemoveUntil(
         context,
@@ -86,9 +89,7 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
         errorMessage =
             'Images are too large. Please select smaller images and try again.';
       }
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(errorMessage)));
+      CustomFlushbar.showError(context: context, message: errorMessage);
     }
   }
 

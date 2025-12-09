@@ -6,6 +6,8 @@ import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/url_constants.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
 import 'package:muvam_rider/core/services/location_service.dart';
+import 'package:muvam_rider/core/utils/app_logger.dart';
+import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -28,7 +30,7 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
   List<Map<String, dynamic>> _locationSuggestions = [];
   bool _showSuggestions = false;
   Timer? _debounceTimer;
-  
+
   final List<String> _recentLocations = [
     'Victoria Island, Lagos',
     'Ikeja, Lagos',
@@ -60,10 +62,7 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
       });
       _mapController?.animateCamera(
         CameraUpdate.newCameraPosition(
-          CameraPosition(
-            target: currentLocation,
-            zoom: 16.0,
-          ),
+          CameraPosition(target: currentLocation, zoom: 16.0),
         ),
       );
     }
@@ -86,8 +85,10 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
 
   Future<void> _updateLocation() async {
     print('=== UPDATING LOCATION ===');
-    print('Selected location: ${_selectedLocation.latitude}, ${_selectedLocation.longitude}');
-    
+    print(
+      'Selected location: ${_selectedLocation.latitude}, ${_selectedLocation.longitude}',
+    );
+
     setState(() {
       _isLoading = true;
     });
@@ -106,21 +107,21 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
         if (result['success'] == true) {
           print('Location updated successfully');
           Navigator.pop(context);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Location updated successfully')),
+          CustomFlushbar.showSuccess(
+            context: context,
+            message: 'Location updated successfully',
           );
         } else {
-          print('Failed to update location: ${result['message']}');
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(result['message'] ?? 'Failed to update location')),
+          AppLogger.log('Failed to update location: ${result['message']}');
+          CustomFlushbar.showError(
+            context: context,
+            message: result['message'] ?? 'Failed to update location',
           );
         }
       }
     } catch (e) {
-      print('Error updating location: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      AppLogger.log('Error updating location: $e');
+      CustomFlushbar.showError(context: context, message: 'Error: $e');
     } finally {
       setState(() {
         _isLoading = false;
@@ -258,10 +259,10 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
 
   void _filterLocations(String query) {
     print('Filtering locations for: $query');
-    
+
     // Cancel previous timer
     _debounceTimer?.cancel();
-    
+
     if (query.isEmpty) {
       setState(() {
         _showSuggestions = false;
@@ -278,22 +279,27 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
 
   Future<void> _searchPlaces(String query) async {
     try {
-      final url = 'https://maps.googleapis.com/maps/api/place/autocomplete/json'
+      final url =
+          'https://maps.googleapis.com/maps/api/place/autocomplete/json'
           '?input=${Uri.encodeComponent(query)}'
           '&key=${UrlConstants.googleMapsApiKey}'
           '&components=country:ng'; // Restrict to Nigeria
-      
+
       final response = await http.get(Uri.parse(url));
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final predictions = data['predictions'] as List;
-        
+
         setState(() {
-          _locationSuggestions = predictions.map((prediction) => {
-            'place_id': prediction['place_id'],
-            'description': prediction['description'],
-          }).toList();
+          _locationSuggestions = predictions
+              .map(
+                (prediction) => {
+                  'place_id': prediction['place_id'],
+                  'description': prediction['description'],
+                },
+              )
+              .toList();
           _showSuggestions = _locationSuggestions.isNotEmpty;
         });
       } else {
@@ -310,11 +316,10 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
 
   void _filterRecentLocations(String query) {
     final filtered = _recentLocations
-        .where((location) => location.toLowerCase().contains(query.toLowerCase()))
-        .map((location) => {
-          'place_id': '',
-          'description': location,
-        })
+        .where(
+          (location) => location.toLowerCase().contains(query.toLowerCase()),
+        )
+        .map((location) => {'place_id': '', 'description': location})
         .toList();
 
     setState(() {
@@ -329,7 +334,7 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
       _searchController.text = location['description'];
       _showSuggestions = false;
     });
-    
+
     // If it's a Google Places result, get the coordinates
     if (location['place_id'].isNotEmpty) {
       _getPlaceDetails(location['place_id']);
@@ -338,23 +343,24 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
 
   Future<void> _getPlaceDetails(String placeId) async {
     try {
-      final url = 'https://maps.googleapis.com/maps/api/place/details/json'
+      final url =
+          'https://maps.googleapis.com/maps/api/place/details/json'
           '?place_id=$placeId'
           '&fields=geometry'
           '&key=${UrlConstants.googleMapsApiKey}';
-      
+
       final response = await http.get(Uri.parse(url));
-      
+
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         final geometry = data['result']['geometry'];
         final location = geometry['location'];
-        
+
         final selectedLatLng = LatLng(
           location['lat'].toDouble(),
           location['lng'].toDouble(),
         );
-        
+
         setState(() {
           _selectedLocation = selectedLatLng;
           _markers = {
@@ -365,13 +371,10 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
             ),
           };
         });
-        
+
         _mapController?.animateCamera(
           CameraUpdate.newCameraPosition(
-            CameraPosition(
-              target: selectedLatLng,
-              zoom: 16.0,
-            ),
+            CameraPosition(target: selectedLatLng, zoom: 16.0),
           ),
         );
       }

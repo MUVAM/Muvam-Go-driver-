@@ -11,6 +11,8 @@ import 'package:muvam_rider/core/services/api_service.dart';
 import 'package:muvam_rider/core/services/location_service.dart';
 import 'package:muvam_rider/core/services/ride_tracking_service.dart';
 import 'package:muvam_rider/core/services/websocket_service.dart';
+import 'package:muvam_rider/core/utils/app_logger.dart';
+import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/activities/presentation/screens/activities_screen.dart';
 import 'package:muvam_rider/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
@@ -149,14 +151,14 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _initializeServices() async {
-    print('=== INITIALIZING HOME SCREEN SERVICES ===');
+    AppLogger.log('=== INITIALIZING HOME SCREEN SERVICES ===');
 
     // Check session expiration first
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final isExpired = await authProvider.isSessionExpired();
 
     if (isExpired) {
-      print('🔒 Session expired, redirecting to login...');
+      AppLogger.log('🔒 Session expired, redirecting to login...');
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => RiderSignupSelectionScreen()),
@@ -165,41 +167,41 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    print('🔌 Connecting WebSocket...');
+    AppLogger.log('🔌 Connecting WebSocket...');
 
     // Force WebSocket connection with detailed logging
     try {
       await _webSocketService.connect();
-      print('✅ WebSocket connection attempt completed');
+      AppLogger.log('✅ WebSocket connection attempt completed');
 
       // Test connection after 2 seconds
       Future.delayed(Duration(seconds: 2), () {
-        print('🧪 Testing WebSocket connection...');
+        AppLogger.log('🧪 Testing WebSocket connection...');
         _webSocketService.testConnection();
       });
     } catch (e) {
-      print('❌ WebSocket connection failed: $e');
+      AppLogger.log('❌ WebSocket connection failed: $e');
     }
 
-    print('📍 Getting current location...');
+    AppLogger.log('📍 Getting current location...');
     _getCurrentLocation();
-    print('👤 Initializing driver status...');
+    AppLogger.log('👤 Initializing driver status...');
     final driverProvider = Provider.of<DriverProvider>(context, listen: false);
     await driverProvider.initializeDriverStatus();
-    print('🚗 Checking active rides...');
+    AppLogger.log('🚗 Checking active rides...');
     _checkActiveRides();
-    print('💰 Fetching earnings summary...');
+    AppLogger.log('💰 Fetching earnings summary...');
     _fetchEarningsSummary();
-    print('⏰ Starting ride checking timer...');
+    AppLogger.log('⏰ Starting ride checking timer...');
     _startRideChecking();
-    print('✅ All services initialized');
-    print('=== HOME SCREEN READY ===\n');
+    AppLogger.log('✅ All services initialized');
+    AppLogger.log('=== HOME SCREEN READY ===\n');
   }
 
   void _startRideChecking() {
     // Setup WebSocket ride request listener
     _webSocketService.onRideRequest = (rideData) {
-      print('📨 Received ride request via WebSocket: $rideData');
+      AppLogger.log('📨 Received ride request via WebSocket: $rideData');
       final driverProvider = Provider.of<DriverProvider>(
         context,
         listen: false,
@@ -287,7 +289,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (token != null) {
       final result = await ApiService.acceptRide(token, rideId);
-      print('ACCEPT RIDE RESPONSE: $result');
+      AppLogger.log('ACCEPT RIDE RESPONSE: $result');
       if (result['success'] == true) {
         if (mounted) {
           setState(() {
@@ -297,8 +299,9 @@ class _HomeScreenState extends State<HomeScreen> {
         }
         _showRideAcceptedSheet(ride, result['data']);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'] ?? 'Failed to accept ride')),
+        CustomFlushbar.showError(
+          context: context,
+          message: result['message'] ?? 'Failed to accept ride',
         );
       }
     }
@@ -316,11 +319,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (token != null) {
       final result = await ApiService.rejectRide(token, rideId);
-      print('REJECT RIDE RESPONSE: $result');
+      AppLogger.log('REJECT RIDE RESPONSE: $result');
       if (result['success'] == true) {
-        print('Ride rejected successfully');
+        AppLogger.log('Ride rejected successfully');
       } else {
-        print('Failed to reject ride: ${result['message']}');
+        AppLogger.log('Failed to reject ride: ${result['message']}');
       }
     }
 
@@ -366,9 +369,10 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     if (!success) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to update status')));
+      CustomFlushbar.showError(
+        context: context,
+        message: 'Failed to update status',
+      );
     }
   }
 
@@ -3493,35 +3497,35 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _checkActiveRides() async {
-    print('=== CHECKING ACTIVE RIDES ===');
+    AppLogger.log('=== CHECKING ACTIVE RIDES ===');
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
 
     if (token != null) {
-      print('Token found, calling getActiveRides API');
+      AppLogger.log('Token found, calling getActiveRides API');
       final result = await ApiService.getActiveRides(token);
-      print('API Result: $result');
+      AppLogger.log('API Result: $result');
 
       if (result['success'] == true) {
         final rides = result['data']['rides'] as List;
-        print('Number of active rides: ${rides.length}');
+        AppLogger.log('Number of active rides: ${rides.length}');
 
         if (rides.isNotEmpty) {
           final activeRide = rides.first;
-          print('Active ride found: $activeRide');
-          print('Ride Status: ${activeRide['Status']}');
-          print('Ride ID: ${activeRide['ID']}');
+          AppLogger.log('Active ride found: $activeRide');
+          AppLogger.log('Ride Status: ${activeRide['Status']}');
+          AppLogger.log('Ride ID: ${activeRide['ID']}');
           _showRideAcceptedSheet(activeRide, {});
         } else {
-          print('No active rides found');
+          AppLogger.log('No active rides found');
         }
       } else {
-        print('Failed to get active rides: ${result['message']}');
+        AppLogger.log('Failed to get active rides: ${result['message']}');
       }
     } else {
-      print('No auth token found');
+      AppLogger.log('No auth token found');
     }
-    print('=== END CHECKING ACTIVE RIDES ===\n');
+    AppLogger.log('=== END CHECKING ACTIVE RIDES ===\n');
   }
 
   void _showRideAcceptedSheet(
@@ -3581,8 +3585,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onRideStatusChanged(Map<String, dynamic> updatedRide) {
-    print('=== RIDE STATUS CHANGED ===');
-    print('Updated Ride Status: ${updatedRide['Status']}');
+    AppLogger.log('=== RIDE STATUS CHANGED ===');
+    AppLogger.log('Updated Ride Status: ${updatedRide['Status']}');
 
     if (mounted) {
       setState(() {
@@ -3596,7 +3600,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (updatedRide['Status'] == 'completed' ||
         updatedRide['Status'] == 'cancelled') {
       // Stop tracking when ride is completed or cancelled
-      print('Stopping tracking for completed/cancelled ride');
+      AppLogger.log('Stopping tracking for completed/cancelled ride');
       RideTrackingService.stopTracking();
 
       // Force clear the map display
@@ -3617,7 +3621,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
 
-    print('=== RIDE STATUS CHANGE HANDLED ===\n');
+    AppLogger.log('=== RIDE STATUS CHANGE HANDLED ===\n');
   }
 }
 
@@ -4038,7 +4042,7 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
 
     if (token != null) {
       final result = await ApiService.arriveRide(token, widget.ride['ID']);
-      print('ARRIVE RIDE RESPONSE: $result');
+      AppLogger.log('ARRIVE RIDE RESPONSE: $result');
 
       if (result['success'] == true) {
         setState(() {
@@ -4078,7 +4082,7 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
 
     if (token != null) {
       final result = await ApiService.startRide(token, widget.ride['ID']);
-      print('START RIDE RESPONSE: $result');
+      AppLogger.log('START RIDE RESPONSE: $result');
 
       if (result['success'] == true) {
         setState(() {
@@ -4090,30 +4094,31 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
         updatedRide['Status'] = 'started';
         widget.onRideStatusChanged(updatedRide);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'] ?? 'Failed to start ride')),
+        CustomFlushbar.showError(
+          context: context,
+          message: result['message'] ?? 'Failed to start ride',
         );
       }
     }
   }
 
   Future<void> _completeRide() async {
-    print('=== COMPLETE RIDE CALLED ===');
-    print('Ride ID: ${widget.ride['ID']}');
-    print('Ride Status: ${widget.ride['Status']}');
+    AppLogger.log('=== COMPLETE RIDE CALLED ===');
+    AppLogger.log('Ride ID: ${widget.ride['ID']}');
+    AppLogger.log('Ride Status: ${widget.ride['Status']}');
 
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
 
-    print('Auth Token: ${token != null ? 'Present' : 'Missing'}');
+    AppLogger.log('Auth Token: ${token != null ? 'Present' : 'Missing'}');
 
     if (token != null) {
-      print('Calling ApiService.completeRide...');
+      AppLogger.log('Calling ApiService.completeRide...');
       final result = await ApiService.completeRide(token, widget.ride['ID']);
-      print('COMPLETE RIDE API RESPONSE: $result');
+      AppLogger.log('COMPLETE RIDE API RESPONSE: $result');
 
       if (result['success'] == true) {
-        print('Ride completed successfully');
+        AppLogger.log('Ride completed successfully');
 
         // Update ride status and notify parent
         final updatedRide = Map<String, dynamic>.from(widget.ride);
@@ -4124,22 +4129,21 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
         Navigator.of(context).pop();
         _showCompletedSheet(context, updatedRide);
 
-        print('State updated and callback called');
+        AppLogger.log('State updated and callback called');
       } else {
-        print('Failed to complete ride: ${result['message']}');
+        AppLogger.log('Failed to complete ride: ${result['message']}');
         setState(() {
           _sliderValue = 0.0;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(result['message'] ?? 'Failed to complete ride'),
-          ),
+        CustomFlushbar.showError(
+          context: context,
+          message: result['message'] ?? 'Failed to complete ride',
         );
       }
     } else {
-      print('No auth token found');
+      AppLogger.log('No auth token found');
     }
-    print('=== END COMPLETE RIDE ===\n');
+    AppLogger.log('=== END COMPLETE RIDE ===\n');
   }
 
   void _showCompletedSheet(BuildContext context, Map<String, dynamic> ride) {
@@ -4325,8 +4329,9 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
 
   Future<void> _cancelRide(String reason) async {
     if (reason.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please provide a cancellation reason')),
+      CustomFlushbar.showInfo(
+        context: context,
+        message: 'Please provide a cancellation reason',
       );
       return;
     }
@@ -4348,12 +4353,14 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
         updatedRide['Status'] = 'cancelled';
         widget.onRideStatusChanged(updatedRide);
         // Don't call Navigator.pop here - the parent will handle it
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Ride cancelled successfully')));
+        CustomFlushbar.showInfo(
+          context: context,
+          message: 'Ride cancelled successfully',
+        );
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(result['message'] ?? 'Failed to cancel ride')),
+        CustomFlushbar.showInfo(
+          context: context,
+          message: result['message'] ?? 'Failed to cancel ride',
         );
       }
     }
