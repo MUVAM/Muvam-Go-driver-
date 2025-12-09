@@ -11,8 +11,9 @@ import '../widgets/account_text_field.dart';
 
 class CreateAccountScreen extends StatefulWidget {
   final String phoneNumber;
+  final String? serviceType;
 
-  const CreateAccountScreen({super.key, required this.phoneNumber});
+  const CreateAccountScreen({super.key, required this.phoneNumber, this.serviceType});
 
   @override
   State<CreateAccountScreen> createState() => _CreateAccountScreenState();
@@ -234,6 +235,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       dateOfBirth: dobController.text,
       city: cityController.text,
       location: 'POINT(7.4069943 6.8720015)',
+      serviceType: widget.serviceType ?? 'taxi',
     );
 
     setState(() => _isLoading = false);

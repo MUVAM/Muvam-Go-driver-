@@ -3,11 +3,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:flutter/services.dart';
+import 'dart:typed_data';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/fonts.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
-import 'package:muvam_rider/features/home/presentation/screens/home_screen.dart';
+import 'package:muvam_rider/features/vehicles/presentation/screens/car_information_screen.dart';
 import '../widgets/kyc_tile.dart';
 
 class KycVerificationScreen extends StatefulWidget {
@@ -27,7 +29,12 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
   final ImagePicker _picker = ImagePicker();
 
   Future<void> _pickImage(String type) async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? image = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 70,
+    );
     if (image != null) {
       setState(() {
         switch (type) {
@@ -67,14 +74,21 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
     setState(() => _isLoading = false);
 
     if (result['success'] == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Documents uploaded successfully!')),
+      );
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
+        MaterialPageRoute(builder: (context) => CarInformationScreen()),
         (route) => false,
       );
     } else {
+      String errorMessage = result['message'] ?? 'Upload failed';
+      if (errorMessage.contains('413') || errorMessage.contains('Too Large')) {
+        errorMessage = 'Images are too large. Please select smaller images and try again.';
+      }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(result['message'] ?? 'Upload failed')),
+        SnackBar(content: Text(errorMessage)),
       );
     }
   }
