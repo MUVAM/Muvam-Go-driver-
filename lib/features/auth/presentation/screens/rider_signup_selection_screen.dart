@@ -78,36 +78,33 @@ class _RiderSignupSelectionScreenState
                 ),
               ),
               Spacer(),
-              Padding(
-                padding: EdgeInsets.symmetric(horizontal: 24.w),
-                child: Container(
-                  width: double.infinity,
-                  height: 48.h,
-                  decoration: BoxDecoration(
-                    color: selectedOptions.isNotEmpty
-                        ? Color(ConstColors.mainColor)
-                        : Color(ConstColors.fieldColor),
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  child: GestureDetector(
-                    onTap: selectedOptions.isNotEmpty
-                        ? () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const OnboardingScreen(),
-                              ),
-                            );
-                          }
-                        : null,
-                    child: Center(
-                      child: Text(
-                        'Continue',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w600,
-                        ),
+              Container(
+                width: double.infinity,
+                height: 48.h,
+                decoration: BoxDecoration(
+                  color: selectedOptions.isNotEmpty
+                      ? Color(ConstColors.mainColor)
+                      : Color(ConstColors.fieldColor),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: GestureDetector(
+                  onTap: selectedOptions.isNotEmpty
+                      ? () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const OnboardingScreen(),
+                            ),
+                          );
+                        }
+                      : null,
+                  child: Center(
+                    child: Text(
+                      'Continue',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ),

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:muvam_rider/features/activities/presentation/widgets/history_item.dart';
-import 'package:muvam_rider/features/activities/presentation/widgets/trip_card.dart';
-import 'package:muvam_rider/features/trips/presentation/screen/active_trip_screen.dart';
-import 'package:muvam_rider/features/trips/presentation/screen/history_cancelled_screen.dart';
-import 'package:muvam_rider/features/trips/presentation/screen/history_completed_screen.dart';
-import 'package:muvam_rider/features/trips/presentation/screen/trip_details_screen.dart';
+import 'package:muvam_rider/features/activities/data/providers/rides_provider.dart';
+import 'package:muvam_rider/features/activities/presentation/widgets/active_tab.dart';
+import 'package:muvam_rider/features/activities/presentation/widgets/history_tab.dart';
+import 'package:muvam_rider/features/activities/presentation/widgets/orders_tab.dart';
+import 'package:provider/provider.dart';
 
 class ActivitiesScreen extends StatefulWidget {
   const ActivitiesScreen({super.key});
@@ -16,6 +15,20 @@ class ActivitiesScreen extends StatefulWidget {
 
 class ActivitiesScreenState extends State<ActivitiesScreen> {
   int _selectedTabIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<RidesProvider>().startAutoRefresh();
+    });
+  }
+
+  @override
+  void dispose() {
+    context.read<RidesProvider>().stopAutoRefresh();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -120,85 +133,13 @@ class ActivitiesScreenState extends State<ActivitiesScreen> {
   Widget _getCurrentTabContent() {
     switch (_selectedTabIndex) {
       case 0:
-        return TripCard(
-          time: '8:00pm',
-          date: 'Nov 28, 2025',
-          destination: 'Ikeja, Lagos',
-          tripId: '#12345',
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const TripDetailsScreen()),
-          ),
-        );
+        return OrdersTab();
       case 1:
-        return TripCard(
-          time: '8:00pm',
-          date: 'Nov 28, 2025',
-          destination: 'Ikeja, Lagos',
-          tripId: '#12345',
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => ActiveTripScreen()),
-          ),
-          isActive: true,
-        );
+        return ActiveTab();
       case 2:
-        return Column(
-          children: [
-            HistoryItem(
-              time: '8:00pm',
-              date: 'Nov 28, 2025',
-              destination: 'Ikeja, Lagos',
-              isCompleted: true,
-              price: '₦12,000',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) =>
-                      HistoryCompletedScreen(price: '₦12,000'),
-                ),
-              ),
-            ),
-            SizedBox(height: 15.h),
-            HistoryItem(
-              time: '6:30pm',
-              date: 'Nov 27, 2025',
-              destination: 'Abuja, FCT',
-              isCompleted: false,
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const HistoryCancelledScreen(),
-                ),
-              ),
-            ),
-            SizedBox(height: 15.h),
-            HistoryItem(
-              time: '2:15pm',
-              date: 'Nov 26, 2025',
-              destination: 'Port Harcourt, Rivers',
-              isCompleted: true,
-              price: '₦8,500',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => HistoryCompletedScreen(price: '₦8,500'),
-                ),
-              ),
-            ),
-          ],
-        );
+        return HistoryTab();
       default:
-        return TripCard(
-          time: '8:00pm',
-          date: 'Nov 28, 2025',
-          destination: 'Ikeja, Lagos',
-          tripId: '#12345',
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const TripDetailsScreen()),
-          ),
-        );
+        return OrdersTab();
     }
   }
 }

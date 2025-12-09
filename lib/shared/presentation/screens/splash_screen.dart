@@ -41,6 +41,7 @@ class _SplashScreenState extends State<SplashScreen>
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
     final hasToken = await authProvider.checkTokenValidity();
+    print('HAS TOKEN+++$hasToken');
 
     if (!hasToken) {
       // No token, go to signup

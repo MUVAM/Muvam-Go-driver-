@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:muvam_rider/core/constants/url_constants.dart';
+import 'package:muvam_rider/core/utils/app_logger.dart';
 
 class ApiService {
   static const String baseUrl = UrlConstants.baseUrl;
@@ -67,13 +68,12 @@ class ApiService {
     String otp,
   ) async {
     try {
-      print('=== VERIFY OTP DEBUG ===');
-      print('Phone: $phoneNumber');
-      print('OTP: $otp');
-      print('URL: $baseUrl${UrlConstants.verifyOtp}');
+      AppLogger.log('Phone: $phoneNumber');
+      AppLogger.log('OTP: $otp');
+      AppLogger.log('URL: $baseUrl${UrlConstants.verifyOtp}');
 
       final requestBody = {'Phone': phoneNumber, 'Code': otp};
-      print('Request Body: ${jsonEncode(requestBody)}');
+      AppLogger.log('Request Body: ${jsonEncode(requestBody)}');
 
       final response = await http.post(
         Uri.parse('$baseUrl${UrlConstants.verifyOtp}'),
@@ -81,15 +81,15 @@ class ApiService {
         body: jsonEncode(requestBody),
       );
 
-      print('Response Status: ${response.statusCode}');
-      print('Response Body: ${response.body}');
+      AppLogger.log('Response Status: ${response.statusCode}');
+      AppLogger.log('Response Body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        print('SUCCESS: OTP verified');
+        AppLogger.log('SUCCESS: OTP verified');
         return {'success': true, 'data': data};
       } else {
-        print('ERROR: OTP verification failed');
+        AppLogger.log('ERROR: OTP verification failed');
         final error = jsonDecode(response.body);
         return {
           'success': false,
@@ -126,9 +126,10 @@ class ApiService {
         'date_of_birth': dateOfBirth,
         'city': city,
         'role': 'driver',
+        'service_type': 'taxi',
         'location': location,
       };
-      print('Request Body: ${jsonEncode(requestBody)}');
+      AppLogger.log('Request Body: ${jsonEncode(requestBody)}');
 
       final response = await http.post(
         Uri.parse('$baseUrl${UrlConstants.registerUser}'),
@@ -136,8 +137,8 @@ class ApiService {
         body: jsonEncode(requestBody),
       );
 
-      print('Response Status: ${response.statusCode}');
-      print('Response Body: ${response.body}');
+      AppLogger.log('Response Status: ${response.statusCode}');
+      AppLogger.log('Response Body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);

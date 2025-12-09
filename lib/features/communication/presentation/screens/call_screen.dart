@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/images.dart';
+import '../widgets/call_button.dart';
 
 class CallScreen extends StatefulWidget {
   final String driverName;
@@ -20,10 +21,8 @@ class _CallScreenState extends State<CallScreen> {
         child: Column(
           children: [
             SizedBox(height: 50.h),
-            // Header with back button and centered driver info
             Stack(
               children: [
-                // Back button on the left
                 Positioned(
                   left: 20.w,
                   child: Container(
@@ -44,7 +43,6 @@ class _CallScreenState extends State<CallScreen> {
                     ),
                   ),
                 ),
-                // Centered driver name and status
                 Center(
                   child: Column(
                     children: [
@@ -78,10 +76,7 @@ class _CallScreenState extends State<CallScreen> {
                 ),
               ],
             ),
-
             SizedBox(height: 50.h),
-
-            // Centered Driver Image
             Center(
               child: Container(
                 width: 200.w,
@@ -92,10 +87,7 @@ class _CallScreenState extends State<CallScreen> {
                 ),
               ),
             ),
-
             Spacer(),
-
-            // Control Buttons
             Container(
               width: 353.w,
               height: 72.h,
@@ -108,42 +100,31 @@ class _CallScreenState extends State<CallScreen> {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _buildCallButton(Icons.chat, Colors.black, () {
-                    Navigator.pop(context);
-                  }),
-                  _buildCallButton(Icons.volume_up, Colors.black, () {}),
-                  _buildCallButton(Icons.mic_off, Colors.black, () {}),
-                  _buildCallButton(Icons.call_end, Colors.white, () {
-                    Navigator.pop(context);
-                  }, isEndCall: true),
+                  CallButton(
+                    icon: Icons.chat,
+                    iconColor: Colors.black,
+                    onTap: () => Navigator.pop(context),
+                  ),
+                  CallButton(
+                    icon: Icons.volume_up,
+                    iconColor: Colors.black,
+                    onTap: () {},
+                  ),
+                  CallButton(
+                    icon: Icons.mic_off,
+                    iconColor: Colors.black,
+                    onTap: () {},
+                  ),
+                  CallButton(
+                    icon: Icons.call_end,
+                    iconColor: Colors.white,
+                    onTap: () => Navigator.pop(context),
+                    isEndCall: true,
+                  ),
                 ],
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCallButton(
-    IconData icon,
-    Color iconColor,
-    VoidCallback onTap, {
-    bool isEndCall = false,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 38.w,
-        height: 38.h,
-        decoration: BoxDecoration(
-          color: isEndCall ? Colors.red : Colors.transparent,
-          borderRadius: isEndCall ? BorderRadius.circular(200.r) : null,
-        ),
-        child: Icon(
-          icon,
-          size: 38.sp,
-          color: isEndCall ? Colors.white : iconColor,
         ),
       ),
     );
