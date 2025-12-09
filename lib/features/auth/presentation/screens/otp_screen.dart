@@ -7,11 +7,6 @@ import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
 import 'package:muvam_rider/features/home/presentation/screens/home_screen.dart';
 import 'package:provider/provider.dart';
 import 'dart:async';
-import '../../../../core/constants/images.dart';
-import '../../../../core/constants/colors.dart';
-import '../../../../core/constants/text_styles.dart';
-import '../../data/provider/auth_provider.dart';
-import '../../../home/presentation/screens/home_screen.dart';
 import 'create_account_screen.dart';
 
 class OtpScreen extends StatefulWidget {

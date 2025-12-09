@@ -3,8 +3,6 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
-import 'package:flutter/services.dart';
-import 'dart:typed_data';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/fonts.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
@@ -85,11 +83,12 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
     } else {
       String errorMessage = result['message'] ?? 'Upload failed';
       if (errorMessage.contains('413') || errorMessage.contains('Too Large')) {
-        errorMessage = 'Images are too large. Please select smaller images and try again.';
+        errorMessage =
+            'Images are too large. Please select smaller images and try again.';
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(errorMessage)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(errorMessage)));
     }
   }
 
