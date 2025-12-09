@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:nativewrappers/_internal/vm/lib/developer.dart' as AppLogger;
 import 'package:http/http.dart' as http;
 import 'package:muvam_rider/core/constants/url_constants.dart';
 import 'package:muvam_rider/core/services/location_service.dart';
@@ -68,13 +69,12 @@ class ApiService {
     String otp,
   ) async {
     try {
-      print('=== VERIFY OTP DEBUG ===');
-      print('Phone: $phoneNumber');
-      print('OTP: $otp');
-      print('URL: $baseUrl${UrlConstants.verifyOtp}');
+      AppLogger.log('Phone: $phoneNumber');
+      AppLogger.log('OTP: $otp');
+      AppLogger.log('URL: $baseUrl${UrlConstants.verifyOtp}');
 
       final requestBody = {'Phone': phoneNumber, 'Code': otp};
-      print('Request Body: ${jsonEncode(requestBody)}');
+      AppLogger.log('Request Body: ${jsonEncode(requestBody)}');
 
       final response = await http.post(
         Uri.parse('$baseUrl${UrlConstants.verifyOtp}'),
@@ -82,15 +82,15 @@ class ApiService {
         body: jsonEncode(requestBody),
       );
 
-      print('Response Status: ${response.statusCode}');
-      print('Response Body: ${response.body}');
+      AppLogger.log('Response Status: ${response.statusCode}');
+      AppLogger.log('Response Body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        print('SUCCESS: OTP verified');
+        AppLogger.log('SUCCESS: OTP verified');
         return {'success': true, 'data': data};
       } else {
-        print('ERROR: OTP verification failed');
+        AppLogger.log('ERROR: OTP verification failed');
         final error = jsonDecode(response.body);
         return {
           'success': false,
@@ -128,10 +128,11 @@ class ApiService {
         'date_of_birth': dateOfBirth,
         'city': city,
         'role': 'driver',
+        'service_type': 'taxi',
         'location': location,
         'service_type': serviceType,
       };
-      print('Request Body: ${jsonEncode(requestBody)}');
+      AppLogger.log('Request Body: ${jsonEncode(requestBody)}');
 
       final response = await http.post(
         Uri.parse('$baseUrl${UrlConstants.registerUser}'),
@@ -139,8 +140,8 @@ class ApiService {
         body: jsonEncode(requestBody),
       );
 
-      print('Response Status: ${response.statusCode}');
-      print('Response Body: ${response.body}');
+      AppLogger.log('Response Status: ${response.statusCode}');
+      AppLogger.log('Response Body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
@@ -167,7 +168,7 @@ class ApiService {
       print('=== GET NEARBY RIDES DEBUG ===');
       print('URL: $baseUrl/rides/nearby');
       print('Token: $token');
-      
+
       final response = await http.get(
         Uri.parse('$baseUrl/rides/nearby'),
         headers: {
@@ -175,10 +176,10 @@ class ApiService {
           'Authorization': 'Bearer $token',
         },
       );
-      
+
       print('Response Status: ${response.statusCode}');
       print('Response Body: ${response.body}');
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         return {'success': true, 'data': data};
@@ -186,7 +187,8 @@ class ApiService {
         final error = jsonDecode(response.body);
         return {
           'success': false,
-          'message': error['message'] ?? error['error'] ?? 'Failed to get rides',
+          'message':
+              error['message'] ?? error['error'] ?? 'Failed to get rides',
         };
       }
     } catch (e) {
@@ -198,12 +200,15 @@ class ApiService {
   }
 
   // Accept ride
-  static Future<Map<String, dynamic>> acceptRide(String token, int rideId) async {
+  static Future<Map<String, dynamic>> acceptRide(
+    String token,
+    int rideId,
+  ) async {
     try {
       print('=== ACCEPT RIDE DEBUG ===');
       print('URL: $baseUrl/rides/accept/$rideId');
       print('Token: $token');
-      
+
       final response = await http.post(
         Uri.parse('$baseUrl/rides/accept/$rideId'),
         headers: {
@@ -211,10 +216,10 @@ class ApiService {
           'Authorization': 'Bearer $token',
         },
       );
-      
+
       print('Response Status: ${response.statusCode}');
       print('Response Body: ${response.body}');
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         return {'success': true, 'data': data};
@@ -222,7 +227,8 @@ class ApiService {
         final error = jsonDecode(response.body);
         return {
           'success': false,
-          'message': error['message'] ?? error['error'] ?? 'Failed to accept ride',
+          'message':
+              error['message'] ?? error['error'] ?? 'Failed to accept ride',
         };
       }
     } catch (e) {
@@ -234,13 +240,16 @@ class ApiService {
   }
 
   // Reject ride
-  static Future<Map<String, dynamic>> rejectRide(String token, int rideId) async {
+  static Future<Map<String, dynamic>> rejectRide(
+    String token,
+    int rideId,
+  ) async {
     try {
       print('=== REJECT RIDE DEBUG ===');
       print('URL: $baseUrl/rides/reject/$rideId');
       print('Token: $token');
       print('Ride ID: $rideId');
-      
+
       final response = await http.post(
         Uri.parse('$baseUrl/rides/reject/$rideId'),
         headers: {
@@ -248,10 +257,10 @@ class ApiService {
           'Authorization': 'Bearer $token',
         },
       );
-      
+
       print('Response Status: ${response.statusCode}');
       print('Response Body: ${response.body}');
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         return {'success': true, 'data': data};
@@ -259,7 +268,8 @@ class ApiService {
         final error = jsonDecode(response.body);
         return {
           'success': false,
-          'message': error['message'] ?? error['error'] ?? 'Failed to reject ride',
+          'message':
+              error['message'] ?? error['error'] ?? 'Failed to reject ride',
         };
       }
     } catch (e) {
@@ -271,7 +281,10 @@ class ApiService {
   }
 
   // Decline ride
-  static Future<Map<String, dynamic>> declineRide(String token, int rideId) async {
+  static Future<Map<String, dynamic>> declineRide(
+    String token,
+    int rideId,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl${UrlConstants.rideCancel}/$rideId'),
@@ -280,7 +293,7 @@ class ApiService {
           'Authorization': 'Bearer $token',
         },
       );
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         return {'success': true, 'data': data};
@@ -288,7 +301,8 @@ class ApiService {
         final error = jsonDecode(response.body);
         return {
           'success': false,
-          'message': error['message'] ?? error['error'] ?? 'Failed to decline ride',
+          'message':
+              error['message'] ?? error['error'] ?? 'Failed to decline ride',
         };
       }
     } catch (e) {
@@ -297,7 +311,10 @@ class ApiService {
   }
 
   // Mark ride as arrived
-  static Future<Map<String, dynamic>> arriveRide(String token, int rideId) async {
+  static Future<Map<String, dynamic>> arriveRide(
+    String token,
+    int rideId,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl${UrlConstants.rideArrive}/$rideId'),
@@ -306,7 +323,7 @@ class ApiService {
           'Authorization': 'Bearer $token',
         },
       );
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         return {'success': true, 'data': data};
@@ -314,7 +331,8 @@ class ApiService {
         final error = jsonDecode(response.body);
         return {
           'success': false,
-          'message': error['message'] ?? error['error'] ?? 'Failed to mark as arrived',
+          'message':
+              error['message'] ?? error['error'] ?? 'Failed to mark as arrived',
         };
       }
     } catch (e) {
@@ -323,7 +341,11 @@ class ApiService {
   }
 
   // Cancel ride with reason
-  static Future<Map<String, dynamic>> cancelRideWithReason(String token, int rideId, String reason) async {
+  static Future<Map<String, dynamic>> cancelRideWithReason(
+    String token,
+    int rideId,
+    String reason,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl${UrlConstants.rideCancel}/$rideId'),
@@ -331,12 +353,9 @@ class ApiService {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({
-          'ride_id': rideId,
-          'reason': reason,
-        }),
+        body: jsonEncode({'ride_id': rideId, 'reason': reason}),
       );
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         return {'success': true, 'data': data};
@@ -344,7 +363,8 @@ class ApiService {
         final error = jsonDecode(response.body);
         return {
           'success': false,
-          'message': error['message'] ?? error['error'] ?? 'Failed to cancel ride',
+          'message':
+              error['message'] ?? error['error'] ?? 'Failed to cancel ride',
         };
       }
     } catch (e) {
@@ -353,12 +373,14 @@ class ApiService {
   }
 
   // Driver online status
-  static Future<Map<String, dynamic>> setDriverOnlineStatus(String token) async {
+  static Future<Map<String, dynamic>> setDriverOnlineStatus(
+    String token,
+  ) async {
     try {
       print('=== DRIVER ONLINE STATUS DEBUG ===');
       print('URL: $baseUrl/driver/online');
       print('Token: $token');
-      
+
       final response = await http.post(
         Uri.parse('$baseUrl/driver/online'),
         headers: {
@@ -366,10 +388,10 @@ class ApiService {
           'Authorization': 'Bearer $token',
         },
       );
-      
+
       print('Response Status: ${response.statusCode}');
       print('Response Body: ${response.body}');
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         return {'success': true, 'data': data};
@@ -377,7 +399,8 @@ class ApiService {
         final error = jsonDecode(response.body);
         return {
           'success': false,
-          'message': error['message'] ?? error['error'] ?? 'Failed to update status',
+          'message':
+              error['message'] ?? error['error'] ?? 'Failed to update status',
         };
       }
     } catch (e) {
@@ -389,7 +412,9 @@ class ApiService {
   }
 
   // Driver offline status
-  static Future<Map<String, dynamic>> setDriverOfflineStatus(String token) async {
+  static Future<Map<String, dynamic>> setDriverOfflineStatus(
+    String token,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl${UrlConstants.driverOffline}'),
@@ -398,7 +423,7 @@ class ApiService {
           'Authorization': 'Bearer $token',
         },
       );
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         return {'success': true, 'data': data};
@@ -406,7 +431,8 @@ class ApiService {
         final error = jsonDecode(response.body);
         return {
           'success': false,
-          'message': error['message'] ?? error['error'] ?? 'Failed to update status',
+          'message':
+              error['message'] ?? error['error'] ?? 'Failed to update status',
         };
       }
     } catch (e) {
@@ -424,7 +450,7 @@ class ApiService {
           'Authorization': 'Bearer $token',
         },
       );
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         return {'success': true, 'data': data};
@@ -432,7 +458,8 @@ class ApiService {
         final error = jsonDecode(response.body);
         return {
           'success': false,
-          'message': error['message'] ?? error['error'] ?? 'Failed to get status',
+          'message':
+              error['message'] ?? error['error'] ?? 'Failed to get status',
         };
       }
     } catch (e) {
@@ -489,7 +516,8 @@ class ApiService {
       } else if (response.statusCode == 413) {
         return {
           'success': false,
-          'message': 'Files are too large. Please select smaller images (max 2MB each) and try again.',
+          'message':
+              'Files are too large. Please select smaller images (max 2MB each) and try again.',
         };
       } else {
         try {
@@ -539,14 +567,14 @@ class ApiService {
       print('Color: $color');
       print('License Plate: $licensePlate');
       print('Vehicle Photos: ${vehiclePhotos.length}');
-      
+
       var request = http.MultipartRequest(
         'POST',
         Uri.parse('$baseUrl${UrlConstants.registerVehicle}'),
       );
 
       request.headers['Authorization'] = 'Bearer $token';
-      
+
       request.fields['make'] = make;
       request.fields['model_type'] = modelType;
       request.fields['seats'] = seats;
@@ -559,7 +587,10 @@ class ApiService {
       print('Request headers: ${request.headers}');
 
       request.files.add(
-        await http.MultipartFile.fromPath('registration_doc', registrationDoc.path),
+        await http.MultipartFile.fromPath(
+          'registration_doc',
+          registrationDoc.path,
+        ),
       );
       request.files.add(
         await http.MultipartFile.fromPath('insurance_doc', insuranceDoc.path),
@@ -588,21 +619,28 @@ class ApiService {
         print('❌ 413 Request Entity Too Large');
         return {
           'success': false,
-          'message': 'Vehicle photo is too large. Please select a smaller image (max 2MB).',
+          'message':
+              'Vehicle photo is too large. Please select a smaller image (max 2MB).',
         };
       } else {
-        print('❌ Vehicle registration failed with status: ${response.statusCode}');
+        print(
+          '❌ Vehicle registration failed with status: ${response.statusCode}',
+        );
         try {
           final error = jsonDecode(responseBody);
           return {
             'success': false,
-            'message': error['message'] ?? error['error'] ?? 'Vehicle registration failed',
+            'message':
+                error['message'] ??
+                error['error'] ??
+                'Vehicle registration failed',
           };
         } catch (parseError) {
           print('❌ Failed to parse error response: $parseError');
           return {
             'success': false,
-            'message': 'Vehicle registration failed. Status: ${response.statusCode}',
+            'message':
+                'Vehicle registration failed. Status: ${response.statusCode}',
           };
         }
       }
@@ -616,30 +654,32 @@ class ApiService {
   }
 
   // Update user location
-  static Future<Map<String, dynamic>> updateLocation(String token, double lat, double lng) async {
+  static Future<Map<String, dynamic>> updateLocation(
+    String token,
+    double lat,
+    double lng,
+  ) async {
     try {
       print('=== UPDATE LOCATION DEBUG ===');
       print('URL: $baseUrl${UrlConstants.updateLocation}');
       print('Token: $token');
       print('Latitude: $lat, Longitude: $lng');
-      
+
       final locationPoint = 'POINT($lat $lng)';
       print('Location Point: $locationPoint');
-      
+
       final response = await http.put(
         Uri.parse('$baseUrl${UrlConstants.updateLocation}'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({
-          'location': locationPoint,
-        }),
+        body: jsonEncode({'location': locationPoint}),
       );
-      
+
       print('Response Status: ${response.statusCode}');
       print('Response Body: ${response.body}');
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         return {'success': true, 'data': data};
@@ -647,7 +687,8 @@ class ApiService {
         final error = jsonDecode(response.body);
         return {
           'success': false,
-          'message': error['message'] ?? error['error'] ?? 'Failed to update location',
+          'message':
+              error['message'] ?? error['error'] ?? 'Failed to update location',
         };
       }
     } catch (e) {
@@ -665,21 +706,19 @@ class ApiService {
       print('URL: $baseUrl${UrlConstants.activeRides}');
       print('Token: $token');
       print('Request Body: {"status": "active"}');
-      
+
       final response = await http.post(
         Uri.parse('$baseUrl${UrlConstants.activeRides}'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({
-          'status': 'active',
-        }),
+        body: jsonEncode({'status': 'active'}),
       );
-      
+
       print('Response Status: ${response.statusCode}');
       print('Response Body: ${response.body}');
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         print('Active rides found: ${data['rides']?.length ?? 0}');
@@ -689,7 +728,10 @@ class ApiService {
         print('Error getting active rides: ${error}');
         return {
           'success': false,
-          'message': error['message'] ?? error['error'] ?? 'Failed to get active rides',
+          'message':
+              error['message'] ??
+              error['error'] ??
+              'Failed to get active rides',
         };
       }
     } catch (e) {
@@ -701,13 +743,16 @@ class ApiService {
   }
 
   // Start ride
-  static Future<Map<String, dynamic>> startRide(String token, int rideId) async {
+  static Future<Map<String, dynamic>> startRide(
+    String token,
+    int rideId,
+  ) async {
     try {
       print('=== START RIDE DEBUG ===');
       print('URL: $baseUrl${UrlConstants.startRide}/$rideId');
       print('Token: $token');
       print('Ride ID: $rideId');
-      
+
       final response = await http.post(
         Uri.parse('$baseUrl${UrlConstants.startRide}/$rideId'),
         headers: {
@@ -715,10 +760,10 @@ class ApiService {
           'Authorization': 'Bearer $token',
         },
       );
-      
+
       print('Response Status: ${response.statusCode}');
       print('Response Body: ${response.body}');
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         return {'success': true, 'data': data};
@@ -727,7 +772,8 @@ class ApiService {
         print('Error starting ride: ${error}');
         return {
           'success': false,
-          'message': error['message'] ?? error['error'] ?? 'Failed to start ride',
+          'message':
+              error['message'] ?? error['error'] ?? 'Failed to start ride',
         };
       }
     } catch (e) {
@@ -739,7 +785,12 @@ class ApiService {
   }
 
   // Update driver location during ride
-  static Future<Map<String, dynamic>> updateDriverLocation(String token, int rideId, double lat, double lng) async {
+  static Future<Map<String, dynamic>> updateDriverLocation(
+    String token,
+    int rideId,
+    double lat,
+    double lng,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/rides/location/$rideId'),
@@ -747,12 +798,9 @@ class ApiService {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
         },
-        body: jsonEncode({
-          'latitude': lat,
-          'longitude': lng,
-        }),
+        body: jsonEncode({'latitude': lat, 'longitude': lng}),
       );
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         return {'success': true, 'data': data};
@@ -774,7 +822,7 @@ class ApiService {
           'Authorization': 'Bearer $token',
         },
       );
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         return {'success': true, 'data': data};
@@ -791,25 +839,26 @@ class ApiService {
   }
 
   // Complete ride
-  static Future<Map<String, dynamic>> completeRide(String token, int rideId) async {
+  static Future<Map<String, dynamic>> completeRide(
+    String token,
+    int rideId,
+  ) async {
     try {
       print('=== COMPLETE RIDE DEBUG ===');
       print('URL: $baseUrl${UrlConstants.completeRide}/$rideId');
       print('Token: $token');
       print('Ride ID: $rideId');
-      
+
       // Get current location for end_location
       final position = await LocationService.getCurrentLocation();
-      final endLocation = position != null 
+      final endLocation = position != null
           ? 'POINT(${position.longitude} ${position.latitude})'
           : 'POINT(0 0)';
-      
-      final requestBody = {
-        'end_location': endLocation,
-      };
-      
+
+      final requestBody = {'end_location': endLocation};
+
       print('Request Body: ${jsonEncode(requestBody)}');
-      
+
       final response = await http.post(
         Uri.parse('$baseUrl${UrlConstants.completeRide}/$rideId'),
         headers: {
@@ -818,10 +867,10 @@ class ApiService {
         },
         body: jsonEncode(requestBody),
       );
-      
+
       print('Response Status: ${response.statusCode}');
       print('Response Body: ${response.body}');
-      
+
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         return {'success': true, 'data': data};
@@ -830,7 +879,8 @@ class ApiService {
         print('Error completing ride: ${error}');
         return {
           'success': false,
-          'message': error['message'] ?? error['error'] ?? 'Failed to complete ride',
+          'message':
+              error['message'] ?? error['error'] ?? 'Failed to complete ride',
         };
       }
     } catch (e) {

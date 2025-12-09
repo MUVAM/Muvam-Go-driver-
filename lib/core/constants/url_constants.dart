@@ -3,8 +3,9 @@ class UrlConstants {
   static const String webSocketUrl = "ws://44.222.121.219/api/v1/ws";
   static const String wsUrl = "ws://44.222.121.219/api/v1/ws";
 
-  static const String googleMapsApiKey = "AIzaSyBcA7Yq13sDyx-8nrLn0y0XMjY6xVcYVlE";
-  
+  static const String googleMapsApiKey =
+      "AIzaSyBcA7Yq13sDyx-8nrLn0y0XMjY6xVcYVlE";
+
   // Authentication endpoints
   static const String sendOtp = "/otp/send";
   static const String resendOtp = "/otp/resend";
@@ -15,16 +16,18 @@ class UrlConstants {
   static const String updateLocation = "/users/location";
   static const String rideEstimate = "/rides/estimate";
   static const String rideRequest = "/rides/request";
+  static const String walletSummary = "/wallet/summary";
+  static const String rides = "/rides";
   static const String rideCancel = "/rides/cancel";
   static const String rideArrive = "/rides/arrive";
   static const String activeRides = "/rides";
   static const String startRide = "/rides/start";
   static const String completeRide = "/rides/complete";
-  
+
   // Driver endpoints
   static const String driverOffline = "/driver/offline";
   static const String driverStatus = "/driver/status";
-  
+
   // Vehicle endpoints
   static const String registerVehicle = "/rides/vehicle";
 }

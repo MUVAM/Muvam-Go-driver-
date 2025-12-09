@@ -9,7 +9,8 @@ class ConstImages {
   static const String otp = 'assets/images/otp.png';
   static const String serviceEscort = 'assets/images/service_escort.png';
   static const String serviceShop = 'assets/images/service_shop.png';
-  static const String onboardBackground = 'assets/images/onboard_background.png';
+  static const String onboardBackground =
+      'assets/images/onboard_background.png';
   static const String phoneCall = 'assets/images/phone-call.png';
   static const String whatsapp = 'assets/images/whatsapp.png';
   static const String homeIcon = 'assets/images/homeIcon.png';
@@ -27,4 +28,8 @@ class ConstImages {
   static const String about = 'assets/images/about.png';
   static const String onboardCar1 = 'assets/images/onboard_car1.png';
   static const String requests = 'assets/images/requests.png';
+  static const String dropDown = 'assets/images/drop-down.svg';
+  static const String carIcon = 'assets/svg/car.svg';
+  static const String calenddarIcon = 'assets/svg/calendar.svg';
+  static const String clockCircleIcon = 'assets/svg/clock-circle.svg';
 }

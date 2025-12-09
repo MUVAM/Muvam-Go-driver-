@@ -78,6 +78,35 @@ class _RiderSignupSelectionScreenState
                 ),
               ),
               Spacer(),
+<<<<<<< HEAD
+              Container(
+                width: double.infinity,
+                height: 48.h,
+                decoration: BoxDecoration(
+                  color: selectedOptions.isNotEmpty
+                      ? Color(ConstColors.mainColor)
+                      : Color(ConstColors.fieldColor),
+                  borderRadius: BorderRadius.circular(8.r),
+                ),
+                child: GestureDetector(
+                  onTap: selectedOptions.isNotEmpty
+                      ? () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const OnboardingScreen(),
+                            ),
+                          );
+                        }
+                      : null,
+                  child: Center(
+                    child: Text(
+                      'Continue',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w600,
+=======
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 24.w),
                 child: Container(
@@ -109,6 +138,7 @@ class _RiderSignupSelectionScreenState
                           fontSize: 16.sp,
                           fontWeight: FontWeight.w600,
                         ),
+>>>>>>> 2289b2e4d7d38c7d08cda86f7e37c3cd9ca96808
                       ),
                     ),
                   ),

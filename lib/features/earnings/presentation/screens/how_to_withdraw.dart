@@ -43,8 +43,7 @@ class HowToWithdraw extends StatelessWidget {
               ),
               SizedBox(height: 40.h),
               Container(
-                width: 353.w,
-                height: 186.h,
+                width: double.infinity,
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(10.r),

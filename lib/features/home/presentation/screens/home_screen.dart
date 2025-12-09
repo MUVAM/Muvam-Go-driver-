@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geolocator/geolocator.dart';
@@ -16,7 +15,6 @@ import 'package:muvam_rider/features/activities/presentation/screens/activities_
 import 'package:muvam_rider/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_selection_screen.dart';
-import 'package:muvam_rider/features/communication/presentation/screens/chat_screen.dart';
 import 'package:muvam_rider/features/earnings/presentation/screens/wallet_screen.dart';
 import 'package:muvam_rider/features/home/data/provider/driver_provider.dart';
 import 'package:muvam_rider/features/home/presentation/widgets/ride_info_widget.dart';
@@ -722,11 +720,20 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                           ),
                           SizedBox(height: 20.h),
-                          _buildEarningsSection('Today\'s earning', '₦${_earningsData['total_earnings']}'),
+                          _buildEarningsSection(
+                            'Today\'s earning',
+                            '₦${_earningsData['total_earnings']}',
+                          ),
                           Divider(color: Color(0xFFE0E0E0), thickness: 1),
-                          _buildEarningsSection('Today\'s rides', '${_earningsData['total_rides']}'),
+                          _buildEarningsSection(
+                            'Today\'s rides',
+                            '${_earningsData['total_rides']}',
+                          ),
                           Divider(color: Color(0xFFE0E0E0), thickness: 1),
-                          _buildEarningsSection('Total ride completed', '${_earningsData['total_rides_completed']}'),
+                          _buildEarningsSection(
+                            'Total ride completed',
+                            '${_earningsData['total_rides_completed']}',
+                          ),
                         ],
                       ),
                     ),
@@ -2333,12 +2340,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(
                       child: GestureDetector(
                         onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const ChatScreen(),
-                            ),
-                          );
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(
+                          //     builder: (context) => const ChatScreen(),
+                          //   ),
+                          // );
                         },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -3058,7 +3065,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _fetchEarningsSummary() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
-    
+
     if (token != null) {
       final result = await ApiService.getEarningsSummary(token);
       if (result['success'] == true) {
@@ -3822,8 +3829,7 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => HistoryCompletedScreen(
-                        ride: widget.ride,
-                        acceptedData: widget.acceptedData,
+                        rideId: widget.ride['ride_id'],
                       ),
                     ),
                   );
@@ -4198,8 +4204,7 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => HistoryCompletedScreen(
-                        ride: ride,
-                        acceptedData: {},
+                        rideId: ride[['ride_id'].toString()],
                       ),
                     ),
                   );

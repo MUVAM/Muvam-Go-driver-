@@ -20,47 +20,50 @@ class TransactionItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeManager = Provider.of<ThemeManager>(context);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              amount,
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w600,
-                height: 1.0,
-                letterSpacing: -0.32,
-                color: themeManager.getTextColor(context),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                amount,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w600,
+                  height: 1.0,
+                  letterSpacing: -0.32,
+                  color: themeManager.getTextColor(context),
+                ),
               ),
-            ),
-            SizedBox(height: 2.h),
-            Text(
-              dateTime,
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w400,
-                height: 1.0,
-                letterSpacing: -0.32,
-                color: themeManager.getSecondaryTextColor(context),
+              SizedBox(height: 2.h),
+              Text(
+                dateTime,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 12.sp,
+                  fontWeight: FontWeight.w500,
+                  height: 1.0,
+                  letterSpacing: -0.32,
+                  color: themeManager.getSecondaryTextColor(context),
+                ),
               ),
-            ),
-          ],
-        ),
-        Text(
-          status,
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w500,
-            color: statusColor,
+            ],
           ),
-        ),
-      ],
+          Text(
+            status,
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 14.sp,
+              fontWeight: FontWeight.w500,
+              color: statusColor,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

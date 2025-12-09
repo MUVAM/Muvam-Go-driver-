@@ -26,8 +26,8 @@ class WithdrawalScreenState extends State<WithdrawalScreen> {
       body: Stack(
         children: [
           Positioned(
-            top: 70.h,
-            left: 20.w,
+            top: 40.h,
+            left: 10.w,
             child: GestureDetector(
               onTap: () => Navigator.pop(context),
               child: Container(
@@ -46,29 +46,33 @@ class WithdrawalScreenState extends State<WithdrawalScreen> {
             ),
           ),
           Positioned(
-            top: 140.h,
+            top: 100.h,
             left: 20.w,
             right: 20.w,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Withdrawal',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 24.sp,
-                    color: themeManager.getTextColor(context),
+                Center(
+                  child: Text(
+                    'Withdrawal',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 24.sp,
+                      color: themeManager.getTextColor(context),
+                    ),
                   ),
                 ),
-                SizedBox(height: 8.h),
-                Text(
-                  'Please enter your correct bank details',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
-                    fontSize: 16.sp,
-                    color: themeManager.getSecondaryTextColor(context),
+                SizedBox(height: 5.h),
+                Center(
+                  child: Text(
+                    'Please enter your correct bank details',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w400,
+                      fontSize: 14.sp,
+                      color: themeManager.getSecondaryTextColor(context),
+                    ),
                   ),
                 ),
                 SizedBox(height: 40.h),

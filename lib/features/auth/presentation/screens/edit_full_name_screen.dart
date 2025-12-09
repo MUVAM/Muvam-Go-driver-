@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
+import '../widgets/editable_field.dart';
 
 class EditFullNameScreen extends StatefulWidget {
   const EditFullNameScreen({super.key});
@@ -75,105 +76,27 @@ class EditFullNameScreenState extends State<EditFullNameScreen> {
                 ),
               ),
               SizedBox(height: 30.h),
-              _buildEditableField(
-                'First name',
-                firstNameController,
-                isFirstNameEditable,
-                () {
-                  setState(() {
-                    isFirstNameEditable = !isFirstNameEditable;
-                  });
-                },
+              EditableField(
+                label: 'First name',
+                controller: firstNameController,
+                isEditable: isFirstNameEditable,
+                onEditTap: () => setState(
+                  () => isFirstNameEditable = !isFirstNameEditable,
+                ),
               ),
               SizedBox(height: 20.h),
-              _buildEditableField(
-                'Last name',
-                lastNameController,
-                isLastNameEditable,
-                () {
-                  setState(() {
-                    isLastNameEditable = !isLastNameEditable;
-                  });
-                },
+              EditableField(
+                label: 'Last name',
+                controller: lastNameController,
+                isEditable: isLastNameEditable,
+                onEditTap: () => setState(
+                  () => isLastNameEditable = !isLastNameEditable,
+                ),
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildEditableField(
-    String label,
-    TextEditingController controller,
-    bool isEditable,
-    VoidCallback onEditTap,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w400,
-            color: Color(0xFFB1B1B1),
-          ),
-        ),
-        SizedBox(height: 8.h),
-        Container(
-          width: 353.w,
-          height: 47.h,
-          decoration: BoxDecoration(
-            color: Color(0xFFF7F9F8),
-            borderRadius: BorderRadius.circular(3.r),
-          ),
-          padding: EdgeInsets.only(
-            top: 15.h,
-            right: 14.w,
-            bottom: 15.h,
-            left: 14.w,
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: TextField(
-                    controller: controller,
-                    enabled: isEditable,
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.zero,
-                      isDense: true,
-                    ),
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.black,
-                    ),
-                  ),
-                ),
-              ),
-              GestureDetector(
-                onTap: onEditTap,
-                child: Text(
-                  'Edit',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w400,
-                    color: Color(ConstColors.mainColor),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

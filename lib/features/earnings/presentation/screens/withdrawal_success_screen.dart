@@ -52,29 +52,46 @@ class WithdrawalSuccessScreen extends StatelessWidget {
             Spacer(),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
-              child: GestureDetector(
-                onTap: () {
-                  Navigator.popUntil(context, (route) => route.isFirst);
-                },
-                child: Container(
-                  width: double.infinity,
-                  height: 50.h,
-                  decoration: BoxDecoration(
-                    color: Color(0xFF007AFF),
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  child: Center(
-                    child: Text(
-                      'Go back home',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16.sp,
-                        color: Colors.white,
+              child: Column(
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.popUntil(context, (route) => route.isFirst);
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      height: 50.h,
+                      decoration: BoxDecoration(
+                        color: Color(0xFF2A8359),
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'Go back home',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16.sp,
+                            color: Colors.white,
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
+                  SizedBox(height: 12.h),
+                  Text(
+                    'View transaction history',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16.sp,
+                      height: 21 / 24,
+                      letterSpacing: -0.32,
+                      color: Color(0xFF2A8359),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
               ),
             ),
             SizedBox(height: 40.h),
