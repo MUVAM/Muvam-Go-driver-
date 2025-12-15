@@ -52,6 +52,8 @@ dependencies:
   flutter_polyline_points: ^2.1.0
   another_flushbar: ^1.12.32
   permission_handler: ^11.0.1
+  flutter_webrtc: ^1.2.1
+
   audioplayers: ^5.2.1
 dev_dependencies:
   flutter_test:
