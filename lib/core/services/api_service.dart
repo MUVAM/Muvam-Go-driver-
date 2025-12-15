@@ -811,6 +811,99 @@ class ApiService {
     }
   }
 
+  // Update driver location with POINT format
+  static Future<Map<String, dynamic>> updateDriverLocationWithPoint(
+    String token,
+    int rideId,
+    String pointLocation,
+  ) async {
+    try {
+      AppLogger.log('=== UPDATE DRIVER LOCATION WITH POINT ===');
+      AppLogger.log('URL: $baseUrl${UrlConstants.updateLocation}');
+      AppLogger.log('Token: ${token.substring(0, 20)}...');
+      AppLogger.log('Ride ID: $rideId');
+      AppLogger.log('Point Location: $pointLocation');
+      
+      final requestBody = {'location': pointLocation};
+      AppLogger.log('Request Body: ${jsonEncode(requestBody)}');
+
+      final response = await http.put(
+        Uri.parse('$baseUrl${UrlConstants.updateLocation}'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      AppLogger.log('Response Status: ${response.statusCode}');
+      AppLogger.log('Response Body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        AppLogger.log('✅ Location updated successfully with POINT format');
+        return {'success': true, 'data': data};
+      } else {
+        final error = jsonDecode(response.body);
+        AppLogger.log('❌ Location update failed: ${error}');
+        return {
+          'success': false,
+          'message': error['message'] ?? 'Failed to update location',
+        };
+      }
+    } catch (e) {
+      AppLogger.log('❌ UPDATE DRIVER LOCATION ERROR: $e');
+      return {'success': false, 'message': 'Network error: $e'};
+    } finally {
+      AppLogger.log('=== END UPDATE DRIVER LOCATION WITH POINT ===\n');
+    }
+  }
+
+  // Update driver location (general - when not in ride)
+  static Future<Map<String, dynamic>> updateDriverLocationGeneral(
+    String token,
+    double lat,
+    double lng,
+  ) async {
+    try {
+      final locationPoint = 'POINT($lng $lat)';
+      
+      AppLogger.log('=== GENERAL LOCATION UPDATE ===');
+      AppLogger.log('📍 Raw coordinates: lat=$lat, lng=$lng');
+      AppLogger.log('📍 POINT format: $locationPoint');
+      AppLogger.log('📍 Token: ${token.substring(0, 20)}...');
+      
+      final requestBody = {'location': locationPoint};
+      AppLogger.log('📍 Request Body: ${jsonEncode(requestBody)}');
+      
+      final response = await http.put(
+        Uri.parse('$baseUrl${UrlConstants.updateLocation}'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      AppLogger.log('📱 Response Status: ${response.statusCode}');
+      AppLogger.log('📱 Response Body: ${response.body}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        AppLogger.log('✅ General location updated successfully with POINT format');
+        return {'success': true, 'data': data};
+      } else {
+        AppLogger.log('❌ General location update failed');
+        return {'success': false, 'message': 'Failed to update location'};
+      }
+    } catch (e) {
+      AppLogger.log('❌ GENERAL LOCATION UPDATE ERROR: $e');
+      return {'success': false, 'message': 'Network error: $e'};
+    } finally {
+      AppLogger.log('=== END GENERAL LOCATION UPDATE ===\n');
+    }
+  }
+
   // Get earnings summary
   static Future<Map<String, dynamic>> getEarningsSummary(String token) async {
     try {

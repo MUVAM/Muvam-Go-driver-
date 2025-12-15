@@ -29,12 +29,20 @@ class SocketService {
     _socket?.listen(
       (event) {
         try {
+          AppLogger.log('=== WEBSOCKET RAW MESSAGE ===');
+          AppLogger.log('Raw event: $event');
           final data = jsonDecode(event) as Map<String, dynamic>;
+          AppLogger.log('Parsed data: $data');
+          AppLogger.log('Has callback: ${onMessageReceived != null}');
           if (onMessageReceived != null) {
+            AppLogger.log('📨 Calling message callback');
             onMessageReceived!(data);
+          } else {
+            AppLogger.log('⚠️ No message callback set');
           }
+          AppLogger.log('=== END WEBSOCKET MESSAGE ===\n');
         } catch (e) {
-          AppLogger.log('Error parsing message: $e');
+          AppLogger.log('❌ Error parsing message: $e');
         }
       },
       onDone: () {
@@ -51,15 +59,28 @@ class SocketService {
   }
 
   void sendMessage(int rideId, String message) {
+    AppLogger.log('=== SENDING CHAT MESSAGE ===');
+    AppLogger.log('Ride ID: $rideId');
+    AppLogger.log('Message: "$message"');
+    AppLogger.log('Socket connected: ${_socket != null}');
+    
     final payload = {
       'type': 'chat',
       'data': {'ride_id': rideId, 'message': message},
       'timestamp': DateTime.now().toIso8601String(),
     };
 
+    AppLogger.log('Payload: $payload');
     final jsonMessage = jsonEncode(payload);
-    _socket?.add(jsonMessage);
-    AppLogger.log('Sent message: $jsonMessage');
+    AppLogger.log('JSON Message: $jsonMessage');
+    
+    try {
+      _socket?.add(jsonMessage);
+      AppLogger.log('✅ Message sent successfully');
+    } catch (e) {
+      AppLogger.log('❌ Failed to send message: $e');
+    }
+    AppLogger.log('=== END SENDING CHAT MESSAGE ===\n');
   }
 
   void disconnect() {

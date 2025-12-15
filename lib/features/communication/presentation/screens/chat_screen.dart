@@ -3,6 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
+import 'package:muvam_rider/features/communication/presentation/screens/call_screen.dart';
 import 'package:muvam_rider/core/services/socket_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
@@ -99,14 +100,21 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _handleIncomingMessage(Map<String, dynamic> data) {
     try {
-      AppLogger.log('Received data: $data');
+      AppLogger.log('=== INCOMING MESSAGE RECEIVED ===');
+      AppLogger.log('Raw data: $data');
+      AppLogger.log('Message type: ${data['type']}');
+      AppLogger.log('Current ride ID: ${widget.rideId}');
 
       if (data['type'] == 'chat') {
+        AppLogger.log('✅ Chat message detected');
         final messageData = data['data'] as Map<String, dynamic>;
         final rideId = messageData['ride_id'] as int?;
+        AppLogger.log('Message ride ID: $rideId');
+        AppLogger.log('Message data: $messageData');
 
         // Only process messages for current ride
         if (rideId == widget.rideId) {
+          AppLogger.log('✅ Ride ID matches, processing message');
           final message = ChatMessageModel(
             message: messageData['message'] ?? '',
             timestamp: data['timestamp'] ?? DateTime.now().toIso8601String(),
@@ -114,27 +122,52 @@ class _ChatScreenState extends State<ChatScreen> {
             userId: messageData['user_id']?.toString(),
           );
 
+          AppLogger.log('Created message model: ${message.message}');
+          AppLogger.log('Message user ID: ${message.userId}');
+          AppLogger.log('Current user ID: $currentUserId');
+
           if (mounted) {
             context.read<ChatProvider>().addMessage(widget.rideId, message);
             _scrollToBottom();
+            AppLogger.log('✅ Message added to chat');
+          } else {
+            AppLogger.log('⚠️ Widget not mounted, message not added');
           }
+        } else {
+          AppLogger.log('⚠️ Ride ID mismatch, ignoring message');
         }
+      } else {
+        AppLogger.log('⚠️ Not a chat message, ignoring');
       }
+      AppLogger.log('=== END INCOMING MESSAGE ===\n');
     } catch (e) {
-      AppLogger.log('Error processing message: $e');
+      AppLogger.log('❌ Error processing message: $e');
     }
   }
 
   void _sendMessage() {
+    AppLogger.log('=== CHAT SEND MESSAGE BUTTON TAPPED ===');
+    AppLogger.log('Connected: $isConnected');
+    AppLogger.log('Ride ID: ${widget.rideId}');
+    AppLogger.log('Current User ID: $currentUserId');
+    
     if (!isConnected) {
+      AppLogger.log('❌ Not connected to chat');
       _showError('Not connected to chat');
       return;
     }
 
     final text = _messageController.text.trim();
-    if (text.isEmpty) return;
+    AppLogger.log('Message text: "$text"');
+    AppLogger.log('Message length: ${text.length}');
+    
+    if (text.isEmpty) {
+      AppLogger.log('⚠️ Message is empty, not sending');
+      return;
+    }
 
     try {
+      AppLogger.log('📤 Calling socketService.sendMessage...');
       socketService.sendMessage(widget.rideId, text);
 
       // Add message locally for immediate UI update
@@ -145,13 +178,16 @@ class _ChatScreenState extends State<ChatScreen> {
         userId: currentUserId,
       );
 
+      AppLogger.log('📝 Adding message to local chat provider');
       context.read<ChatProvider>().addMessage(widget.rideId, message);
       _messageController.clear();
       _scrollToBottom();
+      AppLogger.log('✅ Message sent and added to UI');
     } catch (e) {
-      AppLogger.log('Error sending message: $e');
+      AppLogger.log('❌ Error sending message: $e');
       _showError('Failed to send message');
     }
+    AppLogger.log('=== END CHAT SEND MESSAGE ===\n');
   }
 
   void _scrollToBottom() {
@@ -221,12 +257,22 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                     ),
                   ),
-                  Container(
-                    width: 8.w,
-                    height: 8.h,
-                    decoration: BoxDecoration(
-                      color: isConnected ? Colors.green : Colors.red,
-                      shape: BoxShape.circle,
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => CallScreen(
+                            driverName: widget.passengerName,
+                            rideId: widget.rideId,
+                          ),
+                        ),
+                      );
+                    },
+                    child: Icon(
+                      Icons.phone,
+                      size: 24.sp,
+                      color: Colors.black,
                     ),
                   ),
                 ],

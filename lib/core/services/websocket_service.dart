@@ -1,10 +1,12 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/url_constants.dart';
+import 'ride_tracking_service.dart';
 
 class WebSocketService {
   WebSocketChannel? _channel;
@@ -13,8 +15,11 @@ class WebSocketService {
   int _reconnectAttempts = 0;
   static const int _maxReconnectAttempts = 5;
 
-  // Callback for ride requests
+  // Callbacks
   Function(Map<String, dynamic>)? onRideRequest;
+  Function(Set<Marker>, Set<Polyline>)? onMapUpdate;
+  Function(String, String)? onTimeUpdate;
+  Function(Map<String, dynamic>)? onIncomingCall;
 
   bool get isConnected => _isConnected;
 
@@ -183,6 +188,12 @@ class WebSocketService {
         case 'driver_location':
           _handleDriverLocation(data);
           break;
+        case 'call_initiate':
+          _handleIncomingCall(data);
+          break;
+        case 'call_end':
+          _handleCallEnd(data);
+          break;
         default:
           AppLogger.log('Unknown message type: $type');
           AppLogger.log('Full message data: $data');
@@ -197,37 +208,25 @@ class WebSocketService {
   void _handleRideRequest(Map<String, dynamic> data) {
     AppLogger.log('🚗 NEW RIDE REQUEST RECEIVED:');
     AppLogger.log('   Data: $data');
+    
+    // Log detailed structure for debugging
+    AppLogger.log('🔍 WEBSOCKET RIDE REQUEST STRUCTURE:');
+    AppLogger.log('   Keys: ${data.keys.toList()}');
+    if (data['data'] != null) {
+      final rideData = data['data'] as Map<String, dynamic>;
+      AppLogger.log('   Nested data keys: ${rideData.keys.toList()}');
+      AppLogger.log('   PickupLocation: ${rideData['PickupLocation']}');
+      AppLogger.log('   DestLocation: ${rideData['DestLocation']}');
+      AppLogger.log('   PickupAddress: ${rideData['PickupAddress']}');
+      AppLogger.log('   DestAddress: ${rideData['DestAddress']}');
+    }
 
-    // Transform WebSocket data to expected format
-    final rideData = data['data'] ?? {};
-    final passengerName =
-        rideData['passenger_name']?.toString() ?? 'Unknown Passenger';
-    final nameParts = passengerName.split(' ');
-
-    final transformedRide = {
-      'ID': rideData['ride_id'],
-      'Price': rideData['price']?.toString() ?? '0',
-      'PickupAddress':
-          rideData['pickup_address']?.toString() ?? 'Unknown pickup',
-      'DestAddress':
-          rideData['dest_address']?.toString() ?? 'Unknown destination',
-      'Note': rideData['note']?.toString() ?? '',
-      'PaymentMethod': 'in_car',
-      'pickup_location': rideData['pickup_location']?.toString() ?? '',
-      'dest_location': rideData['dest_location']?.toString() ?? '',
-      'Passenger': {
-        'first_name': nameParts.isNotEmpty ? nameParts.first : 'Unknown',
-        'last_name': nameParts.length > 1
-            ? nameParts.skip(1).join(' ')
-            : 'Passenger',
-      },
-      'Status': 'pending',
-    };
-
-    AppLogger.log('🔄 Transformed ride data: $transformedRide');
+    // Pass the raw WebSocket data directly - no transformation needed
+    // The UI will handle extracting the correct fields
+    AppLogger.log('🔄 Passing raw WebSocket data to UI');
 
     if (onRideRequest != null) {
-      onRideRequest!(transformedRide);
+      onRideRequest!(data);
     }
   }
 
@@ -248,6 +247,29 @@ class WebSocketService {
 
   void _handleDriverLocation(Map<String, dynamic> data) {
     AppLogger.log('📍 DRIVER LOCATION MESSAGE:');
+    AppLogger.log('   Data: $data');
+    
+    // Pass location data to ride tracking service for WKB decoding
+    if (onMapUpdate != null && onTimeUpdate != null) {
+      RideTrackingService.handleWebSocketLocationUpdate(
+        data,
+        onMapUpdate!,
+        onTimeUpdate!,
+      );
+    }
+  }
+
+  void _handleIncomingCall(Map<String, dynamic> data) {
+    AppLogger.log('📞 INCOMING CALL MESSAGE:');
+    AppLogger.log('   Data: $data');
+    
+    if (onIncomingCall != null) {
+      onIncomingCall!(data);
+    }
+  }
+
+  void _handleCallEnd(Map<String, dynamic> data) {
+    AppLogger.log('📞 CALL END MESSAGE:');
     AppLogger.log('   Data: $data');
   }
 

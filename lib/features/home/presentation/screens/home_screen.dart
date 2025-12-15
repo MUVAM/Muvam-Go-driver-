@@ -21,6 +21,9 @@ import 'package:muvam_rider/features/earnings/presentation/screens/wallet_screen
 import 'package:muvam_rider/features/home/data/provider/driver_provider.dart';
 import 'package:muvam_rider/features/home/presentation/widgets/ride_info_widget.dart';
 import 'package:muvam_rider/features/profile/presentation/screens/profile_screen.dart';
+import 'package:muvam_rider/features/communication/presentation/screens/call_screen.dart';
+import 'package:muvam_rider/features/communication/presentation/screens/chat_screen.dart';
+import 'package:muvam_rider/core/services/call_service.dart';
 import 'package:muvam_rider/features/referral/presentation/screens/referral_screen.dart';
 import 'package:muvam_rider/features/trips/presentation/screen/history_completed_screen.dart';
 import 'package:provider/provider.dart';
@@ -72,6 +75,8 @@ class _HomeScreenState extends State<HomeScreen> {
     'total_rides': 0,
     'total_rides_completed': 0,
   };
+  final CallService _callService = CallService();
+  Map<String, dynamic>? _incomingCall;
 
   void _showContactBottomSheet() {
     Navigator.pop(context); // Close drawer
@@ -146,6 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _rideCheckTimer?.cancel();
     _sessionCheckTimer?.cancel();
     _locationUpdateTimer?.cancel();
+    _callService.dispose();
     RideTrackingService.stopTracking();
     super.dispose();
   }
@@ -182,6 +188,15 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       AppLogger.log('❌ WebSocket connection failed: $e');
     }
+
+    // Setup WebSocket incoming call handler
+    _webSocketService.onIncomingCall = (callData) {
+      if (mounted) {
+        setState(() {
+          _incomingCall = callData;
+        });
+      }
+    };
 
     AppLogger.log('📍 Getting current location...');
     _getCurrentLocation();
@@ -226,7 +241,16 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     });
 
-    // Location update timer removed - will be added back later
+    // Driver location update timer (always when online)
+    _locationUpdateTimer = Timer.periodic(Duration(seconds: 30), (timer) async {
+      final driverProvider = Provider.of<DriverProvider>(
+        context,
+        listen: false,
+      );
+      if (driverProvider.isOnline) {
+        _updateDriverLocationToBackend();
+      }
+    });
 
     _sessionCheckTimer = Timer.periodic(Duration(minutes: 1), (timer) async {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -240,6 +264,42 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     });
+  }
+
+  Future<void> _updateDriverLocationToBackend() async {
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      
+      if (token != null) {
+        // Use ride-specific location update if in active ride, otherwise general update
+        Map<String, dynamic> result;
+        if (_activeRide != null) {
+          result = await ApiService.updateDriverLocation(
+            token,
+            _activeRide!['ID'],
+            position.latitude,
+            position.longitude,
+          );
+        } else {
+          result = await ApiService.updateDriverLocationGeneral(
+            token,
+            position.latitude,
+            position.longitude,
+          );
+        }
+        
+        if (result['success'] == true) {
+          AppLogger.log('✅ Driver location updated: ${position.latitude}, ${position.longitude}');
+        }
+      }
+    } catch (e) {
+      AppLogger.log('❌ Failed to update driver location: $e');
+    }
   }
 
   Future<void> _checkNearbyRides() async {
@@ -282,7 +342,9 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
 
     final ride = _nearbyRides[_currentRideIndex];
-    final rideId = ride['ID'];
+    // Extract ride ID from WebSocket data structure
+    final rideData = ride['data'] ?? ride;
+    final rideId = rideData['RideID'] ?? rideData['ID'] ?? 0;
 
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
@@ -297,7 +359,34 @@ class _HomeScreenState extends State<HomeScreen> {
             _nearbyRides.clear();
           });
         }
-        _showRideAcceptedSheet(ride, result['data']);
+        // Transform WebSocket data to expected format for ride sheet
+        final transformedRide = {
+          'ID': rideId,
+          'Price': rideData['Price']?.toString() ?? '0',
+          'PickupAddress': rideData['PickupAddress'] ?? 'Unknown pickup',
+          'DestAddress': rideData['DestAddress'] ?? 'Unknown destination',
+          'StopAddress': rideData['StopAddress'] ?? '',
+          'Note': rideData['Note'] ?? '',
+          'Status': 'accepted',
+          'Passenger': {
+            'first_name': rideData['PassengerName']?.split(' ').first ?? 'Unknown',
+            'last_name': rideData['PassengerName']?.split(' ').skip(1).join(' ') ?? 'Passenger',
+          },
+          'ServiceType': rideData['ServiceType'] ?? 'taxi',
+          'VehicleType': rideData['VehicleType'] ?? 'regular',
+          // CRITICAL: Include location data for ride tracking
+          'PickupLocation': rideData['PickupLocation'],
+          'DestLocation': rideData['DestLocation'],
+          // Keep original data structure for tracking service
+          'data': rideData,
+        };
+        
+        AppLogger.log('🔄 TRANSFORMED RIDE DATA:');
+        AppLogger.log('   Transformed keys: ${transformedRide.keys.toList()}');
+        AppLogger.log('   PickupLocation: ${transformedRide['PickupLocation']}');
+        AppLogger.log('   DestLocation: ${transformedRide['DestLocation']}');
+        AppLogger.log('   Has data field: ${transformedRide['data'] != null}');
+        _showRideAcceptedSheet(transformedRide, result['data']);
       } else {
         CustomFlushbar.showError(
           context: context,
@@ -312,7 +401,9 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
 
     final ride = _nearbyRides[_currentRideIndex];
-    final rideId = ride['ID'];
+    // Extract ride ID from WebSocket data structure
+    final rideData = ride['data'] ?? ride;
+    final rideId = rideData['RideID'] ?? rideData['ID'] ?? 0;
 
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
@@ -385,6 +476,48 @@ class _HomeScreenState extends State<HomeScreen> {
       if (_activeRide == null) {
         _mapController?.animateCamera(CameraUpdate.newLatLng(_currentLocation));
       }
+    }
+  }
+
+  void _centerMapOnActiveRide() {
+    if (_activeRide == null || _mapController == null) {
+      AppLogger.log('⚠️ Cannot center map: activeRide=${_activeRide != null}, mapController=${_mapController != null}');
+      return;
+    }
+    
+    AppLogger.log('🎯 Attempting to center map on active ride');
+    
+    try {
+      // If we have markers, use them to center the map
+      if (_mapMarkers.isNotEmpty) {
+        Marker? pickupMarker;
+        try {
+          pickupMarker = _mapMarkers.firstWhere(
+            (marker) => marker.markerId.value == 'pickup',
+          );
+        } catch (e) {
+          pickupMarker = null;
+        }
+        
+        if (pickupMarker != null) {
+          _mapController!.animateCamera(
+            CameraUpdate.newLatLngZoom(pickupMarker.position, 14),
+          );
+          AppLogger.log('✅ Map centered on pickup marker: ${pickupMarker.position}');
+          return;
+        }
+        
+        // Fallback to any available marker
+        final anyMarker = _mapMarkers.first;
+        _mapController!.animateCamera(
+          CameraUpdate.newLatLngZoom(anyMarker.position, 14),
+        );
+        AppLogger.log('✅ Map centered on available marker: ${anyMarker.position}');
+      } else {
+        AppLogger.log('⚠️ No markers available for centering');
+      }
+    } catch (e) {
+      AppLogger.log('❌ Error centering map on active ride: $e');
     }
   }
 
@@ -463,6 +596,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   onMapCreated: (GoogleMapController controller) {
                     _mapController = controller;
                     RideTrackingService.setMapController(controller);
+                    // If there's an active ride when map is created, center on it
+                    if (_activeRide != null) {
+                      _centerMapOnActiveRide();
+                    }
                   },
                   initialCameraPosition: CameraPosition(
                     target: _currentLocation,
@@ -606,7 +743,15 @@ class _HomeScreenState extends State<HomeScreen> {
                   top: 66.h,
                   right: 20.w,
                   child: GestureDetector(
-                    onTap: _getCurrentLocation,
+                    onTap: () {
+                      if (_activeRide != null) {
+                        // If there's an active ride, center on it
+                        _centerMapOnActiveRide();
+                      } else {
+                        // Otherwise center on current location
+                        _getCurrentLocation();
+                      }
+                    },
                     child: Container(
                       width: 50.w,
                       height: 50.h,
@@ -615,7 +760,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: BorderRadius.circular(25.r),
                       ),
                       padding: EdgeInsets.all(10.w),
-                      child: Icon(Icons.my_location, size: 24.sp),
+                      child: Icon(
+                        _activeRide != null ? Icons.directions_car : Icons.my_location, 
+                        size: 24.sp
+                      ),
                     ),
                   ),
                 ),
@@ -788,6 +936,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Ride request overlay
                 if (_hasActiveRequest && _nearbyRides.isNotEmpty)
                   _buildRideRequestSheet(),
+                // Incoming call overlay
+                if (_incomingCall != null)
+                  _buildIncomingCallOverlay(),
               ],
             ),
     );
@@ -3285,8 +3436,18 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     final ride = _nearbyRides[_currentRideIndex];
-    final passenger = ride['Passenger'] ?? {};
-    final eta = _calculateETA(ride);
+    // Extract data from WebSocket message format
+    final rideData = ride['data'] ?? ride; // Handle both formats
+    final rideId = rideData['RideID'] ?? rideData['ID'] ?? 0;
+    final passengerName = rideData['PassengerName'] ?? 'Unknown Passenger';
+    final pickupAddress = rideData['PickupAddress'] ?? 'Unknown pickup location';
+    final destAddress = rideData['DestAddress'] ?? 'Unknown destination';
+    final stopAddress = rideData['StopAddress'] ?? '';
+    final note = rideData['Note'] ?? '';
+    final price = rideData['Price']?.toString() ?? '0';
+    final serviceType = rideData['ServiceType'] ?? 'taxi';
+    final vehicleType = rideData['VehicleType'] ?? 'regular';
+    final eta = _calculateETA(rideData);
 
     return Positioned(
       bottom: 0,
@@ -3338,18 +3499,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     ),
-                    Positioned(
-                      top: 8.h,
-                      left: 8.w,
-                      child: Container(
-                        width: 70.w,
-                        height: 4.h,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
                 SizedBox(width: 15.w),
@@ -3367,7 +3516,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Divider(thickness: 1, color: Colors.grey.shade300),
             SizedBox(height: 15.h),
             Text(
-              '₦${ride['Price']}',
+              '₦$price',
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w700,
@@ -3378,7 +3527,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             SizedBox(height: 15.h),
             Text(
-              '${passenger['first_name'] ?? 'Unknown'} ${passenger['last_name'] ?? 'Passenger'}',
+              passengerName,
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w600,
@@ -3386,10 +3535,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 1.0,
                 letterSpacing: -0.32,
               ),
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
             ),
             SizedBox(height: 8.h),
             Text(
-              'Pickup: ${ride['PickupAddress'] ?? 'Unknown location'}',
+              'Pickup: $pickupAddress',
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w600,
@@ -3400,7 +3551,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             SizedBox(height: 8.h),
             Text(
-              'Destination: ${ride['DestAddress'] ?? 'Unknown destination'}',
+              'Destination: $destAddress',
               style: TextStyle(
                 fontFamily: 'Inter',
                 fontWeight: FontWeight.w600,
@@ -3409,13 +3560,30 @@ class _HomeScreenState extends State<HomeScreen> {
                 letterSpacing: -0.32,
               ),
             ),
+            if (stopAddress.isNotEmpty)
+              Column(
+                children: [
+                  SizedBox(height: 8.h),
+                  Text(
+                    'Stop: $stopAddress',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w500,
+                      fontSize: 14.sp,
+                      height: 1.0,
+                      letterSpacing: -0.32,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
             SizedBox(height: 15.h),
-            if (ride['Note'] != null && ride['Note'].toString().isNotEmpty)
+            if (note.isNotEmpty)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Note: ${ride['Note']}',
+                    'Note: $note',
                     style: TextStyle(fontFamily: 'Inter', fontSize: 14.sp),
                   ),
                   SizedBox(height: 15.h),
@@ -3434,8 +3602,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   Image.asset(ConstImages.wallet, width: 20.w, height: 20.h),
                   SizedBox(width: 8.w),
                   Text(
-                    _formatPaymentMethod(ride['PaymentMethod'] ?? 'in_car'),
+                    'Pay in car', // Default payment method for new requests
                     style: TextStyle(fontFamily: 'Inter', fontSize: 14.sp),
+                  ),
+                  Spacer(),
+                  Text(
+                    '${serviceType.toUpperCase()} • ${vehicleType.toUpperCase()}',
+                    style: TextStyle(
+                      fontFamily: 'Inter', 
+                      fontSize: 12.sp,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ],
               ),
@@ -3515,13 +3693,22 @@ class _HomeScreenState extends State<HomeScreen> {
           AppLogger.log('Active ride found: $activeRide');
           AppLogger.log('Ride Status: ${activeRide['Status']}');
           AppLogger.log('Ride ID: ${activeRide['ID']}');
-          _showRideAcceptedSheet(activeRide, {});
+          
+          // Small delay to ensure map is initialized before showing ride
+          Future.delayed(Duration(milliseconds: 1000), () {
+            if (mounted) {
+              _showRideAcceptedSheet(activeRide, {});
+            }
+          });
         } else {
           AppLogger.log('No active rides found');
         }
       } else {
         AppLogger.log('Failed to get active rides: ${result['message']}');
       }
+
+  
+    
     } else {
       AppLogger.log('No auth token found');
     }
@@ -3549,6 +3736,8 @@ class _HomeScreenState extends State<HomeScreen> {
               _mapMarkers = markers;
               _mapPolylines = polylines;
             });
+            // Center map after markers are updated
+            _centerMapOnActiveRide();
           }
         },
         onTimeUpdate: (eta, location) {
@@ -3560,6 +3749,9 @@ class _HomeScreenState extends State<HomeScreen> {
           }
         },
       );
+    } else {
+      // If markers already exist, just center the map
+      _centerMapOnActiveRide();
     }
 
     showModalBottomSheet(
@@ -3603,17 +3795,29 @@ class _HomeScreenState extends State<HomeScreen> {
       AppLogger.log('Stopping tracking for completed/cancelled ride');
       RideTrackingService.stopTracking();
 
-      // Force clear the map display
+      // Immediately clear the map display
+      AppLogger.log('Clearing map markers and polylines immediately');
       if (mounted) {
         setState(() {
           _activeRide = null;
-          _isRideSheetVisible = true; // Reset visibility
-          _mapMarkers = {}; // Clear markers
-          _mapPolylines = {}; // Clear polylines
+          _isRideSheetVisible = false;
+          _mapMarkers = <Marker>{}; // Force clear markers
+          _mapPolylines = <Polyline>{}; // Force clear polylines
           _currentETA = '';
           _currentLocationName = '';
         });
       }
+
+      // Force a second clear after a short delay to ensure UI updates
+      Future.delayed(Duration(milliseconds: 100), () {
+        if (mounted) {
+          AppLogger.log('Secondary map clear to ensure UI update');
+          setState(() {
+            _mapMarkers = <Marker>{};
+            _mapPolylines = <Polyline>{};
+          });
+        }
+      });
 
       // Close any open modal sheets
       if (Navigator.of(context).canPop()) {
@@ -3622,6 +3826,112 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     AppLogger.log('=== RIDE STATUS CHANGE HANDLED ===\n');
+  }
+
+  Widget _buildIncomingCallOverlay() {
+    final callData = _incomingCall!['data'] ?? {};
+    final passengerName = callData['caller_name'] ?? 'Unknown Passenger';
+    final sessionId = callData['session_id'] ?? 0;
+
+    return Positioned.fill(
+      child: Container(
+        color: Colors.black.withOpacity(0.8),
+        child: Center(
+          child: Container(
+            width: 300.w,
+            padding: EdgeInsets.all(20.w),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20.r),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircleAvatar(
+                  radius: 40.r,
+                  backgroundImage: AssetImage(ConstImages.avatar),
+                ),
+                SizedBox(height: 15.h),
+                Text(
+                  passengerName,
+                  style: TextStyle(
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                SizedBox(height: 5.h),
+                Text(
+                  'Incoming call...',
+                  style: TextStyle(
+                    fontSize: 14.sp,
+                    color: Colors.grey,
+                  ),
+                ),
+                SizedBox(height: 30.h),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    GestureDetector(
+                      onTap: () async {
+                        await _callService.rejectCall(sessionId);
+                        setState(() {
+                          _incomingCall = null;
+                        });
+                      },
+                      child: Container(
+                        width: 60.w,
+                        height: 60.h,
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.call_end,
+                          color: Colors.white,
+                          size: 30.sp,
+                        ),
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () async {
+                        await _callService.answerCall(sessionId);
+                        setState(() {
+                          _incomingCall = null;
+                        });
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => CallScreen(
+                              driverName: passengerName,
+                              rideId: callData['ride_id'] ?? 0,
+                              sessionId: sessionId,
+                              isIncomingCall: true,
+                            ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        width: 60.w,
+                        height: 60.h,
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.call,
+                          color: Colors.white,
+                          size: 30.sp,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -3773,20 +4083,33 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
             children: [
               Expanded(
                 child: GestureDetector(
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatScreen(
+                          passengerName: '${passenger['first_name'] ?? 'Unknown'} ${passenger['last_name'] ?? 'Passenger'}',
+                          rideId: widget.ride['ID'],
+                        ),
+                      ),
+                    );
+                  },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.chat, size: 16.sp),
                       SizedBox(width: 8.w),
-                      Text(
-                        'Chat ${passenger['first_name'] ?? 'Passenger'}',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.w600,
-                          height: 22 / 18,
-                          letterSpacing: -0.41,
+                      Flexible(
+                        child: Text(
+                          'Chat ${passenger['first_name'] ?? 'Passenger'}',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w600,
+                            height: 22 / 16,
+                            letterSpacing: -0.41,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -3796,20 +4119,33 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
               Container(width: 1.w, height: 30.h, color: Colors.grey.shade300),
               Expanded(
                 child: GestureDetector(
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CallScreen(
+                          driverName: '${passenger['first_name'] ?? 'Unknown'} ${passenger['last_name'] ?? 'Passenger'}',
+                          rideId: widget.ride['ID'],
+                        ),
+                      ),
+                    );
+                  },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.call, size: 16.sp),
                       SizedBox(width: 8.w),
-                      Text(
-                        'Call ${passenger['first_name'] ?? 'Passenger'}',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.w600,
-                          height: 22 / 18,
-                          letterSpacing: -0.41,
+                      Flexible(
+                        child: Text(
+                          'Call ${passenger['first_name'] ?? 'Passenger'}',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w600,
+                            height: 22 / 16,
+                            letterSpacing: -0.41,
+                          ),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],

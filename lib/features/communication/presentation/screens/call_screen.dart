@@ -1,18 +1,104 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/images.dart';
+import 'package:muvam_rider/core/services/call_service.dart';
 import '../widgets/call_button.dart';
 
 class CallScreen extends StatefulWidget {
   final String driverName;
+  final int rideId;
+  final int? sessionId;
+  final bool isIncomingCall;
 
-  const CallScreen({super.key, required this.driverName});
+  const CallScreen({
+    super.key, 
+    required this.driverName, 
+    required this.rideId,
+    this.sessionId,
+    this.isIncomingCall = false,
+  });
 
   @override
   State<CallScreen> createState() => _CallScreenState();
 }
 
 class _CallScreenState extends State<CallScreen> {
+  final CallService _callService = CallService();
+  String _callStatus = 'Calling...';
+  int? _sessionId;
+  int _callStartTime = 0;
+  bool _isMuted = false;
+  bool _isSpeakerOn = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeCall();
+  }
+
+  Future<void> _initializeCall() async {
+    await _callService.initialize();
+    _callService.onCallStateChanged = (status) {
+      if (mounted) {
+        setState(() {
+          _callStatus = status;
+          if (status == 'Connected') {
+            _callStartTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+          }
+        });
+      }
+    };
+    
+    if (widget.isIncomingCall && widget.sessionId != null) {
+      // For incoming calls, use the existing session ID
+      _sessionId = widget.sessionId;
+      setState(() {
+        _callStatus = 'Connected';
+        _callStartTime = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      });
+    } else {
+      // For outgoing calls, initiate a new call
+      try {
+        final result = await _callService.initiateCall(widget.rideId);
+        _sessionId = result['session_id'];
+      } catch (e) {
+        if (mounted) {
+          setState(() {
+            _callStatus = 'Call failed';
+          });
+        }
+      }
+    }
+  }
+
+  void _endCall() async {
+    final duration = _callStartTime > 0 
+        ? (DateTime.now().millisecondsSinceEpoch ~/ 1000) - _callStartTime 
+        : 0;
+    await _callService.endCall(_sessionId, duration);
+    Navigator.pop(context);
+  }
+
+  void _toggleMute() {
+    setState(() {
+      _isMuted = !_isMuted;
+    });
+    _callService.toggleMute(_isMuted);
+  }
+
+  void _toggleSpeaker() {
+    setState(() {
+      _isSpeakerOn = !_isSpeakerOn;
+    });
+    _callService.toggleSpeaker(_isSpeakerOn);
+  }
+
+  @override
+  void dispose() {
+    _callService.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,7 +146,7 @@ class _CallScreenState extends State<CallScreen> {
                       ),
                       SizedBox(height: 5.h),
                       Text(
-                        'Calling...',
+                        _callStatus,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontFamily: 'Inter',
@@ -106,19 +192,19 @@ class _CallScreenState extends State<CallScreen> {
                     onTap: () => Navigator.pop(context),
                   ),
                   CallButton(
-                    icon: Icons.volume_up,
+                    icon: _isSpeakerOn ? Icons.volume_up : Icons.volume_down,
                     iconColor: Colors.black,
-                    onTap: () {},
+                    onTap: _toggleSpeaker,
                   ),
                   CallButton(
-                    icon: Icons.mic_off,
+                    icon: _isMuted ? Icons.mic_off : Icons.mic,
                     iconColor: Colors.black,
-                    onTap: () {},
+                    onTap: _toggleMute,
                   ),
                   CallButton(
                     icon: Icons.call_end,
                     iconColor: Colors.white,
-                    onTap: () => Navigator.pop(context),
+                    onTap: _endCall,
                     isEndCall: true,
                   ),
                 ],
