@@ -271,10 +271,10 @@ class _HomeScreenState extends State<HomeScreen> {
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
-      
+
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
-      
+
       if (token != null) {
         // Use ride-specific location update if in active ride, otherwise general update
         Map<String, dynamic> result;
@@ -292,9 +292,11 @@ class _HomeScreenState extends State<HomeScreen> {
             position.longitude,
           );
         }
-        
+
         if (result['success'] == true) {
-          AppLogger.log('✅ Driver location updated: ${position.latitude}, ${position.longitude}');
+          AppLogger.log(
+            '✅ Driver location updated: ${position.latitude}, ${position.longitude}',
+          );
         }
       }
     } catch (e) {
@@ -369,8 +371,11 @@ class _HomeScreenState extends State<HomeScreen> {
           'Note': rideData['Note'] ?? '',
           'Status': 'accepted',
           'Passenger': {
-            'first_name': rideData['PassengerName']?.split(' ').first ?? 'Unknown',
-            'last_name': rideData['PassengerName']?.split(' ').skip(1).join(' ') ?? 'Passenger',
+            'first_name':
+                rideData['PassengerName']?.split(' ').first ?? 'Unknown',
+            'last_name':
+                rideData['PassengerName']?.split(' ').skip(1).join(' ') ??
+                'Passenger',
           },
           'ServiceType': rideData['ServiceType'] ?? 'taxi',
           'VehicleType': rideData['VehicleType'] ?? 'regular',
@@ -380,10 +385,12 @@ class _HomeScreenState extends State<HomeScreen> {
           // Keep original data structure for tracking service
           'data': rideData,
         };
-        
+
         AppLogger.log('🔄 TRANSFORMED RIDE DATA:');
         AppLogger.log('   Transformed keys: ${transformedRide.keys.toList()}');
-        AppLogger.log('   PickupLocation: ${transformedRide['PickupLocation']}');
+        AppLogger.log(
+          '   PickupLocation: ${transformedRide['PickupLocation']}',
+        );
         AppLogger.log('   DestLocation: ${transformedRide['DestLocation']}');
         AppLogger.log('   Has data field: ${transformedRide['data'] != null}');
         _showRideAcceptedSheet(transformedRide, result['data']);
@@ -481,12 +488,14 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _centerMapOnActiveRide() {
     if (_activeRide == null || _mapController == null) {
-      AppLogger.log('⚠️ Cannot center map: activeRide=${_activeRide != null}, mapController=${_mapController != null}');
+      AppLogger.log(
+        '⚠️ Cannot center map: activeRide=${_activeRide != null}, mapController=${_mapController != null}',
+      );
       return;
     }
-    
+
     AppLogger.log('🎯 Attempting to center map on active ride');
-    
+
     try {
       // If we have markers, use them to center the map
       if (_mapMarkers.isNotEmpty) {
@@ -498,21 +507,25 @@ class _HomeScreenState extends State<HomeScreen> {
         } catch (e) {
           pickupMarker = null;
         }
-        
+
         if (pickupMarker != null) {
           _mapController!.animateCamera(
             CameraUpdate.newLatLngZoom(pickupMarker.position, 14),
           );
-          AppLogger.log('✅ Map centered on pickup marker: ${pickupMarker.position}');
+          AppLogger.log(
+            '✅ Map centered on pickup marker: ${pickupMarker.position}',
+          );
           return;
         }
-        
+
         // Fallback to any available marker
         final anyMarker = _mapMarkers.first;
         _mapController!.animateCamera(
           CameraUpdate.newLatLngZoom(anyMarker.position, 14),
         );
-        AppLogger.log('✅ Map centered on available marker: ${anyMarker.position}');
+        AppLogger.log(
+          '✅ Map centered on available marker: ${anyMarker.position}',
+        );
       } else {
         AppLogger.log('⚠️ No markers available for centering');
       }
@@ -761,8 +774,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       padding: EdgeInsets.all(10.w),
                       child: Icon(
-                        _activeRide != null ? Icons.directions_car : Icons.my_location, 
-                        size: 24.sp
+                        _activeRide != null
+                            ? Icons.directions_car
+                            : Icons.my_location,
+                        size: 24.sp,
                       ),
                     ),
                   ),
@@ -937,8 +952,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (_hasActiveRequest && _nearbyRides.isNotEmpty)
                   _buildRideRequestSheet(),
                 // Incoming call overlay
-                if (_incomingCall != null)
-                  _buildIncomingCallOverlay(),
+                if (_incomingCall != null) _buildIncomingCallOverlay(),
               ],
             ),
     );
@@ -2176,6 +2190,43 @@ class _HomeScreenState extends State<HomeScreen> {
         ? ['Regular vehicle', 'Fancy vehicle', 'VIP'][selectedVehicle!]
         : ['Bicycle', 'Vehicle', 'Motor bike'][selectedDelivery!];
 
+    // Extract ride data at the beginning of the method
+    final ride = _activeRide;
+
+    // Return early if no active ride
+    if (ride == null) {
+      CustomFlushbar.showError(
+        context: context,
+        message: 'No active ride found',
+      );
+      return;
+    }
+
+    final passenger = ride['Passenger'] ?? {};
+    final passengerFirstName = passenger['first_name'] ?? 'Unknown';
+    final passengerLastName = passenger['last_name'] ?? '';
+    final passengerName = '$passengerFirstName $passengerLastName'.trim();
+    final passengerImage =
+        passenger['profile_image'] ?? passenger['image'] ?? '';
+    final rideId = ride['ID'];
+    final pickupAddress = ride['PickupAddress'] ?? 'Unknown pickup';
+    final destAddress = ride['DestAddress'] ?? 'Unknown destination';
+    final price = ride['Price']?.toString() ?? '0';
+    final paymentMethod = ride['PaymentMethod'] ?? 'in_car';
+    final createdAt = ride['CreatedAt'] ?? ride['created_at'] ?? '';
+
+    // Format date
+    String formattedDate = 'Unknown date';
+    if (createdAt.isNotEmpty) {
+      try {
+        final dateTime = DateTime.parse(createdAt);
+        formattedDate =
+            '${_getMonth(dateTime.month)} ${dateTime.day}, ${dateTime.year} at ${TimeOfDay.fromDateTime(dateTime).format(context)}';
+      } catch (e) {
+        AppLogger.log('Error parsing date: $e');
+      }
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -2205,7 +2256,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'ID: #12345',
+                    'ID: #$rideId',
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 18.sp,
@@ -2260,7 +2311,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Padding(
                         padding: EdgeInsets.only(left: 16.w),
                         child: Text(
-                          'Nsukka, Enugu',
+                          pickupAddress,
                           style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 14.sp,
@@ -2305,7 +2356,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Padding(
                         padding: EdgeInsets.only(left: 16.w),
                         child: Text(
-                          'Ikeja, Lagos',
+                          destAddress,
                           style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 14.sp,
@@ -2342,7 +2393,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'November 28, 2025 at 03:45 pm',
+                  formattedDate,
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 14.sp,
@@ -2375,7 +2426,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         SizedBox(height: 5.h),
                         Text(
-                          selectedPaymentMethod,
+                          _formatPaymentMethod(paymentMethod),
                           style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 14.sp,
@@ -2411,7 +2462,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         SizedBox(height: 5.h),
                         Text(
-                          selectedOption,
+                          ride['VehicleType'] ?? selectedOption,
                           style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 14.sp,
@@ -2447,7 +2498,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     SizedBox(height: 5.h),
                     Text(
-                      '₦12,000',
+                      '₦$price',
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 18.sp,
@@ -2495,12 +2546,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     Expanded(
                       child: GestureDetector(
                         onTap: () {
-                          // Navigator.push(
-                          //   context,
-                          //   MaterialPageRoute(
-                          //     builder: (context) => const ChatScreen(),
-                          //   ),
-                          // );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ChatScreen(
+                                rideId: rideId,
+                                passengerName: passengerName,
+                                passengerImage: passengerImage.isNotEmpty
+                                    ? passengerImage
+                                    : null,
+                              ),
+                            ),
+                          );
                         },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -2508,7 +2565,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             Icon(Icons.chat, size: 16.sp, color: Colors.black),
                             SizedBox(width: 8.w),
                             Text(
-                              'Chat Driver',
+                              'Chat Passenger',
                               style: TextStyle(
                                 fontFamily: 'Inter',
                                 fontSize: 16.sp,
@@ -2536,6 +2593,36 @@ class _HomeScreenState extends State<HomeScreen> {
     final selectedOption = selectedVehicle != null
         ? ['Regular vehicle', 'Fancy vehicle', 'VIP'][selectedVehicle!]
         : ['Bicycle', 'Vehicle', 'Motor bike'][selectedDelivery!];
+
+    // Extract ride data
+    final ride = _activeRide;
+
+    // Return early if no active ride
+    if (ride == null) {
+      CustomFlushbar.showError(
+        context: context,
+        message: 'No scheduled ride found',
+      );
+      return;
+    }
+
+    final pickupAddress = ride['PickupAddress'] ?? 'Unknown pickup';
+    final destAddress = ride['DestAddress'] ?? 'Unknown destination';
+    final price = ride['Price']?.toString() ?? '0';
+    final paymentMethod = ride['PaymentMethod'] ?? 'in_car';
+    final scheduledAt = ride['ScheduledAt'] ?? ride['scheduled_at'] ?? '';
+
+    // Format scheduled date
+    String formattedDate = 'Unknown date';
+    if (scheduledAt.isNotEmpty) {
+      try {
+        final dateTime = DateTime.parse(scheduledAt);
+        formattedDate =
+            '${_getMonth(dateTime.month)} ${dateTime.day}, ${dateTime.year} at ${TimeOfDay.fromDateTime(dateTime).format(context)}';
+      } catch (e) {
+        AppLogger.log('Error parsing scheduled date: $e');
+      }
+    }
 
     showModalBottomSheet(
       context: context,
@@ -2615,7 +2702,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Padding(
                         padding: EdgeInsets.only(left: 16.w),
                         child: Text(
-                          'Nsukka, Enugu',
+                          pickupAddress,
                           style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 14.sp,
@@ -2660,7 +2747,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Padding(
                         padding: EdgeInsets.only(left: 16.w),
                         child: Text(
-                          'Ikeja, Lagos',
+                          destAddress,
                           style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 14.sp,
@@ -2697,7 +2784,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Align(
                 alignment: Alignment.centerLeft,
                 child: Text(
-                  'November 28, 2025 at 03:45 pm',
+                  formattedDate,
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 14.sp,
@@ -2730,7 +2817,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         SizedBox(height: 5.h),
                         Text(
-                          selectedPaymentMethod,
+                          _formatPaymentMethod(paymentMethod),
                           style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 14.sp,
@@ -2766,7 +2853,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         SizedBox(height: 5.h),
                         Text(
-                          selectedOption,
+                          ride['VehicleType'] ?? selectedOption,
                           style: TextStyle(
                             fontFamily: 'Inter',
                             fontSize: 14.sp,
@@ -2802,7 +2889,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     SizedBox(height: 5.h),
                     Text(
-                      '₦12,000',
+                      '₦$price',
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 18.sp,
@@ -2846,6 +2933,38 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showEditPrebookingSheet() {
+    // Extract ride data
+    final ride = _activeRide;
+
+    // Return early if no active ride
+    if (ride == null) {
+      CustomFlushbar.showError(context: context, message: 'No ride to edit');
+      return;
+    }
+
+    final pickupAddress = ride['PickupAddress'] ?? 'Unknown pickup';
+    final destAddress = ride['DestAddress'] ?? 'Unknown destination';
+    final paymentMethod = ride['PaymentMethod'] ?? 'in_car';
+    final scheduledAt = ride['ScheduledAt'] ?? ride['scheduled_at'] ?? '';
+
+    // Format scheduled date
+    String formattedDate = 'Unknown date';
+    if (scheduledAt.isNotEmpty) {
+      try {
+        final dateTime = DateTime.parse(scheduledAt);
+        formattedDate =
+            '${_getMonth(dateTime.month)} ${dateTime.day}, ${dateTime.year} at ${TimeOfDay.fromDateTime(dateTime).format(context)}';
+      } catch (e) {
+        AppLogger.log('Error parsing scheduled date: $e');
+      }
+    }
+
+    final vehicleType =
+        ride['VehicleType'] ??
+        (selectedVehicle != null
+            ? ['Regular vehicle', 'Fancy vehicle', 'VIP'][selectedVehicle!]
+            : ['Bicycle', 'Vehicle', 'Motor bike'][selectedDelivery!]);
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -2890,24 +3009,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               SizedBox(height: 30.h),
-              _buildEditField('PICK UP', 'Nsukka, Enugu'),
+              _buildEditField('PICK UP', pickupAddress),
               SizedBox(height: 15.h),
-              _buildEditField('DESTINATION', 'Ikeja, Lagos'),
+              _buildEditField('DESTINATION', destAddress),
               SizedBox(height: 15.h),
-              _buildEditField('WHEN', 'November 28, 2025 at 03:45 pm'),
-              SizedBox(height: 15.h),
-              _buildEditField('PAYMENT METHOD', selectedPaymentMethod),
+              _buildEditField('WHEN', formattedDate),
               SizedBox(height: 15.h),
               _buildEditField(
-                'VEHICLE',
-                selectedVehicle != null
-                    ? [
-                        'Regular vehicle',
-                        'Fancy vehicle',
-                        'VIP',
-                      ][selectedVehicle!]
-                    : ['Bicycle', 'Vehicle', 'Motor bike'][selectedDelivery!],
+                'PAYMENT METHOD',
+                _formatPaymentMethod(paymentMethod),
               ),
+              SizedBox(height: 15.h),
+              _buildEditField('VEHICLE', vehicleType),
               SizedBox(height: 40.h),
               Column(
                 children: [
@@ -2947,6 +3060,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: GestureDetector(
                       onTap: () {
                         Navigator.pop(context);
+                        // TODO: Implement save functionality with API call
+                        CustomFlushbar.showSuccess(
+                          context: context,
+                          message: 'Prebooking updated successfully',
+                        );
                       },
                       child: Center(
                         child: Text(
@@ -3440,7 +3558,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final rideData = ride['data'] ?? ride; // Handle both formats
     final rideId = rideData['RideID'] ?? rideData['ID'] ?? 0;
     final passengerName = rideData['PassengerName'] ?? 'Unknown Passenger';
-    final pickupAddress = rideData['PickupAddress'] ?? 'Unknown pickup location';
+    final pickupAddress =
+        rideData['PickupAddress'] ?? 'Unknown pickup location';
     final destAddress = rideData['DestAddress'] ?? 'Unknown destination';
     final stopAddress = rideData['StopAddress'] ?? '';
     final note = rideData['Note'] ?? '';
@@ -3609,7 +3728,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Text(
                     '${serviceType.toUpperCase()} • ${vehicleType.toUpperCase()}',
                     style: TextStyle(
-                      fontFamily: 'Inter', 
+                      fontFamily: 'Inter',
                       fontSize: 12.sp,
                       color: Colors.grey[600],
                       fontWeight: FontWeight.w500,
@@ -3693,7 +3812,7 @@ class _HomeScreenState extends State<HomeScreen> {
           AppLogger.log('Active ride found: $activeRide');
           AppLogger.log('Ride Status: ${activeRide['Status']}');
           AppLogger.log('Ride ID: ${activeRide['ID']}');
-          
+
           // Small delay to ensure map is initialized before showing ride
           Future.delayed(Duration(milliseconds: 1000), () {
             if (mounted) {
@@ -3706,9 +3825,6 @@ class _HomeScreenState extends State<HomeScreen> {
       } else {
         AppLogger.log('Failed to get active rides: ${result['message']}');
       }
-
-  
-    
     } else {
       AppLogger.log('No auth token found');
     }
@@ -3862,10 +3978,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 SizedBox(height: 5.h),
                 Text(
                   'Incoming call...',
-                  style: TextStyle(
-                    fontSize: 14.sp,
-                    color: Colors.grey,
-                  ),
+                  style: TextStyle(fontSize: 14.sp, color: Colors.grey),
                 ),
                 SizedBox(height: 30.h),
                 Row(
@@ -4088,7 +4201,8 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => ChatScreen(
-                          passengerName: '${passenger['first_name'] ?? 'Unknown'} ${passenger['last_name'] ?? 'Passenger'}',
+                          passengerName:
+                              '${passenger['first_name'] ?? 'Unknown'} ${passenger['last_name'] ?? 'Passenger'}',
                           rideId: widget.ride['ID'],
                         ),
                       ),
@@ -4124,7 +4238,8 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => CallScreen(
-                          driverName: '${passenger['first_name'] ?? 'Unknown'} ${passenger['last_name'] ?? 'Passenger'}',
+                          driverName:
+                              '${passenger['first_name'] ?? 'Unknown'} ${passenger['last_name'] ?? 'Passenger'}',
                           rideId: widget.ride['ID'],
                         ),
                       ),
