@@ -148,29 +148,29 @@ class CallService {
     await _audioPlayer.stop();
   }
 
-  Future<void> _setupLocalMedia() async {
-    try {
-      AppLogger.log('🎤 Setting up local media...', tag: 'CALL');
+  // Future<void> _setupLocalMedia() async {
+  //   try {
+  //     AppLogger.log('🎤 Setting up local media...', tag: 'CALL');
 
-      final Map<String, dynamic> mediaConstraints = {
-        'audio': {
-          'echoCancellation': true,
-          'noiseSuppression': true,
-          'autoGainControl': true,
-        },
-        'video': false,
-      };
+  //     final Map<String, dynamic> mediaConstraints = {
+  //       'audio': {
+  //         'echoCancellation': true,
+  //         'noiseSuppression': true,
+  //         'autoGainControl': true,
+  //       },
+  //       'video': false,
+  //     };
 
-      _localStream = await navigator.mediaDevices.getUserMedia(
-        mediaConstraints,
-      );
-      AppLogger.log('✅ Local media stream obtained', tag: 'CALL');
-      AppLogger.log('🎤 Audio tracks: ${_localStream!.getAudioTracks().length}', tag: 'CALL');
-    } catch (e) {
-      AppLogger.error('❌ Failed to get local media', error: e, tag: 'CALL');
-      rethrow;
-    }
-  }
+  //     _localStream = await navigator.mediaDevices.getUserMedia(
+  //       mediaConstraints,
+  //     );
+  //     AppLogger.log('✅ Local media stream obtained', tag: 'CALL');
+  //     AppLogger.log('🎤 Audio tracks: ${_localStream!.getAudioTracks().length}', tag: 'CALL');
+  //   } catch (e) {
+  //     AppLogger.error('❌ Failed to get local media', error: e, tag: 'CALL');
+  //     rethrow;
+  //   }
+  // }
 
   Future<void> _createPeerConnection() async {
     try {
@@ -229,6 +229,35 @@ class CallService {
       rethrow;
     }
   }
+
+
+
+
+Future<void> _setupLocalMedia() async {
+  try {
+    AppLogger.log('🎤 Setting up local media...', tag: 'CALL');
+
+    final Map<String, dynamic> mediaConstraints = {
+      'audio': {
+        'echoCancellation': true,
+        'noiseSuppression': true,
+        'autoGainControl': true,
+      },
+      'video': false,
+    };
+
+    _localStream = await navigator.mediaDevices.getUserMedia(
+      mediaConstraints,
+    );
+    AppLogger.log('✅ Local media stream obtained', tag: 'CALL');
+    AppLogger.log('🎤 Audio tracks: ${_localStream!.getAudioTracks().length}', tag: 'CALL');
+  } catch (e) {
+    AppLogger.error('❌ Failed to get local media', error: e, tag: 'CALL');
+    AppLogger.log('💡 Hint: Check if microphone permission is granted', tag: 'CALL');
+    rethrow;
+  }
+}
+
 
   Future<void> _createAndSendOffer() async {
     try {

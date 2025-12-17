@@ -2094,6 +2094,10 @@ import 'call_screen.dart';
 
 
 // ChatScreen using Pure Native WebSocket (No packages)
+
+
+
+// ChatScreen using Pure Native WebSocket (No packages)
 class ChatScreen extends StatefulWidget {
   final int rideId;
   final String driverName;
@@ -2145,9 +2149,9 @@ class _ChatScreenState extends State<ChatScreen> {
     try {
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString('user_id');
-
+      
       print('🔑 User ID: $userId');
-
+      
       if (mounted) {
         setState(() {
           currentUserId = userId;
@@ -2167,9 +2171,9 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _initializeWebSocket() async {
     try {
       print('🔧 Initializing WebSocket');
-
+      
       _webSocketService = WebSocketService.instance;
-
+      
       if (!_webSocketService.isConnected) {
         print('📡 Connecting...');
         await _webSocketService.connect();
@@ -2187,6 +2191,7 @@ class _ChatScreenState extends State<ChatScreen> {
       // Register chat message handler
       _webSocketService.onChatMessage = _handleIncomingMessage;
       print('✅ Chat handler registered');
+
     } catch (e) {
       print('❌ WebSocket initialization error: $e');
       if (mounted) {
@@ -2218,10 +2223,8 @@ class _ChatScreenState extends State<ChatScreen> {
       }
 
       final messageText = messageData['message'] ?? '';
-      final senderId =
-          messageData['sender_id']?.toString() ??
-          data['user_id']?.toString() ??
-          '';
+      final senderId = messageData['sender_id']?.toString() ?? 
+                       data['user_id']?.toString() ?? '';
       final timestamp = data['timestamp'] ?? DateTime.now().toIso8601String();
 
       print('✅ Adding message: "$messageText"');
@@ -2236,7 +2239,7 @@ class _ChatScreenState extends State<ChatScreen> {
         );
 
         context.read<ChatProvider>().addMessage(widget.rideId, message);
-
+        
         // Auto-scroll
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (_scrollController.hasClients) {
@@ -2279,7 +2282,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   //   try {
   //     print('📤 Sending: "$text" for ride ${widget.rideId}');
-
+      
   //     // Send using the exact format from Postman
   //     _webSocketService.sendMessage({
   //       'type': 'chat',
@@ -2302,10 +2305,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
   //     context.read<ChatProvider>().addMessage(widget.rideId, localMessage);
   //     _messageController.clear();
-
+      
   //     print('✅ Added to UI');
   //     print('');
-
+      
   //   } catch (e) {
   //     print('❌ Send error: $e');
   //     CustomFlushbar.showError(
@@ -2315,142 +2318,156 @@ class _ChatScreenState extends State<ChatScreen> {
   //   }
   // }
 
-  // void _sendMessage() {
-  //   print('');
-  //   print('🚀 ═══════════════════════════════════════');
-  //   print('   SEND MESSAGE INITIATED');
-  //   print('   ═══════════════════════════════════════');
 
-  //   if (!_userIdLoaded) {
-  //     print('   ❌ User ID not loaded');
-  //     print('');
-  //     return;
-  //   }
+// void _sendMessage() {
+//   print('');
+//   print('🚀 ═══════════════════════════════════════');
+//   print('   SEND MESSAGE INITIATED');
+//   print('   ═══════════════════════════════════════');
 
-  //   if (!isConnected) {
-  //     print('   ❌ Not connected');
-  //     print('');
-  //     CustomFlushbar.showError(
-  //       context: context,
-  //       message: 'Not connected to chat',
-  //     );
-  //     return;
-  //   }
+//   if (!_userIdLoaded) {
+//     print('   ❌ User ID not loaded');
+//     print('');
+//     return;
+//   }
 
-  //   final text = _messageController.text.trim();
-  //   if (text.isEmpty) {
-  //     print('   ❌ Empty message');
-  //     print('');
-  //     return;
-  //   }
+//   if (!isConnected) {
+//     print('   ❌ Not connected');
+//     print('');
+//     CustomFlushbar.showError(
+//       context: context,
+//       message: 'Not connected to chat',
+//     );
+//     return;
+//   }
 
-  //   try {
-  //     print('   📝 Message: "$text"');
-  //     print('   🎯 Ride ID: ${widget.rideId}');
-  //     print('   👤 User ID: $currentUserId');
-  //     print('   ⏰ Time: ${DateTime.now().toIso8601String()}');
+//   final text = _messageController.text.trim();
+//   if (text.isEmpty) {
+//     print('   ❌ Empty message');
+//     print('');
+//     return;
+//   }
 
-  //     // Send using the exact format - let WebSocketService add timestamp
-  //     _webSocketService.sendMessage({
-  //       'type': 'chat',
-  //       'data': {
-  //         'ride_id': widget.rideId,
-  //         'message': text,
-  //       },
+//   try {
+//     print('   📝 Message: "$text"');
+//     print('   🎯 Ride ID: ${widget.rideId}');
+//     print('   👤 User ID: $currentUserId');
+//     print('   ⏰ Time: ${DateTime.now().toIso8601String()}');
+    
+//     // Send using the exact format - let WebSocketService add timestamp
+//     _webSocketService.sendMessage({
+//       'type': 'chat',
+//       'data': {
+//         'ride_id': widget.rideId,
+//         'message': text,
+//       },
 
-  //     });
+//     });
 
-  //     print('   ✅ Passed to WebSocket service');
-  //     print('   🔄 Clearing input field');
+//     print('   ✅ Passed to WebSocket service');
+//     print('   🔄 Clearing input field');
 
-  //     _messageController.clear();
+//     _messageController.clear();
+    
+//     // DON'T add to local UI - wait for server echo
+//     print('   ⏳ Waiting for server response...');
+//     print('   ═══════════════════════════════════════');
+//     print('');
+    
+//   } catch (e, stack) {
+//     print('   ❌ Exception: $e');
+//     print('   Stack: $stack');
+//     print('   ═══════════════════════════════════════');
+//     print('');
+//     CustomFlushbar.showError(
+//       context: context,
+//       message: 'Failed to send message',
+//     );
+//   }
+// }
 
-  //     // DON'T add to local UI - wait for server echo
-  //     print('   ⏳ Waiting for server response...');
-  //     print('   ═══════════════════════════════════════');
-  //     print('');
 
-  //   } catch (e, stack) {
-  //     print('   ❌ Exception: $e');
-  //     print('   Stack: $stack');
-  //     print('   ═══════════════════════════════════════');
-  //     print('');
-  //     CustomFlushbar.showError(
-  //       context: context,
-  //       message: 'Failed to send message',
-  //     );
-  //   }
-  // }
 
-  void _sendMessage() async {
+
+
+
+
+void _sendMessage() async {
+  print('');
+  print('🚀 ═══════════════════════════════════════');
+  print('   SEND MESSAGE INITIATED');
+  print('   ═══════════════════════════════════════');
+
+  if (!_userIdLoaded) {
+    print('   ❌ User ID not loaded');
     print('');
-    print('🚀 ═══════════════════════════════════════');
-    print('   SEND MESSAGE INITIATED');
-    print('   ═══════════════════════════════════════');
-
-    if (!_userIdLoaded) {
-      print('   ❌ User ID not loaded');
-      print('');
-      return;
-    }
-
-    if (!isConnected) {
-      print('   ❌ Not connected');
-      print('');
-      CustomFlushbar.showError(
-        context: context,
-        message: 'Not connected to chat',
-      );
-      return;
-    }
-
-    final text = _messageController.text.trim();
-    if (text.isEmpty) {
-      print('   ❌ Empty message');
-      print('');
-      return;
-    }
-
-    try {
-      print('   📝 Message: "$text"');
-      print('   🎯 Ride ID: ${widget.rideId}');
-      print('   👤 User ID: $currentUserId');
-      print('   ⏰ Time: ${DateTime.now().toIso8601String()}');
-
-      // Get user name from SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      final userName =
-          prefs.getString('user_name') ??
-          prefs.getString('name') ??
-          'Unknown User';
-
-      print('   👤 User Name: $userName');
-
-      // Send with sender_id and sender_name in data object
-      _webSocketService.sendMessage({
-        "type": 'chat',
-        'data': {'ride_id': widget.rideId, 'message': text},
-      });
-
-      print('   ✅ Passed to WebSocket service');
-      print('   🔄 Clearing input field');
-
-      _messageController.clear();
-
-      print('   ⏳ Waiting for server response...');
-      print('   ═══════════════════════════════════════');
-      print('');
-    } catch (e, stack) {
-      print('   ❌ Exception: $e');
-      print('   Stack: $stack');
-      print('   ═══════════════════════════════════════');
-      print('');
-      CustomFlushbar.showError(
-        context: context,
-        message: 'Failed to send message',
-      );
-    }
+    return;
   }
+
+  if (!isConnected) {
+    print('   ❌ Not connected');
+    print('');
+    CustomFlushbar.showError(
+      context: context,
+      message: 'Not connected to chat',
+    );
+    return;
+  }
+
+  final text = _messageController.text.trim();
+  if (text.isEmpty) {
+    print('   ❌ Empty message');
+    print('');
+    return;
+  }
+
+  try {
+    print('   📝 Message: "$text"');
+    print('   🎯 Ride ID: ${widget.rideId}');
+    print('   👤 User ID: $currentUserId');
+    print('   ⏰ Time: ${DateTime.now().toIso8601String()}');
+    
+    // Get user name from SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    final userName = prefs.getString('user_name') ?? 
+                     prefs.getString('name') ?? 
+                     'Unknown User';
+    
+    print('   👤 User Name: $userName');
+    
+    // Send with sender_id and sender_name in data object
+    _webSocketService.sendMessage({
+      "type": 'chat',
+      'data': {
+        'ride_id': widget.rideId,
+        'message': text,
+      },
+      
+    });
+
+    print('   ✅ Passed to WebSocket service');
+    print('   🔄 Clearing input field');
+
+    _messageController.clear();
+    
+    print('   ⏳ Waiting for server response...');
+    print('   ═══════════════════════════════════════');
+    print('');
+    
+  } catch (e, stack) {
+    print('   ❌ Exception: $e');
+    print('   Stack: $stack');
+    print('   ═══════════════════════════════════════');
+    print('');
+    CustomFlushbar.showError(
+      context: context,
+      message: 'Failed to send message',
+    );
+  }
+}
+
+
+
 
   String _extractTime(String timestamp) {
     try {
@@ -2558,7 +2575,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void _makeCall() async {
     const phoneNumber = '+1234567890';
     final uri = Uri.parse('tel:$phoneNumber');
-
+    
     try {
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri);
@@ -2588,18 +2605,12 @@ class _ChatScreenState extends State<ChatScreen> {
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Icon(
-                      Icons.arrow_back,
-                      size: 24.sp,
-                      color: Colors.black,
-                    ),
+                    child: Icon(Icons.arrow_back, size: 24.sp, color: Colors.black),
                   ),
                   SizedBox(width: 15.w),
                   CircleAvatar(
                     radius: 15.r,
-                    backgroundImage:
-                        widget.driverImage != null &&
-                            widget.driverImage!.isNotEmpty
+                    backgroundImage: widget.driverImage != null && widget.driverImage!.isNotEmpty
                         ? NetworkImage(widget.driverImage!)
                         : AssetImage(ConstImages.avatar) as ImageProvider,
                   ),
@@ -2621,11 +2632,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     onTap: _showCallDialog,
                     child: Container(
                       padding: EdgeInsets.all(4.w),
-                      child: Icon(
-                        Icons.phone,
-                        size: 24.sp,
-                        color: Colors.black,
-                      ),
+                      child: Icon(Icons.phone, size: 24.sp, color: Colors.black),
                     ),
                   ),
                 ],
@@ -2633,7 +2640,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             SizedBox(height: 10.h),
             Divider(thickness: 1, color: Colors.grey.shade300),
-
+            
             if (!isConnected && !isLoading)
               Container(
                 color: Colors.orange.shade100,
@@ -2645,27 +2652,18 @@ class _ChatScreenState extends State<ChatScreen> {
                     SizedBox(width: 8.w),
                     Text(
                       'Reconnecting...',
-                      style: TextStyle(
-                        color: Colors.orange.shade900,
-                        fontSize: 12.sp,
-                      ),
+                      style: TextStyle(color: Colors.orange.shade900, fontSize: 12.sp),
                     ),
                   ],
                 ),
               ),
-
+            
             Expanded(
               child: isLoading
-                  ? Center(
-                      child: CircularProgressIndicator(
-                        color: Color(ConstColors.mainColor),
-                      ),
-                    )
+                  ? Center(child: CircularProgressIndicator(color: Color(ConstColors.mainColor)))
                   : Consumer<ChatProvider>(
                       builder: (context, provider, child) {
-                        final messages = provider.getMessagesForRide(
-                          widget.rideId,
-                        );
+                        final messages = provider.getMessagesForRide(widget.rideId);
 
                         if (messages.isEmpty) {
                           return Center(
@@ -2691,9 +2689,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           controller: _scrollController,
                           itemBuilder: (context, index) {
                             final message = messages[index];
-                            final isMe =
-                                message.userId == currentUserId ||
-                                message.userId == null;
+                            final isMe = message.userId == currentUserId || message.userId == null;
                             final time = _extractTime(message.timestamp);
 
                             return ChatBubble(
