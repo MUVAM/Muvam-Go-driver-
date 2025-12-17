@@ -47,6 +47,18 @@ class AuthService {
       if (result['token'] != null) {
         await _saveToken(result['token']);
       }
+      
+      // Store user data after successful OTP verification
+      if (result['user'] != null) {
+        final user = result['user'];
+        await _saveUserInfo(
+          userId: user['ID']?.toString(),
+          firstName: user['first_name']?.toString(),
+          lastName: user['last_name']?.toString(),
+          profilePhoto: user['profile_photo']?.toString(),
+        );
+      }
+      
       return result;
     } else {
       throw Exception('Failed to verify OTP');
@@ -143,6 +155,19 @@ class AuthService {
     await prefs.setString('last_login_time', DateTime.now().millisecondsSinceEpoch.toString());
   }
 
+  Future<void> _saveUserInfo({
+    String? userId,
+    String? firstName,
+    String? lastName,
+    String? profilePhoto,
+  }) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (userId != null) await prefs.setString('user_id', userId);
+    if (firstName != null) await prefs.setString('first_name', firstName);
+    if (lastName != null) await prefs.setString('last_name', lastName);
+    if (profilePhoto != null) await prefs.setString('profile_photo', profilePhoto);
+  }
+
   Future<void> saveUserData(
     String firstName,
     String lastName,
@@ -157,9 +182,11 @@ class AuthService {
   Future<Map<String, String?>> getUserData() async {
     final prefs = await SharedPreferences.getInstance();
     return {
+      'user_id': prefs.getString('user_id'),
       'first_name': prefs.getString('first_name'),
       'last_name': prefs.getString('last_name'),
       'email': prefs.getString('email'),
+      'profile_photo': prefs.getString('profile_photo'),
     };
   }
 }

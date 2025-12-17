@@ -63,7 +63,10 @@ class _HomeScreenState extends State<HomeScreen> {
     'Holy ghost Enugu',
     'Abakpa, Enugu',
   ];
-  final WebSocketService _webSocketService = WebSocketService();
+  // final WebSocketService _webSocketService = WebSocketService();
+
+  late final WebSocketService _webSocketService;
+
   List<Map<String, dynamic>> _nearbyRides = [];
   int _currentRideIndex = 0;
   bool _hasActiveRequest = false;
@@ -141,6 +144,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+
+    _webSocketService = WebSocketService.instance; // Get singleton instance
+
     _initializeServices();
   }
 
@@ -183,7 +189,7 @@ class _HomeScreenState extends State<HomeScreen> {
       // Test connection after 2 seconds
       Future.delayed(Duration(seconds: 2), () {
         AppLogger.log('🧪 Testing WebSocket connection...');
-        _webSocketService.testConnection();
+        // _webSocketService.testConnection();
       });
     } catch (e) {
       AppLogger.log('❌ WebSocket connection failed: $e');
@@ -2551,8 +2557,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             MaterialPageRoute(
                               builder: (context) => ChatScreen(
                                 rideId: rideId,
-                                passengerName: passengerName,
-                                passengerImage: passengerImage.isNotEmpty
+                                driverName: passengerName,
+                                driverImage: passengerImage.isNotEmpty
                                     ? passengerImage
                                     : null,
                               ),
@@ -4017,8 +4023,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             builder: (context) => CallScreen(
                               driverName: passengerName,
                               rideId: callData['ride_id'] ?? 0,
-                              sessionId: sessionId,
-                              isIncomingCall: true,
+                              // sessionId: sessionId,
+                              // isIncomingCall: true,
                             ),
                           ),
                         );
@@ -4201,7 +4207,7 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => ChatScreen(
-                          passengerName:
+                          driverName:
                               '${passenger['first_name'] ?? 'Unknown'} ${passenger['last_name'] ?? 'Passenger'}',
                           rideId: widget.ride['ID'],
                         ),
