@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class WithdrawalSuccessScreen extends StatelessWidget {
-  const WithdrawalSuccessScreen({super.key});
+  final double amount;
+
+  const WithdrawalSuccessScreen({super.key, required this.amount});
 
   @override
   Widget build(BuildContext context) {
@@ -37,7 +39,7 @@ class WithdrawalSuccessScreen extends StatelessWidget {
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 40.w),
               child: Text(
-                'Your withdrawal of ₦45,000 is successful you will receive the withdrawal in 30mins.',
+                'Your withdrawal of ₦${amount.toStringAsFixed(0)} is successful you will receive the withdrawal in 30mins.',
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w400,

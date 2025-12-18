@@ -4,6 +4,7 @@ import 'package:muvam_rider/features/activities/data/providers/rides_provider.da
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
 import 'package:muvam_rider/features/communication/data/providers/chat_provider.dart';
 import 'package:muvam_rider/features/earnings/data/provider/wallet_provider.dart';
+import 'package:muvam_rider/features/earnings/data/provider/withdrawal_provider.dart';
 import 'package:muvam_rider/features/home/data/provider/driver_provider.dart';
 import 'package:muvam_rider/shared/presentation/screens/splash_screen.dart';
 import 'package:provider/provider.dart';
@@ -20,6 +21,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => RidesProvider()),
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (context) => DriverProvider()),
+        ChangeNotifierProvider(create: (_) => WithdrawalProvider()),
       ],
       child: const MyApp(),
     ),
