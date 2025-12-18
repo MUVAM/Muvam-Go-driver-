@@ -15,6 +15,7 @@ class UrlConstants {
   static const String favouriteLocation = "/api/v1/users/favouriteLocation";
   static const String updateLocation = "/users/location";
   static const String rideEstimate = "/rides/estimate";
+  static const String userProfile = "/users/profile";
   static const String rideRequest = "/rides/request";
   static const String walletSummary = "/wallet/summary";
   static const String rides = "/rides";

@@ -6,6 +6,7 @@ import 'package:muvam_rider/features/communication/data/providers/chat_provider.
 import 'package:muvam_rider/features/earnings/data/provider/wallet_provider.dart';
 import 'package:muvam_rider/features/earnings/data/provider/withdrawal_provider.dart';
 import 'package:muvam_rider/features/home/data/provider/driver_provider.dart';
+import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
 import 'package:muvam_rider/shared/presentation/screens/splash_screen.dart';
 import 'package:provider/provider.dart';
 import 'core/constants/theme_manager.dart';
@@ -22,6 +23,7 @@ void main() async {
         ChangeNotifierProvider(create: (_) => ChatProvider()),
         ChangeNotifierProvider(create: (context) => DriverProvider()),
         ChangeNotifierProvider(create: (_) => WithdrawalProvider()),
+        ChangeNotifierProvider(create: (_) => ProfileProvider()),
       ],
       child: const MyApp(),
     ),

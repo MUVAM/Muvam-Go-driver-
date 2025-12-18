@@ -20,6 +20,7 @@ import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_sele
 import 'package:muvam_rider/features/earnings/presentation/screens/wallet_screen.dart';
 import 'package:muvam_rider/features/home/data/provider/driver_provider.dart';
 import 'package:muvam_rider/features/home/presentation/widgets/ride_info_widget.dart';
+import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
 import 'package:muvam_rider/features/profile/presentation/screens/profile_screen.dart';
 import 'package:muvam_rider/features/communication/presentation/screens/call_screen.dart';
 import 'package:muvam_rider/features/communication/presentation/screens/chat_screen.dart';
@@ -179,23 +180,26 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    AppLogger.log('🔌 Connecting WebSocket...');
+    // Fetch user profile
+    AppLogger.log('👤 Fetching user profile...');
+    final profileProvider = Provider.of<ProfileProvider>(
+      context,
+      listen: false,
+    );
+    await profileProvider.fetchUserProfile();
 
-    // Force WebSocket connection with detailed logging
+    AppLogger.log('🔌 Connecting WebSocket...');
     try {
       await _webSocketService.connect();
       AppLogger.log('✅ WebSocket connection attempt completed');
 
-      // Test connection after 2 seconds
       Future.delayed(Duration(seconds: 2), () {
         AppLogger.log('🧪 Testing WebSocket connection...');
-        // _webSocketService.testConnection();
       });
     } catch (e) {
       AppLogger.log('❌ WebSocket connection failed: $e');
     }
 
-    // Setup WebSocket incoming call handler
     _webSocketService.onIncomingCall = (callData) {
       if (mounted) {
         setState(() {
@@ -206,15 +210,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
     AppLogger.log('📍 Getting current location...');
     _getCurrentLocation();
+
     AppLogger.log('👤 Initializing driver status...');
     final driverProvider = Provider.of<DriverProvider>(context, listen: false);
     await driverProvider.initializeDriverStatus();
+
     AppLogger.log('🚗 Checking active rides...');
     _checkActiveRides();
+
     AppLogger.log('💰 Fetching earnings summary...');
     _fetchEarningsSummary();
+
     AppLogger.log('⏰ Starting ride checking timer...');
     _startRideChecking();
+
     AppLogger.log('✅ All services initialized');
     AppLogger.log('=== HOME SCREEN READY ===\n');
   }
@@ -1588,6 +1597,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildDrawer() {
     final themeManager = Provider.of<ThemeManager>(context);
+    final profileProvider = Provider.of<ProfileProvider>(context);
+
     return Drawer(
       backgroundColor: themeManager.getCardColor(context),
       child: Column(
@@ -1597,35 +1608,49 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: EdgeInsets.symmetric(horizontal: 20.w),
             child: Row(
               children: [
-                Image.asset(ConstImages.avatar, width: 60.w, height: 60.h),
-                SizedBox(width: 15.w),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'John Doe',
-                      style: ConstTextStyles.drawerName.copyWith(
-                        color: themeManager.getTextColor(context),
+                profileProvider.userProfilePhoto.isNotEmpty
+                    ? CircleAvatar(
+                        radius: 30.r,
+                        backgroundImage: NetworkImage(
+                          profileProvider.userProfilePhoto,
+                        ),
+                      )
+                    : Image.asset(
+                        ConstImages.avatar,
+                        width: 60.w,
+                        height: 60.h,
                       ),
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ProfileScreen(),
+                SizedBox(width: 15.w),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        profileProvider.userShortName,
+                        style: ConstTextStyles.drawerName.copyWith(
+                          color: themeManager.getTextColor(context),
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ProfileScreen(),
+                            ),
+                          );
+                        },
+                        child: Text(
+                          'My Account',
+                          style: ConstTextStyles.drawerAccount.copyWith(
+                            color: themeManager.getSecondaryTextColor(context),
                           ),
-                        );
-                      },
-                      child: Text(
-                        'My Account',
-                        style: ConstTextStyles.drawerAccount.copyWith(
-                          color: themeManager.getSecondaryTextColor(context),
                         ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
