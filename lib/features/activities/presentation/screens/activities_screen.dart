@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/features/activities/data/providers/request_provider.dart';
-import 'package:muvam_rider/features/activities/data/providers/rides_provider.dart';
 import 'package:muvam_rider/features/activities/presentation/widgets/active_tab.dart';
 import 'package:muvam_rider/features/activities/presentation/widgets/history_tab.dart';
 import 'package:muvam_rider/features/activities/presentation/widgets/orders_tab.dart';
@@ -27,7 +26,7 @@ class ActivitiesScreenState extends State<ActivitiesScreen> {
 
   @override
   void dispose() {
-    context.read<RidesProvider>().stopAutoRefresh();
+    context.read<RequestProvider>().stopAutoRefresh();
     super.dispose();
   }
 
