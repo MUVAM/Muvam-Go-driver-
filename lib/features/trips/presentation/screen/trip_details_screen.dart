@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
-import 'package:muvam_rider/features/activities/data/providers/rides_provider.dart';
+import 'package:muvam_rider/features/activities/data/providers/request_provider.dart';
 import 'package:provider/provider.dart';
 
 class TripDetailsScreen extends StatefulWidget {
@@ -18,7 +18,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<RidesProvider>().fetchRideDetails(widget.rideId);
+      context.read<RequestProvider>().fetchRideDetails(widget.rideId);
     });
   }
 
@@ -27,7 +27,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Consumer<RidesProvider>(
+        child: Consumer<RequestProvider>(
           builder: (context, provider, child) {
             if (provider.isLoadingDetails) {
               return Center(
@@ -229,7 +229,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                             ),
                             SizedBox(height: 5.h),
                             Text(
-                              ride.getPaymentMethodDisplay(),
+                              ride.paymentMethod,
                               style: TextStyle(
                                 fontFamily: 'Inter',
                                 fontSize: 14.sp,
@@ -265,7 +265,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                             ),
                             SizedBox(height: 5.h),
                             Text(
-                              ride.getVehicleTypeDisplay(),
+                              ride.vehicleType,
                               style: TextStyle(
                                 fontFamily: 'Inter',
                                 fontSize: 14.sp,

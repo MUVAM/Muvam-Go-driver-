@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
-import 'package:muvam_rider/features/activities/data/providers/rides_provider.dart';
+import 'package:muvam_rider/core/utils/app_logger.dart';
+import 'package:muvam_rider/features/activities/data/providers/request_provider.dart';
 import 'package:provider/provider.dart';
 
 class HistoryCancelledScreen extends StatefulWidget {
@@ -19,7 +20,7 @@ class _HistoryCancelledScreenState extends State<HistoryCancelledScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<RidesProvider>().fetchRideDetails(widget.rideId);
+      context.read<RequestProvider>().fetchRideDetails(widget.rideId);
     });
   }
 
@@ -28,7 +29,7 @@ class _HistoryCancelledScreenState extends State<HistoryCancelledScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Consumer<RidesProvider>(
+        child: Consumer<RequestProvider>(
           builder: (context, provider, child) {
             if (provider.isLoadingDetails) {
               return Center(
@@ -43,6 +44,7 @@ class _HistoryCancelledScreenState extends State<HistoryCancelledScreen> {
             }
 
             final ride = provider.selectedRide!;
+            AppLogger.log('get ride address omoooo:${ride.pickupAddress}');
 
             return Padding(
               padding: EdgeInsets.all(20.w),
@@ -208,7 +210,7 @@ class _HistoryCancelledScreenState extends State<HistoryCancelledScreen> {
                             ),
                             SizedBox(width: 10.w),
                             Text(
-                              ride.getPaymentMethodDisplay(),
+                              ride.paymentMethod,
                               style: TextStyle(
                                 fontFamily: 'Inter',
                                 fontSize: 14.sp,
@@ -232,7 +234,7 @@ class _HistoryCancelledScreenState extends State<HistoryCancelledScreen> {
                       ],
                     ),
                   ),
-                  if (ride.cancellationReason != null) ...[
+                  if (ride.isCancelled) ...[
                     SizedBox(height: 20.h),
                     Divider(thickness: 1, color: Colors.grey.shade300),
                     SizedBox(height: 20.h),
@@ -247,7 +249,7 @@ class _HistoryCancelledScreenState extends State<HistoryCancelledScreen> {
                     ),
                     SizedBox(height: 5.h),
                     Text(
-                      ride.cancellationReason!,
+                      ride.cancellationReason.toString(),
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 14.sp,
