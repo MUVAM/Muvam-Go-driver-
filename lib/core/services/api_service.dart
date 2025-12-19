@@ -982,4 +982,73 @@ class ApiService {
       AppLogger.log('=== END COMPLETE RIDE DEBUG ===\n');
     }
   }
+
+  // Get driver vehicles
+  static Future<Map<String, dynamic>> getVehicles(String token) async {
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/rides/vehicle'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        return {'success': true, 'data': data};
+      } else {
+        final error = jsonDecode(response.body);
+        return {
+          'success': false,
+          'message': error['message'] ?? 'Failed to get vehicles',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
+
+  // Get user ratings
+  static Future<Map<String, dynamic>> getUserRatings(
+    String token,
+    int userId,
+  ) async {
+    try {
+      AppLogger.log('=== GET USER RATINGS API ===', tag: 'API');
+      final endpoint = '$baseUrl/users/$userId/ratings';
+      AppLogger.log('URL: $endpoint', tag: 'API');
+      AppLogger.log('User ID: $userId', tag: 'API');
+      AppLogger.log('Token: ${token.substring(0, 20)}...', tag: 'API');
+      
+      final response = await http.get(
+        Uri.parse(endpoint),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      AppLogger.log('Response Status: ${response.statusCode}', tag: 'API');
+      AppLogger.log('Response Body: ${response.body}', tag: 'API');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        AppLogger.log('✅ Ratings fetched successfully', tag: 'API');
+        return {'success': true, 'data': data};
+      } else {
+        AppLogger.log('❌ Failed to get ratings', tag: 'API');
+        final error = jsonDecode(response.body);
+        return {
+          'success': false,
+          'message': error['message'] ?? 'Failed to get ratings',
+        };
+      }
+    } catch (e) {
+      AppLogger.log('❌ Exception in getUserRatings: $e', tag: 'API');
+      return {'success': false, 'message': 'Network error: $e'};
+    } finally {
+      AppLogger.log('=== END GET USER RATINGS API ===\n', tag: 'API');
+    }
+  }
 }

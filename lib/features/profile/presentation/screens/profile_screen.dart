@@ -2,17 +2,61 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
+import 'package:muvam_rider/core/services/api_service.dart';
+// import 'package:muvam_rider/core/utils/token_manager.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/delete_account_screen.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/edit_full_name_screen.dart';
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
 import 'package:muvam_rider/features/profile/presentation/widgets/profile_field.dart';
 import 'package:muvam_rider/features/profile/presentation/screens/update_location_screen.dart';
 import 'package:muvam_rider/features/ratings/presentation/screens/ratings_screen.dart';
-import 'package:muvam_rider/features/vehicles/presentation/screens/my_cars_screen.dart';
+import 'package:muvam_rider/features/vehicles/data/models/vehicle_response.dart';
+import 'package:muvam_rider/features/vehicles/presentation/screens/vehicle_selection_screen.dart';
+import 'package:muvam_rider/features/vehicles/presentation/screens/car_information_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
+
+  @override
+  State<ProfileScreen> createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  VehicleDetail? primaryVehicle;
+  bool isLoadingVehicle = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPrimaryVehicle();
+  }
+
+  Future<void> _loadPrimaryVehicle() async {
+        final prefs = await SharedPreferences.getInstance();
+
+          final token = prefs.getString('auth_token');
+
+    // final token = await TokenManager.getToken();
+    if (token == null) return;
+
+    final response = await ApiService.getVehicles(token);
+    if (response['success']) {
+      final vehicleResponse = VehicleResponse.fromJson(response['data']);
+      setState(() {
+        primaryVehicle = vehicleResponse.vehicles.firstWhere(
+          (v) => v.isDefault,
+          orElse: () => vehicleResponse.vehicles.isNotEmpty
+              ? vehicleResponse.vehicles.first
+              : null as VehicleDetail,
+        );
+        isLoadingVehicle = false;
+      });
+    } else {
+      setState(() => isLoadingVehicle = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -219,7 +263,15 @@ class ProfileScreen extends StatelessWidget {
                               ),
                             ),
                             GestureDetector(
-                              onTap: () {},
+                              onTap: () async {
+                                await Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => CarInformationScreen(),
+                                  ),
+                                );
+                                _loadPrimaryVehicle();
+                              },
                               child: Text(
                                 '+ Add another vehicle',
                                 style: TextStyle(
@@ -235,10 +287,17 @@ class ProfileScreen extends StatelessWidget {
                         ),
                         SizedBox(height: 15.h),
                         GestureDetector(
-                          onTap: () => _navigateToMyCarsScreen(context),
+                          onTap: () async {
+                            await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => VehicleSelectionScreen(),
+                              ),
+                            );
+                            _loadPrimaryVehicle();
+                          },
                           child: Container(
                             width: 353.w,
-                            height: 47.h,
                             decoration: BoxDecoration(
                               color: Color(0xFFF7F9F8),
                               borderRadius: BorderRadius.circular(3.r),
@@ -250,24 +309,71 @@ class ProfileScreen extends StatelessWidget {
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                Row(
-                                  children: [
-                                    Image.asset(
-                                      ConstImages.car,
-                                      width: 20.w,
-                                      height: 20.h,
-                                    ),
-                                    SizedBox(width: 10.w),
-                                    Text(
-                                      'Active car',
-                                      style: TextStyle(
-                                        fontFamily: 'Inter',
-                                        fontSize: 14.sp,
-                                        fontWeight: FontWeight.w400,
-                                        color: Colors.black,
+                                Expanded(
+                                  child: Row(
+                                    children: [
+                                      if (isLoadingVehicle)
+                                        SizedBox(
+                                          width: 20.w,
+                                          height: 20.h,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Color(ConstColors.mainColor),
+                                          ),
+                                        )
+                                      else if (primaryVehicle?.primaryPhoto != null)
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(4.r),
+                                          child: Image.network(
+                                            primaryVehicle!.primaryPhoto!.url,
+                                            width: 40.w,
+                                            height: 40.h,
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stack) =>
+                                                Image.asset(
+                                              ConstImages.car,
+                                              width: 20.w,
+                                              height: 20.h,
+                                            ),
+                                          ),
+                                        )
+                                      else
+                                        Image.asset(
+                                          ConstImages.car,
+                                          width: 20.w,
+                                          height: 20.h,
+                                        ),
+                                      SizedBox(width: 10.w),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              'Active car',
+                                              style: TextStyle(
+                                                fontFamily: 'Inter',
+                                                fontSize: 12.sp,
+                                                fontWeight: FontWeight.w400,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                            if (primaryVehicle != null)
+                                              Text(
+                                                primaryVehicle!.displayName,
+                                                style: TextStyle(
+                                                  fontFamily: 'Inter',
+                                                  fontSize: 14.sp,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.black,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                                 Icon(
                                   Icons.arrow_forward_ios,
@@ -332,13 +438,6 @@ class ProfileScreen extends StatelessWidget {
           ),
         );
       },
-    );
-  }
-
-  void _navigateToMyCarsScreen(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (context) => MyCarsScreen()),
     );
   }
 

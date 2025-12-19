@@ -950,7 +950,7 @@ class WebSocketService {
   Function(Map<String, dynamic>)? onChatMessage;
   Function(Map<String, dynamic>)? onDriverLocation;
   Function(Map<String, dynamic>)? onIncomingCall;
-  Function(Map<String, dynamic>)? onRideCompleted;
+  Function(Map<String, dynamic>)? onRideCompleted; // Callback for ride completion
   Function(Map<String, dynamic>)? onRideRequest;
 
   bool get isConnected => _isConnected;
@@ -1189,8 +1189,12 @@ class WebSocketService {
         if (onIncomingCall != null) onIncomingCall!(data);
         break;
       case 'ride_completed':
-        print('   → ride_completed handler');
-        if (onRideCompleted != null) onRideCompleted!(data);
+        print('🎉 Ride completed message received: $data');
+        if (onRideCompleted != null) {
+          onRideCompleted!(data);
+        } else {
+          print('⚠️ No ride completed handler registered!');
+        }
         break;
       case 'ride_request':
       case 'new_ride':
