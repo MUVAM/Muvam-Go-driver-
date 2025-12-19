@@ -6,7 +6,7 @@ import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/features/activities/data/models/ride_data.dart';
 
 class RequestProvider extends ChangeNotifier {
-  final RequestService _activitiesService = RequestService();
+  final RequestService _requestService = RequestService();
 
   List<RideData> _prebookedRides = [];
   List<RideData> _activeRides = [];
@@ -27,7 +27,7 @@ class RequestProvider extends ChangeNotifier {
   bool get isLoadingDetails => _isLoadingDetails;
   String? get errorMessage => _errorMessage;
 
-  RidesProvider() {
+  RequestProvider() {
     fetchRides();
   }
 
@@ -37,42 +37,30 @@ class RequestProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      AppLogger.log('🔄 Fetching rides from API...');
+      AppLogger.log('Fetching rides');
 
-      // Fetch prebooked rides
-      final prebookedResult = await _activitiesService.getPrebookedRides();
+      final prebookedResult = await _requestService.getPrebookedRides();
       if (prebookedResult['success'] == true &&
           prebookedResult['data'] != null) {
         _prebookedRides = _parseRides(prebookedResult['data']);
-        AppLogger.log('✅ Prebooked: ${_prebookedRides.length} rides');
       } else {
-        AppLogger.log(
-          '⚠️ Prebooked rides failed: ${prebookedResult['message']}',
-        );
         _prebookedRides = [];
       }
 
-      // Fetch active rides
-      final activeResult = await _activitiesService.getActiveRides();
+      final activeResult = await _requestService.getActiveRides();
       if (activeResult['success'] == true && activeResult['data'] != null) {
         _activeRides = _parseRides(activeResult['data']);
-        AppLogger.log('✅ Active: ${_activeRides.length} rides');
       } else {
-        AppLogger.log('⚠️ Active rides failed: ${activeResult['message']}');
         _activeRides = [];
       }
 
-      // Fetch history rides
-      final historyResult = await _activitiesService.getHistoryRides();
+      final historyResult = await _requestService.getHistoryRides();
       if (historyResult['success'] == true && historyResult['data'] != null) {
         _historyRides = _parseRides(historyResult['data']);
-        AppLogger.log('✅ History: ${_historyRides.length} rides');
       } else {
-        AppLogger.log('⚠️ History rides failed: ${historyResult['message']}');
         _historyRides = [];
       }
 
-      // Only set error if ALL requests failed
       if (_prebookedRides.isEmpty &&
           _activeRides.isEmpty &&
           _historyRides.isEmpty) {
@@ -82,8 +70,7 @@ class RequestProvider extends ChangeNotifier {
       }
     } catch (e) {
       _errorMessage = 'Error fetching rides: $e';
-      AppLogger.log('❌ Exception: $e');
-      // Clear all rides on exception
+      AppLogger.log('Exception: $e');
       _prebookedRides = [];
       _activeRides = [];
       _historyRides = [];
@@ -93,29 +80,26 @@ class RequestProvider extends ChangeNotifier {
     }
   }
 
-  /// Fetch details for a specific ride by ID
   Future<void> fetchRideDetails(int rideId) async {
     _isLoadingDetails = true;
     _errorMessage = null;
     notifyListeners();
 
     try {
-      AppLogger.log('🔄 Fetching ride details for ID: $rideId');
+      AppLogger.log('Fetching ride details: $rideId');
 
-      final result = await _activitiesService.getRideDetails(rideId);
+      final result = await _requestService.getRideDetails(rideId);
 
       if (result['success'] == true && result['data'] != null) {
         _selectedRide = RideData.fromJson(result['data']);
-        AppLogger.log('✅ Successfully fetched ride details for ID: $rideId');
         _errorMessage = null;
       } else {
-        AppLogger.log('⚠️ Failed to fetch ride details: ${result['message']}');
         _errorMessage = result['message'] ?? 'Failed to fetch ride details';
         _selectedRide = null;
       }
     } catch (e) {
       _errorMessage = 'Error fetching ride details: $e';
-      AppLogger.log('❌ Exception in fetchRideDetails: $e');
+      AppLogger.log('Exception in fetchRideDetails: $e');
       _selectedRide = null;
     } finally {
       _isLoadingDetails = false;
@@ -123,7 +107,6 @@ class RequestProvider extends ChangeNotifier {
     }
   }
 
-  /// Clear the selected ride (useful when navigating away from details)
   void clearSelectedRide() {
     _selectedRide = null;
     notifyListeners();
@@ -133,39 +116,30 @@ class RequestProvider extends ChangeNotifier {
     try {
       List<dynamic> ridesJson = [];
 
-      if (data is Map<String, dynamic>) {
-        // Response structure: {"rides": [...], "limit": 50, "offset": 0, "total": 74}
-        if (data.containsKey('rides') && data['rides'] is List) {
-          ridesJson = data['rides'] as List<dynamic>;
-          AppLogger.log(
-            '📦 Parsed ${ridesJson.length} rides from Map response',
-          );
-        }
+      if (data is Map<String, dynamic> && data['rides'] is List) {
+        ridesJson = data['rides'];
       } else if (data is List) {
-        // Response is directly a list
         ridesJson = data;
-        AppLogger.log('📦 Parsed ${ridesJson.length} rides from List response');
       }
 
       return ridesJson
-          .map((json) {
+          .map((e) {
             try {
-              return RideData.fromJson(json);
+              return RideData.fromJson(e);
             } catch (e) {
-              AppLogger.log('⚠️ Failed to parse ride: $e');
+              AppLogger.log('Failed to parse ride: $e');
               return null;
             }
           })
-          .whereType<RideData>() // Filter out null values
+          .whereType<RideData>()
           .toList();
     } catch (e) {
-      AppLogger.log('❌ Error parsing rides: $e');
+      AppLogger.log('Error parsing rides: $e');
       return [];
     }
   }
 
   void startAutoRefresh() {
-    AppLogger.log('▶️ Starting auto-refresh (every 30 seconds)');
     _refreshTimer?.cancel();
     _refreshTimer = Timer.periodic(
       const Duration(seconds: 30),
@@ -174,7 +148,6 @@ class RequestProvider extends ChangeNotifier {
   }
 
   void stopAutoRefresh() {
-    AppLogger.log('⏸️ Stopping auto-refresh');
     _refreshTimer?.cancel();
     _refreshTimer = null;
   }
@@ -186,10 +159,9 @@ class RequestProvider extends ChangeNotifier {
   String formatDateTime(String dateTimeStr) {
     try {
       final dateTime = DateTime.parse(dateTimeStr);
-      final formatter = DateFormat('MMM dd, yyyy • hh:mm a');
-      return formatter.format(dateTime);
+      return DateFormat('MMM dd, yyyy • hh:mm a').format(dateTime);
     } catch (e) {
-      AppLogger.log('⚠️ Error formatting date: $e');
+      AppLogger.log('Date format error: $e');
       return dateTimeStr;
     }
   }
