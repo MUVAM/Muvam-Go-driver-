@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
-import 'package:muvam_rider/features/activities/data/providers/rides_provider.dart';
+import 'package:muvam_rider/features/activities/data/providers/request_provider.dart';
 import 'package:provider/provider.dart';
 
 class HistoryCompletedScreen extends StatefulWidget {
@@ -19,7 +19,7 @@ class _HistoryCompletedScreenState extends State<HistoryCompletedScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<RidesProvider>().fetchRideDetails(widget.rideId);
+      context.read<RequestProvider>().fetchRideDetails(widget.rideId);
     });
   }
 
@@ -28,7 +28,7 @@ class _HistoryCompletedScreenState extends State<HistoryCompletedScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Consumer<RidesProvider>(
+        child: Consumer<RequestProvider>(
           builder: (context, provider, child) {
             if (provider.isLoadingDetails) {
               return Center(
@@ -260,7 +260,7 @@ class _HistoryCompletedScreenState extends State<HistoryCompletedScreen> {
                             ),
                             SizedBox(width: 10.w),
                             Text(
-                              ride.getPaymentMethodDisplay(),
+                              ride.paymentMethod,
                               style: TextStyle(
                                 fontFamily: 'Inter',
                                 fontSize: 14.sp,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:muvam_rider/core/constants/images.dart';
-import 'package:muvam_rider/features/activities/data/providers/rides_provider.dart';
+import 'package:muvam_rider/features/activities/data/providers/request_provider.dart';
 import 'package:muvam_rider/features/activities/presentation/widgets/history_item.dart';
 import 'package:muvam_rider/features/trips/presentation/screen/history_cancelled_screen.dart';
 import 'package:muvam_rider/features/trips/presentation/screen/history_completed_screen.dart';
@@ -13,7 +13,7 @@ class HistoryTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<RidesProvider>(
+    return Consumer<RequestProvider>(
       builder: (context, provider, child) {
         if (provider.isLoading) {
           return Center(

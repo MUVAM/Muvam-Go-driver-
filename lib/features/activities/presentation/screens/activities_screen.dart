@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/features/activities/data/providers/request_provider.dart';
 import 'package:muvam_rider/features/activities/data/providers/rides_provider.dart';
 import 'package:muvam_rider/features/activities/presentation/widgets/active_tab.dart';
 import 'package:muvam_rider/features/activities/presentation/widgets/history_tab.dart';
@@ -20,7 +21,7 @@ class ActivitiesScreenState extends State<ActivitiesScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<RidesProvider>().startAutoRefresh();
+      context.read<RequestProvider>().startAutoRefresh();
     });
   }
 
@@ -37,7 +38,7 @@ class ActivitiesScreenState extends State<ActivitiesScreen> {
       body: Stack(
         children: [
           Positioned(
-            top: 70.h,
+            top: 35.h,
             left: 20.w,
             child: Container(
               width: 45.w,
@@ -58,7 +59,7 @@ class ActivitiesScreenState extends State<ActivitiesScreen> {
             ),
           ),
           Positioned(
-            top: 140.h,
+            top: 100.h,
             left: 20.w,
             child: Container(
               width: 353.w,
@@ -88,7 +89,7 @@ class ActivitiesScreenState extends State<ActivitiesScreen> {
             ),
           ),
           Positioned(
-            top: 197.h,
+            top: 170.h,
             left: 20.w,
             right: 20.w,
             bottom: 20.h,
