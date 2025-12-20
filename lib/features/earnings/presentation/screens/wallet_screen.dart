@@ -84,14 +84,14 @@ class WalletScreenState extends State<WalletScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      GestureDetector(
-                        onTap: () => Navigator.of(context).pop(),
-                        child: Image.asset(
-                          ConstImages.back,
-                          width: 24.w,
-                          height: 24.h,
-                        ),
-                      ),
+                      // GestureDetector(
+                      //   onTap: () => Navigator.of(context).pop(),
+                      //   child: Image.asset(
+                      //     ConstImages.back,
+                      //     width: 24.w,
+                      //     height: 24.h,
+                      //   ),
+                      // ),
                       GestureDetector(
                         onTap: () => Navigator.push(
                           context,

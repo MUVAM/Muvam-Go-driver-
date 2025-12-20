@@ -17,6 +17,9 @@ import 'package:muvam_rider/features/activities/presentation/screens/activities_
 import 'package:muvam_rider/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_selection_screen.dart';
+import 'package:muvam_rider/features/communication/data/models/chat_model.dart';
+import 'package:muvam_rider/features/communication/data/providers/chat_provider.dart';
+import 'package:muvam_rider/features/communication/presentation/widgets/notificationchat.dart';
 import 'package:muvam_rider/features/earnings/presentation/screens/wallet_screen.dart';
 import 'package:muvam_rider/features/home/data/provider/driver_provider.dart';
 import 'package:muvam_rider/features/home/presentation/widgets/ride_info_widget.dart';
@@ -81,7 +84,6 @@ class _HomeScreenState extends State<HomeScreen> {
     'total_rides_completed': 0,
   };
   final CallService _callService = CallService();
-  Map<String, dynamic>? _incomingCall;
   DateTime? _lastBackPress;
 
   void _showContactBottomSheet() {
@@ -166,100 +168,302 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  void _initializeServices() async {
-    AppLogger.log('=== INITIALIZING HOME SCREEN SERVICES ===');
+// void _initializeServices() async {
+//   AppLogger.log('=== INITIALIZING HOME SCREEN SERVICES ===');
 
-    // Check session expiration first
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final isExpired = await authProvider.isSessionExpired();
+//   // Check session expiration first
+//   final authProvider = Provider.of<AuthProvider>(context, listen: false);
+//   final isExpired = await authProvider.isSessionExpired();
 
-    if (isExpired) {
-      AppLogger.log('🔒 Session expired, redirecting to login...');
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => RiderSignupSelectionScreen()),
-        (route) => false,
-      );
-      return;
-    }
+//   if (isExpired) {
+//     AppLogger.log('🔒 Session expired, redirecting to login...');
+//     Navigator.pushAndRemoveUntil(
+//       context,
+//       MaterialPageRoute(builder: (context) => RiderSignupSelectionScreen()),
+//       (route) => false,
+//     );
+//     return;
+//   }
 
-    // Fetch user profile
-    AppLogger.log('👤 Fetching user profile...');
-    final profileProvider = Provider.of<ProfileProvider>(
-      context,
-      listen: false,
-    );
-    await profileProvider.fetchUserProfile();
+//   // Fetch user profile
+//   AppLogger.log('👤 Fetching user profile...');
+//   final profileProvider = Provider.of<ProfileProvider>(
+//     context,
+//     listen: false,
+//   );
+//   await profileProvider.fetchUserProfile();
 
-    AppLogger.log('🔌 Connecting WebSocket...');
-    try {
-      await _webSocketService.connect();
-      AppLogger.log('✅ WebSocket connection attempt completed');
+//   AppLogger.log('🔌 Connecting WebSocket...');
+//   try {
+//     await _webSocketService.connect();
+//     AppLogger.log('✅ WebSocket connection attempt completed');
 
-      Future.delayed(Duration(seconds: 2), () {
-        AppLogger.log('🧪 Testing WebSocket connection...');
-      });
-    } catch (e) {
-      AppLogger.log('❌ WebSocket connection failed: $e');
-    }
+//     Future.delayed(Duration(seconds: 2), () {
+//       AppLogger.log('🧪 Testing WebSocket connection...');
+//     });
+//   } catch (e) {
+//     AppLogger.log('❌ WebSocket connection failed: $e');
+//   }
 
-    _webSocketService.onIncomingCall = (callData) {
-      AppLogger.log('📞 Incoming call received in HomeScreen', tag: 'HOME');
-      AppLogger.log('Call data: $callData', tag: 'HOME');
+//   // CRITICAL: Register chat handler GLOBALLY in HomeScreen
+//   _webSocketService.onChatMessage = (chatData) {
+//     AppLogger.log('💬 Global chat handler called in HomeScreen');
+//     _handleGlobalChatMessage(chatData);
+//   };
+
+//   _webSocketService.onIncomingCall = (callData) {
+//     AppLogger.log('📞 Incoming call received in HomeScreen', tag: 'HOME');
+//     AppLogger.log('Call data: $callData', tag: 'HOME');
+    
+//     if (mounted) {
+//       setState(() {
+//         _incomingCall = callData;
+//       });
+//       AppLogger.log('✅ Incoming call state updated', tag: 'HOME');
+//     } else {
+//       AppLogger.log('⚠️ Widget not mounted, cannot show incoming call', tag: 'HOME');
+//     }
+//   };
+
+//   // Setup WebSocket ride completion handler
+//   _webSocketService.onRideCompleted = (completionData) {
+//     AppLogger.log('🎉 Ride completion received via WebSocket: $completionData');
+//     if (mounted) {
+//       // Close any open sheets first
+//       if (Navigator.of(context).canPop()) {
+//         Navigator.of(context).pop();
+//       }
       
-      if (mounted) {
-        setState(() {
-          _incomingCall = callData;
-        });
-        AppLogger.log('✅ Incoming call state updated', tag: 'HOME');
-      } else {
-        AppLogger.log('⚠️ Widget not mounted, cannot show incoming call', tag: 'HOME');
-      }
-    };
+//       // Small delay before showing completion sheet
+//       Future.delayed(Duration(milliseconds: 300), () {
+//         if (mounted) {
+//           _showCompletedSheet(context, _activeRide ?? {});
+//         }
+//       });
+      
+//       // Update local state
+//       final updatedRide = Map<String, dynamic>.from(_activeRide ?? {});
+//       updatedRide['Status'] = 'completed';
+//       _onRideStatusChanged(updatedRide);
+//     }
+//   };
 
-    // Setup WebSocket ride completion handler
-    _webSocketService.onRideCompleted = (completionData) {
-      AppLogger.log('🎉 Ride completion received via WebSocket: $completionData');
-      if (mounted) {
-        // Close any open sheets first
-        if (Navigator.of(context).canPop()) {
-          Navigator.of(context).pop();
-        }
-        
-        // Small delay before showing completion sheet
-        Future.delayed(Duration(milliseconds: 300), () {
-          if (mounted) {
-            _showCompletedSheet(context, _activeRide ?? {});
-          }
-        });
-        
-        // Update local state
-        final updatedRide = Map<String, dynamic>.from(_activeRide ?? {});
-        updatedRide['Status'] = 'completed';
-        _onRideStatusChanged(updatedRide);
-      }
-    };
+//   AppLogger.log('📍 Getting current location...');
+//   _getCurrentLocation();
 
-    AppLogger.log('📍 Getting current location...');
-    _getCurrentLocation();
+//   AppLogger.log('👤 Initializing driver status...');
+//   final driverProvider = Provider.of<DriverProvider>(context, listen: false);
+//   await driverProvider.initializeDriverStatus();
 
-    AppLogger.log('👤 Initializing driver status...');
-    final driverProvider = Provider.of<DriverProvider>(context, listen: false);
-    await driverProvider.initializeDriverStatus();
+//   AppLogger.log('🚗 Checking active rides...');
+//   _checkActiveRides();
 
-    AppLogger.log('🚗 Checking active rides...');
-    _checkActiveRides();
+//   AppLogger.log('💰 Fetching earnings summary...');
+//   _fetchEarningsSummary();
 
-    AppLogger.log('💰 Fetching earnings summary...');
-    _fetchEarningsSummary();
+//   AppLogger.log('⏰ Starting ride checking timer...');
+//   _startRideChecking();
 
-    AppLogger.log('⏰ Starting ride checking timer...');
-    _startRideChecking();
+//   AppLogger.log('✅ All services initialized');
+//   AppLogger.log('=== HOME SCREEN READY ===\n');
+// }
 
-    AppLogger.log('✅ All services initialized');
-    AppLogger.log('=== HOME SCREEN READY ===\n');
+
+void _initializeServices() async {
+  AppLogger.log('=== INITIALIZING HOME SCREEN SERVICES ===');
+
+  // Check session expiration first
+  final authProvider = Provider.of<AuthProvider>(context, listen: false);
+  final isExpired = await authProvider.isSessionExpired();
+
+  if (isExpired) {
+    AppLogger.log('🔒 Session expired, redirecting to login...');
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => RiderSignupSelectionScreen()),
+      (route) => false,
+    );
+    return;
   }
 
+  // Fetch user profile
+  AppLogger.log('👤 Fetching user profile...');
+  final profileProvider = Provider.of<ProfileProvider>(
+    context,
+    listen: false,
+  );
+  await profileProvider.fetchUserProfile();
+
+  AppLogger.log('🔌 Connecting WebSocket...');
+  try {
+    await _webSocketService.connect();
+    AppLogger.log('✅ WebSocket connection attempt completed');
+
+    Future.delayed(Duration(seconds: 2), () {
+      AppLogger.log('🧪 Testing WebSocket connection...');
+    });
+  } catch (e) {
+    AppLogger.log('❌ WebSocket connection failed: $e');
+  }
+
+  // CRITICAL: Register chat handler GLOBALLY in HomeScreen
+  _webSocketService.onChatMessage = (chatData) {
+    AppLogger.log('💬 Global chat handler called in HomeScreen');
+    _handleGlobalChatMessage(chatData);
+  };
+
+  // NEW: Send "Hello" message to open WebSocket channel
+  if (_activeRide != null) {
+    AppLogger.log('📤 Sending initialization message to open WebSocket channel...');
+    Future.delayed(Duration(seconds: 3), () {
+      if (_webSocketService.isConnected) {
+        _webSocketService.sendMessage({
+          "type": "chat",
+          "data": {
+            "ride_id": _activeRide!['ID'],
+            "message": "Hello",
+          },
+        });
+        AppLogger.log('✅ Initialization message sent');
+      }
+    });
+  }
+
+  // _webSocketService.onIncomingCall = (callData) {
+  //   AppLogger.log('📞 Incoming call received in HomeScreen', tag: 'HOME');
+  //   AppLogger.log('Call data: $callData', tag: 'HOME');
+    
+  //   if (mounted) {
+  //     setState(() {
+  //       _incomingCall = callData;
+  //     });
+  //     AppLogger.log('✅ Incoming call state updated', tag: 'HOME');
+  //   } else {
+  //     AppLogger.log('⚠️ Widget not mounted, cannot show incoming call', tag: 'HOME');
+  //   }
+  // };
+
+  // Setup WebSocket ride completion handler
+  _webSocketService.onRideCompleted = (completionData) {
+    AppLogger.log('🎉 Ride completion received via WebSocket: $completionData');
+    if (mounted) {
+      // Close any open sheets first
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+      
+      // Small delay before showing completion sheet
+      Future.delayed(Duration(milliseconds: 300), () {
+        if (mounted) {
+          _showCompletedSheet(context, _activeRide ?? {});
+        }
+      });
+      
+      // Update local state
+      final updatedRide = Map<String, dynamic>.from(_activeRide ?? {});
+      updatedRide['Status'] = 'completed';
+      _onRideStatusChanged(updatedRide);
+    }
+  };
+
+  AppLogger.log('📍 Getting current location...');
+  _getCurrentLocation();
+
+  AppLogger.log('👤 Initializing driver status...');
+  final driverProvider = Provider.of<DriverProvider>(context, listen: false);
+  await driverProvider.initializeDriverStatus();
+
+  AppLogger.log('🚗 Checking active rides...');
+  _checkActiveRides();
+
+  AppLogger.log('💰 Fetching earnings summary...');
+  _fetchEarningsSummary();
+
+  AppLogger.log('⏰ Starting ride checking timer...');
+  _startRideChecking();
+
+  AppLogger.log('✅ All services initialized');
+  AppLogger.log('=== HOME SCREEN READY ===\n');
+}
+
+
+
+
+// Add this new method to handle global chat messages
+void _handleGlobalChatMessage(Map<String, dynamic> chatData) {
+  try {
+    AppLogger.log('📨 Processing global chat message');
+    final data = chatData['data'] ?? {};
+    final messageText = data['message'] ?? '';
+    final senderName = data['sender_name'] ?? 'Unknown User';
+    final senderImage = data['sender_image'];
+    final senderId = data['sender_id']?.toString() ?? '';
+    final rideId = data['ride_id'] ?? 0;
+    final timestamp = chatData['timestamp'] ?? DateTime.now().toIso8601String();
+
+    AppLogger.log('   Message: "$messageText"');
+    AppLogger.log('   From: $senderName (ID: $senderId)');
+    AppLogger.log('   Ride: $rideId');
+
+    // Add message to ChatProvider so it's available when user opens ChatScreen
+    if (mounted && rideId > 0) {
+      final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+      final message = ChatMessageModel(
+        message: messageText,
+        timestamp: timestamp,
+        rideId: rideId,
+        userId: senderId,
+      );
+      
+      chatProvider.addMessage(rideId, message);
+      AppLogger.log('✅ Message added to ChatProvider');
+
+      // Show notification
+      ChatNotificationService.showChatNotification(
+        context,
+        senderName: senderName,
+        message: messageText,
+        senderImage: senderImage,
+        onTap: () {
+          AppLogger.log('🔔 Notification tapped, navigating to chat');
+          
+          // Navigate to chat screen
+          if (_activeRide != null) {
+            final passenger = _activeRide!['Passenger'] ?? {};
+            final passengerName = '${passenger['first_name'] ?? 'Unknown'} ${passenger['last_name'] ?? 'Passenger'}';
+            final passengerImage = passenger['profile_image'] ?? passenger['image'];
+            
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChatScreen(
+                  rideId: rideId,
+                  driverName: passengerName,
+                  driverImage: passengerImage,
+                ),
+              ),
+            );
+          } else {
+            // Fallback if no active ride
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ChatScreen(
+                  rideId: rideId,
+                  driverName: senderName,
+                  driverImage: senderImage,
+                ),
+              ),
+            );
+          }
+        },
+      );
+    }
+  } catch (e, stack) {
+    AppLogger.log('❌ Error handling global chat message: $e');
+    AppLogger.log('Stack: $stack');
+  }
+}
   void _startRideChecking() {
     // Setup WebSocket ride request listener
     _webSocketService.onRideRequest = (rideData) {
@@ -1013,45 +1217,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (_hasActiveRequest && _nearbyRides.isNotEmpty)
                   _buildRideRequestSheet(),
                 // Full-screen incoming call overlay
-                if (_incomingCall != null)
-                  Positioned.fill(
-                    child: IncomingCallScreen(
-                      callerName: _incomingCall!['data']?['caller_name'] ?? 'Unknown Caller',
-                      callerImage: _incomingCall!['data']?['caller_image'],
-                      sessionId: _incomingCall!['data']?['session_id'] ?? 0,
-                      rideId: _incomingCall!['data']?['ride_id'] ?? 0,
-                      onAccept: () async {
-                        final sessionId = _incomingCall!['data']?['session_id'] ?? 0;
-                        final passengerName = _incomingCall!['data']?['caller_name'] ?? 'Unknown Passenger';
-                        final rideId = _incomingCall!['data']?['ride_id'] ?? 0;
-                        
-                        await _callService.answerCall(sessionId);
-                        
-                        setState(() {
-                          _incomingCall = null;
-                        });
-                        
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CallScreen(
-                              driverName: passengerName,
-                              rideId: rideId,
-                            ),
-                          ),
-                        );
-                      },
-                      onReject: () async {
-                        final sessionId = _incomingCall!['data']?['session_id'] ?? 0;
-                        
-                        await _callService.rejectCall(sessionId);
-                        
-                        setState(() {
-                          _incomingCall = null;
-                        });
-                      },
-                    ),
-                  ),
+                
               ],
             ),
       ),
@@ -3673,7 +3839,7 @@ class _HomeScreenState extends State<HomeScreen> {
     // Extract data from WebSocket message format
     final rideData = ride['data'] ?? ride; // Handle both formats
     final rideId = rideData['RideID'] ?? rideData['ID'] ?? 0;
-    final passengerName = rideData['Passenger']['first_name'] ?? 'Unknown Passenger';
+    final passengerName = rideData['PassengerName'] ?? 'Passenger';
     final pickupAddress =
         rideData['PickupAddress'] ?? 'Unknown pickup location';
     final destAddress = rideData['DestAddress'] ?? 'Unknown destination';
@@ -4364,108 +4530,6 @@ Widget _buildDetailRow(String label, String value, {bool isStop = false}) {
     AppLogger.log('=== RIDE STATUS CHANGE HANDLED ===\n');
   }
 
-  Widget _buildIncomingCallOverlay() {
-    final callData = _incomingCall!['data'] ?? {};
-    final passengerName = callData['caller_name'] ?? 'Unknown Passenger';
-    final sessionId = callData['session_id'] ?? 0;
-
-    return Positioned.fill(
-      child: Container(
-        color: Colors.black.withOpacity(0.8),
-        child: Center(
-          child: Container(
-            width: 300.w,
-            padding: EdgeInsets.all(20.w),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20.r),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircleAvatar(
-                  radius: 40.r,
-                  backgroundImage: AssetImage(ConstImages.avatar),
-                ),
-                SizedBox(height: 15.h),
-                Text(
-                  passengerName,
-                  style: TextStyle(
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                SizedBox(height: 5.h),
-                Text(
-                  'Incoming call...',
-                  style: TextStyle(fontSize: 14.sp, color: Colors.grey),
-                ),
-                SizedBox(height: 30.h),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    GestureDetector(
-                      onTap: () async {
-                        await _callService.rejectCall(sessionId);
-                        setState(() {
-                          _incomingCall = null;
-                        });
-                      },
-                      child: Container(
-                        width: 60.w,
-                        height: 60.h,
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.call_end,
-                          color: Colors.white,
-                          size: 30.sp,
-                        ),
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () async {
-                        await _callService.answerCall(sessionId);
-                        setState(() {
-                          _incomingCall = null;
-                        });
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CallScreen(
-                              driverName: passengerName,
-                              rideId: callData['ride_id'] ?? 0,
-                              // sessionId: sessionId,
-                              // isIncomingCall: true,
-                            ),
-                          ),
-                        );
-                      },
-                      child: Container(
-                        width: 60.w,
-                        height: 60.h,
-                        decoration: BoxDecoration(
-                          color: Color(ConstColors.mainColor), 
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.call,
-                          color: Colors.white,
-                          size: 30.sp,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _RideAcceptedSheet extends StatefulWidget {
@@ -4495,7 +4559,6 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
   Widget build(BuildContext context) {
     final passenger = widget.ride['Passenger'] ?? {};
     AppLogger.log('DEBUG Passenger data: $passenger');
-    AppLogger.log('DEBUG first_name: ${passenger['first_name']}');
     final tip = widget.acceptedData['tip'] ?? 0;
     final waitFee = widget.acceptedData['wait_fee'] ?? 0;
     final passengerName = '${passenger['first_name'] ?? 'Unknown'} ${passenger['last_name'] ?? 'Passenger'}';
