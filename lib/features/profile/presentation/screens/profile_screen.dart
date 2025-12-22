@@ -34,9 +34,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadPrimaryVehicle() async {
-        final prefs = await SharedPreferences.getInstance();
+    final prefs = await SharedPreferences.getInstance();
 
-          final token = prefs.getString('auth_token');
+    final token = prefs.getString('auth_token');
 
     // final token = await TokenManager.getToken();
     if (token == null) return;
@@ -89,8 +89,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         onTap: () => Navigator.pop(context),
                         child: Image.asset(
                           ConstImages.back,
-                          width: 24.w,
-                          height: 24.h,
+                          width: 30.w,
+                          height: 30.h,
+                          fit: BoxFit.cover,
                         ),
                       ),
                       Expanded(
@@ -110,7 +111,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                 ),
-                SizedBox(height: 40.h),
+                SizedBox(height: 10.h),
                 Stack(
                   children: [
                     profileProvider.userProfilePhoto.isNotEmpty
@@ -126,7 +127,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             height: 80.h,
                           ),
                     Positioned(
-                      top: 6.h,
+                      top: 2.h,
                       left: 51.w,
                       child: Container(
                         width: 18.w,
@@ -144,7 +145,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 16.h),
                 Container(
                   width: 120.w,
                   height: 20.h,
@@ -165,7 +165,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                 ),
-                SizedBox(height: 10.h),
                 GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -267,7 +266,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 await Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => CarInformationScreen(),
+                                    builder: (context) =>
+                                        CarInformationScreen(),
                                   ),
                                 );
                                 _loadPrimaryVehicle();
@@ -321,20 +321,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             color: Color(ConstColors.mainColor),
                                           ),
                                         )
-                                      else if (primaryVehicle?.primaryPhoto != null)
+                                      else if (primaryVehicle?.primaryPhoto !=
+                                          null)
                                         ClipRRect(
-                                          borderRadius: BorderRadius.circular(4.r),
+                                          borderRadius: BorderRadius.circular(
+                                            4.r,
+                                          ),
                                           child: Image.network(
                                             primaryVehicle!.primaryPhoto!.url,
                                             width: 40.w,
                                             height: 40.h,
                                             fit: BoxFit.cover,
-                                            errorBuilder: (context, error, stack) =>
-                                                Image.asset(
-                                              ConstImages.car,
-                                              width: 20.w,
-                                              height: 20.h,
-                                            ),
+                                            errorBuilder:
+                                                (context, error, stack) =>
+                                                    Image.asset(
+                                                      ConstImages.car,
+                                                      width: 20.w,
+                                                      height: 20.h,
+                                                    ),
                                           ),
                                         )
                                       else
