@@ -81,6 +81,16 @@ class _OtpScreenState extends State<OtpScreen> {
     setState(() => _isLoading = false);
 
     if (success) {
+      // Check if user role is driver
+      final userRole = authProvider.verifyOtpResponse?['user']?['Role'];
+      if (userRole != null && userRole != 'driver') {
+        CustomFlushbar.showError(
+          context: context,
+          message: 'You cannot log in with a passenger account in the driver app',
+        );
+        return;
+      }
+
       if (authProvider.isNewUser) {
         // New user - go to create account
         Navigator.pushReplacement(
