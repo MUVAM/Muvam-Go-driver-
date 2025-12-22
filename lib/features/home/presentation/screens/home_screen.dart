@@ -14,6 +14,7 @@ import 'package:muvam_rider/core/services/websocket_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/activities/presentation/screens/activities_screen.dart';
+import 'package:muvam_rider/features/analytics/data/providers/earnings_provider.dart';
 import 'package:muvam_rider/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_selection_screen.dart';
@@ -30,6 +31,7 @@ import 'package:muvam_rider/features/referral/presentation/screens/referral_scre
 import 'package:muvam_rider/features/trips/presentation/screen/history_completed_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 //FOR DRIVER
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -59,7 +61,9 @@ class _HomeScreenState extends State<HomeScreen> {
   String _currentETA = '';
   String _currentLocationName = '';
   Map<String, dynamic>? _activeRide;
-  bool _isRideSheetVisible = true; // Track ride sheet visibility
+  final int _selectedPeriodIndex = 0;
+  final int _selectedTabIndex = 0;
+  bool _isRideSheetVisible = true;
   List<String> recentLocations = [
     'Nsukka, Ogige',
     'Holy ghost Enugu',
@@ -147,8 +151,11 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchData();
+    });
 
-    _webSocketService = WebSocketService.instance; // Get singleton instance
+    _webSocketService = WebSocketService.instance;
 
     _initializeServices();
   }
@@ -164,6 +171,18 @@ class _HomeScreenState extends State<HomeScreen> {
     _callService.dispose();
     RideTrackingService.stopTracking();
     super.dispose();
+  }
+
+  void _fetchData() {
+    final earningsProvider = Provider.of<EarningsProvider>(
+      context,
+      listen: false,
+    );
+    final period = earningsProvider.getPeriodFromIndex(_selectedPeriodIndex);
+    earningsProvider.fetchEarningsSummary(period);
+    if (_selectedTabIndex == 0) {
+      earningsProvider.fetchWeeklyOverview('weekly');
+    }
   }
 
   void _initializeServices() async {
@@ -206,33 +225,38 @@ class _HomeScreenState extends State<HomeScreen> {
     _webSocketService.onIncomingCall = (callData) {
       AppLogger.log('📞 Incoming call received in HomeScreen', tag: 'HOME');
       AppLogger.log('Call data: $callData', tag: 'HOME');
-      
+
       if (mounted) {
         setState(() {
           _incomingCall = callData;
         });
         AppLogger.log('✅ Incoming call state updated', tag: 'HOME');
       } else {
-        AppLogger.log('⚠️ Widget not mounted, cannot show incoming call', tag: 'HOME');
+        AppLogger.log(
+          '⚠️ Widget not mounted, cannot show incoming call',
+          tag: 'HOME',
+        );
       }
     };
 
     // Setup WebSocket ride completion handler
     _webSocketService.onRideCompleted = (completionData) {
-      AppLogger.log('🎉 Ride completion received via WebSocket: $completionData');
+      AppLogger.log(
+        '🎉 Ride completion received via WebSocket: $completionData',
+      );
       if (mounted) {
         // Close any open sheets first
         if (Navigator.of(context).canPop()) {
           Navigator.of(context).pop();
         }
-        
+
         // Small delay before showing completion sheet
         Future.delayed(Duration(milliseconds: 300), () {
           if (mounted) {
             _showCompletedSheet(context, _activeRide ?? {});
           }
         });
-        
+
         // Update local state
         final updatedRide = Map<String, dynamic>.from(_activeRide ?? {});
         updatedRide['Status'] = 'completed';
@@ -418,13 +442,15 @@ class _HomeScreenState extends State<HomeScreen> {
           'StopAddress': rideData['StopAddress'] ?? '',
           'Note': rideData['Note'] ?? '',
           'Status': 'accepted',
-          'Passenger': rideData['Passenger'] ?? {
-            'first_name':
-                rideData['PassengerName']?.split(' ').first ?? 'Unknown',
-            'last_name':
-                rideData['PassengerName']?.split(' ').skip(1).join(' ') ??
-                'Passenger',
-          },
+          'Passenger':
+              rideData['Passenger'] ??
+              {
+                'first_name':
+                    rideData['PassengerName']?.split(' ').first ?? 'Unknown',
+                'last_name':
+                    rideData['PassengerName']?.split(' ').skip(1).join(' ') ??
+                    'Passenger',
+              },
           'ServiceType': rideData['ServiceType'] ?? 'taxi',
           'VehicleType': rideData['VehicleType'] ?? 'regular',
           // CRITICAL: Include location data for ride tracking
@@ -588,7 +614,8 @@ class _HomeScreenState extends State<HomeScreen> {
     return WillPopScope(
       onWillPop: () async {
         final now = DateTime.now();
-        if (_lastBackPress == null || now.difference(_lastBackPress!) > Duration(seconds: 2)) {
+        if (_lastBackPress == null ||
+            now.difference(_lastBackPress!) > Duration(seconds: 2)) {
           _lastBackPress = now;
           CustomFlushbar.showInfo(
             context: context,
@@ -599,461 +626,473 @@ class _HomeScreenState extends State<HomeScreen> {
         return true;
       },
       child: Scaffold(
-      key: _scaffoldKey,
-      backgroundColor: themeManager.getBackgroundColor(context),
-      drawer: _buildDrawer(),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
-        backgroundColor: themeManager.getCardColor(context),
-        selectedItemColor: Color(ConstColors.mainColor),
-        unselectedItemColor: Colors.grey,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
-        items: [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(
-            icon: Stack(
-              children: [
-                Image.asset(
-                  ConstImages.requests,
-                  width: 24.w,
-                  height: 24.h,
-                  color: _currentIndex == 1
-                      ? Color(ConstColors.mainColor)
-                      : Colors.grey,
-                ),
-                Positioned(
-                  right: 0,
-                  top: 0,
-                  child: Container(
-                    padding: EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    constraints: BoxConstraints(minWidth: 16, minHeight: 16),
-                    child: Text(
-                      '3',
-                      style: TextStyle(color: Colors.white, fontSize: 10),
-                      textAlign: TextAlign.center,
-                    ),
+        key: _scaffoldKey,
+        backgroundColor: themeManager.getBackgroundColor(context),
+        drawer: _buildDrawer(),
+        bottomNavigationBar: BottomNavigationBar(
+          currentIndex: _currentIndex,
+          backgroundColor: themeManager.getCardColor(context),
+          selectedItemColor: Color(ConstColors.mainColor),
+          unselectedItemColor: Colors.grey,
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+            });
+          },
+          items: [
+            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+            BottomNavigationBarItem(
+              icon: Stack(
+                children: [
+                  Image.asset(
+                    ConstImages.requests,
+                    width: 24.w,
+                    height: 24.h,
+                    color: _currentIndex == 1
+                        ? Color(ConstColors.mainColor)
+                        : Colors.grey,
                   ),
-                ),
-              ],
-            ),
-            label: 'Requests',
-          ),
-          BottomNavigationBarItem(
-            icon: Image.asset(
-              ConstImages.wallet,
-              width: 24.w,
-              height: 24.h,
-              color: _currentIndex == 2
-                  ? Color(ConstColors.mainColor)
-                  : Colors.grey,
-            ),
-            label: 'Earnings',
-          ),
-        ],
-      ),
-      body: _currentIndex == 1
-          ? ActivitiesScreen()
-          : _currentIndex == 2
-          ? WalletScreen()
-          : Stack(
-              children: [
-                // Google Map
-                GoogleMap(
-                  onMapCreated: (GoogleMapController controller) {
-                    _mapController = controller;
-                    RideTrackingService.setMapController(controller);
-                    // If there's an active ride when map is created, center on it
-                    if (_activeRide != null) {
-                      _centerMapOnActiveRide();
-                    }
-                  },
-                  initialCameraPosition: CameraPosition(
-                    target: _currentLocation,
-                    zoom: 14.0,
-                  ),
-                  myLocationEnabled: _activeRide == null,
-                  myLocationButtonEnabled: false,
-                  zoomControlsEnabled: false,
-                  mapToolbarEnabled: false,
-                  markers: _mapMarkers,
-                  polylines: _mapPolylines,
-                ),
-                // Center location pin
-                // Center(
-                //   child: Icon(
-                //     Icons.location_on,
-                //     color: Color(ConstColors.mainColor),
-                //     size: 40.sp,
-                //   ),
-                // ),
-                // Online/Offline Toggle
-                Positioned(
-                  top: 80.h,
-                  left: 109.w,
-                  child: Consumer<DriverProvider>(
-                    builder: (context, driverProvider, child) {
-                      return Container(
-                        width: 175.w,
-                        height: 38.h,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(15.r),
-                        ),
-                        child: Row(
-                          children: [
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: driverProvider.isLoading
-                                    ? null
-                                    : () => _updateDriverStatus(true),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: driverProvider.isOnline
-                                        ? Color(ConstColors.mainColor)
-                                        : Color(0xFFB1B1B1).withOpacity(0.3),
-                                    borderRadius: BorderRadius.only(
-                                      topLeft: Radius.circular(15.r),
-                                      bottomLeft: Radius.circular(15.r),
-                                    ),
-                                  ),
-                                  child: Center(
-                                    child: driverProvider.isLoading
-                                        ? SizedBox(
-                                            width: 12.w,
-                                            height: 12.h,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              valueColor:
-                                                  AlwaysStoppedAnimation<Color>(
-                                                    Colors.white,
-                                                  ),
-                                            ),
-                                          )
-                                        : Text(
-                                            'Online',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 14.sp,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Expanded(
-                              child: GestureDetector(
-                                onTap: driverProvider.isLoading
-                                    ? null
-                                    : () => _updateDriverStatus(false),
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    color: !driverProvider.isOnline
-                                        ? Colors.red
-                                        : Color(0xFFB1B1B1).withOpacity(0.3),
-                                    borderRadius: BorderRadius.only(
-                                      topRight: Radius.circular(15.r),
-                                      bottomRight: Radius.circular(15.r),
-                                    ),
-                                  ),
-                                  child: Center(
-                                    child: driverProvider.isLoading
-                                        ? SizedBox(
-                                            width: 12.w,
-                                            height: 12.h,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              valueColor:
-                                                  AlwaysStoppedAnimation<Color>(
-                                                    Colors.white,
-                                                  ),
-                                            ),
-                                          )
-                                        : Text(
-                                            'Offline',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 14.sp,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                // Drawer button
-                Positioned(
-                  top: 66.h,
-                  left: 20.w,
-                  child: GestureDetector(
-                    onTap: () => _scaffoldKey.currentState?.openDrawer(),
+                  Positioned(
+                    right: 0,
+                    top: 0,
                     child: Container(
-                      width: 50.w,
-                      height: 50.h,
+                      padding: EdgeInsets.all(2),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(25.r),
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      padding: EdgeInsets.all(10.w),
-                      child: Icon(Icons.menu, size: 24.sp),
+                      constraints: BoxConstraints(minWidth: 16, minHeight: 16),
+                      child: Text(
+                        '3',
+                        style: TextStyle(color: Colors.white, fontSize: 10),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ),
-                ),
-                // My Location button
-                Positioned(
-                  top: 66.h,
-                  right: 20.w,
-                  child: GestureDetector(
-                    onTap: () {
+                ],
+              ),
+              label: 'Requests',
+            ),
+            BottomNavigationBarItem(
+              icon: Image.asset(
+                ConstImages.wallet,
+                width: 24.w,
+                height: 24.h,
+                color: _currentIndex == 2
+                    ? Color(ConstColors.mainColor)
+                    : Colors.grey,
+              ),
+              label: 'Earnings',
+            ),
+          ],
+        ),
+        body: _currentIndex == 1
+            ? ActivitiesScreen()
+            : _currentIndex == 2
+            ? WalletScreen()
+            : Stack(
+                children: [
+                  // Google Map
+                  GoogleMap(
+                    onMapCreated: (GoogleMapController controller) {
+                      _mapController = controller;
+                      RideTrackingService.setMapController(controller);
+                      // If there's an active ride when map is created, center on it
                       if (_activeRide != null) {
-                        // If there's an active ride, center on it
                         _centerMapOnActiveRide();
-                      } else {
-                        // Otherwise center on current location
-                        _getCurrentLocation();
                       }
                     },
-                    child: Container(
-                      width: 50.w,
-                      height: 50.h,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(25.r),
-                      ),
-                      padding: EdgeInsets.all(10.w),
-                      child: Icon(
-                        _activeRide != null
-                            ? Icons.directions_car
-                            : Icons.my_location,
-                        size: 24.sp,
+                    initialCameraPosition: CameraPosition(
+                      target: _currentLocation,
+                      zoom: 14.0,
+                    ),
+                    myLocationEnabled: _activeRide == null,
+                    myLocationButtonEnabled: false,
+                    zoomControlsEnabled: false,
+                    mapToolbarEnabled: false,
+                    markers: _mapMarkers,
+                    polylines: _mapPolylines,
+                  ),
+                  // Center location pin
+                  // Center(
+                  //   child: Icon(
+                  //     Icons.location_on,
+                  //     color: Color(ConstColors.mainColor),
+                  //     size: 40.sp,
+                  //   ),
+                  // ),
+                  // Online/Offline Toggle
+                  Positioned(
+                    top: 80.h,
+                    left: 109.w,
+                    child: Consumer<DriverProvider>(
+                      builder: (context, driverProvider, child) {
+                        return Container(
+                          width: 175.w,
+                          height: 38.h,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(15.r),
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: driverProvider.isLoading
+                                      ? null
+                                      : () => _updateDriverStatus(true),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: driverProvider.isOnline
+                                          ? Color(ConstColors.mainColor)
+                                          : Color(0xFFB1B1B1).withOpacity(0.3),
+                                      borderRadius: BorderRadius.only(
+                                        topLeft: Radius.circular(15.r),
+                                        bottomLeft: Radius.circular(15.r),
+                                      ),
+                                    ),
+                                    child: Center(
+                                      child: driverProvider.isLoading
+                                          ? SizedBox(
+                                              width: 12.w,
+                                              height: 12.h,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                valueColor:
+                                                    AlwaysStoppedAnimation<
+                                                      Color
+                                                    >(Colors.white),
+                                              ),
+                                            )
+                                          : Text(
+                                              'Online',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 14.sp,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: GestureDetector(
+                                  onTap: driverProvider.isLoading
+                                      ? null
+                                      : () => _updateDriverStatus(false),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      color: !driverProvider.isOnline
+                                          ? Colors.red
+                                          : Color(0xFFB1B1B1).withOpacity(0.3),
+                                      borderRadius: BorderRadius.only(
+                                        topRight: Radius.circular(15.r),
+                                        bottomRight: Radius.circular(15.r),
+                                      ),
+                                    ),
+                                    child: Center(
+                                      child: driverProvider.isLoading
+                                          ? SizedBox(
+                                              width: 12.w,
+                                              height: 12.h,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                                valueColor:
+                                                    AlwaysStoppedAnimation<
+                                                      Color
+                                                    >(Colors.white),
+                                              ),
+                                            )
+                                          : Text(
+                                              'Offline',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 14.sp,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  // Drawer button
+                  Positioned(
+                    top: 66.h,
+                    left: 20.w,
+                    child: GestureDetector(
+                      onTap: () => _scaffoldKey.currentState?.openDrawer(),
+                      child: Container(
+                        width: 50.w,
+                        height: 50.h,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(25.r),
+                        ),
+                        padding: EdgeInsets.all(10.w),
+                        child: Icon(Icons.menu, size: 24.sp),
                       ),
                     ),
                   ),
-                ),
-                // Bottom sheet
-                Positioned(
-                  bottom: _isBottomSheetVisible ? 0 : -294.h,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    height: 344.h,
-                    width: 393.w,
-                    decoration: BoxDecoration(
-                      color: themeManager.getCardColor(context),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(20.r),
-                        topRight: Radius.circular(20.r),
+                  // My Location button
+                  Positioned(
+                    top: 66.h,
+                    right: 20.w,
+                    child: GestureDetector(
+                      onTap: () {
+                        if (_activeRide != null) {
+                          // If there's an active ride, center on it
+                          _centerMapOnActiveRide();
+                        } else {
+                          // Otherwise center on current location
+                          _getCurrentLocation();
+                        }
+                      },
+                      child: Container(
+                        width: 50.w,
+                        height: 50.h,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(25.r),
+                        ),
+                        padding: EdgeInsets.all(10.w),
+                        child: Icon(
+                          _activeRide != null
+                              ? Icons.directions_car
+                              : Icons.my_location,
+                          size: 24.sp,
+                        ),
                       ),
                     ),
-                    child: SingleChildScrollView(
-                      child: Column(
-                        children: [
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _isBottomSheetVisible = !_isBottomSheetVisible;
-                              });
-                            },
-                            child: SizedBox(
-                              height: 50.h,
-                              child: Column(
-                                children: [
-                                  SizedBox(height: 11.75.h),
-                                  Container(
-                                    width: 69.w,
-                                    height: 5.h,
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey.shade300,
-                                      borderRadius: BorderRadius.circular(
-                                        2.5.r,
+                  ),
+                  // Bottom sheet
+                  Positioned(
+                    bottom: _isBottomSheetVisible ? 0 : -294.h,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      height: 344.h,
+                      width: 393.w,
+                      decoration: BoxDecoration(
+                        color: themeManager.getCardColor(context),
+                        borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(20.r),
+                          topRight: Radius.circular(20.r),
+                        ),
+                      ),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          children: [
+                            GestureDetector(
+                              onTap: () {
+                                setState(() {
+                                  _isBottomSheetVisible =
+                                      !_isBottomSheetVisible;
+                                });
+                              },
+                              child: SizedBox(
+                                height: 50.h,
+                                child: Column(
+                                  children: [
+                                    SizedBox(height: 11.75.h),
+                                    Container(
+                                      width: 69.w,
+                                      height: 5.h,
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey.shade300,
+                                        borderRadius: BorderRadius.circular(
+                                          2.5.r,
+                                        ),
                                       ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            Container(
+                              width: 353.w,
+                              height: 50.h,
+                              padding: EdgeInsets.symmetric(horizontal: 10.w),
+                              decoration: BoxDecoration(
+                                color: Color(0xFFB1B1B1).withOpacity(0.12),
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 35.w,
+                                    height: 35.h,
+                                    padding: EdgeInsets.all(1.w),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(
+                                        500.r,
+                                      ),
+                                    ),
+                                    child: Image.asset(
+                                      'assets/images/Gift1.png',
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
+                                  SizedBox(width: 10.w),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          'Refer and earn',
+                                          style: TextStyle(
+                                            fontFamily: 'Inter',
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14.sp,
+                                            height: 1.0,
+                                            letterSpacing: -0.41,
+                                            color: themeManager.getTextColor(
+                                              context,
+                                            ),
+                                          ),
+                                        ),
+                                        Text(
+                                          'Refer a friend to earn and win up to #4000',
+                                          style: TextStyle(
+                                            fontFamily: 'Inter',
+                                            fontWeight: FontWeight.w400,
+                                            fontSize: 12.sp,
+                                            height: 1.0,
+                                            letterSpacing: -0.41,
+                                            color: themeManager.getTextColor(
+                                              context,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
                             ),
-                          ),
-                          Container(
-                            width: 353.w,
-                            height: 50.h,
-                            padding: EdgeInsets.symmetric(horizontal: 10.w),
-                            decoration: BoxDecoration(
-                              color: Color(0xFFB1B1B1).withOpacity(0.12),
-                              borderRadius: BorderRadius.circular(8.r),
+                            SizedBox(height: 20.h),
+                            _buildEarningsSection(
+                              'Today\'s earning',
+                              '₦${_earningsData['total_earnings']}',
                             ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 35.w,
-                                  height: 35.h,
-                                  padding: EdgeInsets.all(1.w),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(500.r),
-                                  ),
-                                  child: Image.asset(
-                                    'assets/images/Gift1.png',
-                                    fit: BoxFit.contain,
-                                  ),
-                                ),
-                                SizedBox(width: 10.w),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        'Refer and earn',
-                                        style: TextStyle(
-                                          fontFamily: 'Inter',
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 14.sp,
-                                          height: 1.0,
-                                          letterSpacing: -0.41,
-                                          color: themeManager.getTextColor(
-                                            context,
-                                          ),
-                                        ),
-                                      ),
-                                      Text(
-                                        'Refer a friend to earn and win up to #4000',
-                                        style: TextStyle(
-                                          fontFamily: 'Inter',
-                                          fontWeight: FontWeight.w400,
-                                          fontSize: 12.sp,
-                                          height: 1.0,
-                                          letterSpacing: -0.41,
-                                          color: themeManager.getTextColor(
-                                            context,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                            Divider(color: Color(0xFFE0E0E0), thickness: 1),
+                            _buildEarningsSection(
+                              'Today\'s rides',
+                              '${_earningsData['total_rides']}',
                             ),
-                          ),
-                          SizedBox(height: 20.h),
-                          _buildEarningsSection(
-                            'Today\'s earning',
-                            '₦${_earningsData['total_earnings']}',
-                          ),
-                          Divider(color: Color(0xFFE0E0E0), thickness: 1),
-                          _buildEarningsSection(
-                            'Today\'s rides',
-                            '${_earningsData['total_rides']}',
-                          ),
-                          Divider(color: Color(0xFFE0E0E0), thickness: 1),
-                          _buildEarningsSection(
-                            'Total ride completed',
-                            '${_earningsData['total_rides_completed']}',
-                          ),
-                        ],
+                            Divider(color: Color(0xFFE0E0E0), thickness: 1),
+                            _buildEarningsSection(
+                              'Total ride completed',
+                              '${_earningsData['total_rides_completed']}',
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
-                ),
-                // Ride info widget
-                if (_activeRide != null && _currentETA.isNotEmpty)
-                  RideInfoWidget(
-                    eta: _currentETA,
-                    location: _currentLocationName,
-                    rideStatus: _activeRide!['Status'] ?? 'accepted',
-                  ),
-                // Floating button to reopen ride sheet when dismissed
-                if (_activeRide != null && !_isRideSheetVisible)
-                  Positioned(
-                    bottom: 120.h,
-                    right: 20.w,
-                    child: Container(
-                      width: 56.w,
-                      height: 56.h,
-                      decoration: BoxDecoration(
-                        color: Color(ConstColors.mainColor),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black26,
-                            blurRadius: 8,
-                            offset: Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(28.r),
-                          onTap: () => _showRideAcceptedSheet(_activeRide!, {}),
-                          child: Center(
-                            child: Icon(
-                              Icons.directions_car,
-                              color: Colors.white,
-                              size: 28.sp,
+                  // Ride info widget
+                  if (_activeRide != null && _currentETA.isNotEmpty)
+                    RideInfoWidget(
+                      eta: _currentETA,
+                      location: _currentLocationName,
+                      rideStatus: _activeRide!['Status'] ?? 'accepted',
+                    ),
+                  // Floating button to reopen ride sheet when dismissed
+                  if (_activeRide != null && !_isRideSheetVisible)
+                    Positioned(
+                      bottom: 120.h,
+                      right: 20.w,
+                      child: Container(
+                        width: 56.w,
+                        height: 56.h,
+                        decoration: BoxDecoration(
+                          color: Color(ConstColors.mainColor),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 8,
+                              offset: Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(28.r),
+                            onTap: () =>
+                                _showRideAcceptedSheet(_activeRide!, {}),
+                            child: Center(
+                              child: Icon(
+                                Icons.directions_car,
+                                color: Colors.white,
+                                size: 28.sp,
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                // Ride request overlay
-                if (_hasActiveRequest && _nearbyRides.isNotEmpty)
-                  _buildRideRequestSheet(),
-                // Full-screen incoming call overlay
-                if (_incomingCall != null)
-                  Positioned.fill(
-                    child: IncomingCallScreen(
-                      callerName: _incomingCall!['data']?['caller_name'] ?? 'Unknown Caller',
-                      callerImage: _incomingCall!['data']?['caller_image'],
-                      sessionId: _incomingCall!['data']?['session_id'] ?? 0,
-                      rideId: _incomingCall!['data']?['ride_id'] ?? 0,
-                      onAccept: () async {
-                        final sessionId = _incomingCall!['data']?['session_id'] ?? 0;
-                        final passengerName = _incomingCall!['data']?['caller_name'] ?? 'Unknown Passenger';
-                        final rideId = _incomingCall!['data']?['ride_id'] ?? 0;
-                        
-                        await _callService.answerCall(sessionId);
-                        
-                        setState(() {
-                          _incomingCall = null;
-                        });
-                        
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CallScreen(
-                              driverName: passengerName,
-                              rideId: rideId,
+                  // Ride request overlay
+                  if (_hasActiveRequest && _nearbyRides.isNotEmpty)
+                    _buildRideRequestSheet(),
+                  // Full-screen incoming call overlay
+                  if (_incomingCall != null)
+                    Positioned.fill(
+                      child: IncomingCallScreen(
+                        callerName:
+                            _incomingCall!['data']?['caller_name'] ??
+                            'Unknown Caller',
+                        callerImage: _incomingCall!['data']?['caller_image'],
+                        sessionId: _incomingCall!['data']?['session_id'] ?? 0,
+                        rideId: _incomingCall!['data']?['ride_id'] ?? 0,
+                        onAccept: () async {
+                          final sessionId =
+                              _incomingCall!['data']?['session_id'] ?? 0;
+                          final passengerName =
+                              _incomingCall!['data']?['caller_name'] ??
+                              'Unknown Passenger';
+                          final rideId =
+                              _incomingCall!['data']?['ride_id'] ?? 0;
+
+                          await _callService.answerCall(sessionId);
+
+                          setState(() {
+                            _incomingCall = null;
+                          });
+
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CallScreen(
+                                driverName: passengerName,
+                                rideId: rideId,
+                              ),
                             ),
-                          ),
-                        );
-                      },
-                      onReject: () async {
-                        final sessionId = _incomingCall!['data']?['session_id'] ?? 0;
-                        
-                        await _callService.rejectCall(sessionId);
-                        
-                        setState(() {
-                          _incomingCall = null;
-                        });
-                      },
+                          );
+                        },
+                        onReject: () async {
+                          final sessionId =
+                              _incomingCall!['data']?['session_id'] ?? 0;
+
+                          await _callService.rejectCall(sessionId);
+
+                          setState(() {
+                            _incomingCall = null;
+                          });
+                        },
+                      ),
                     ),
-                  ),
-              ],
-            ),
+                ],
+              ),
       ),
     );
   }
@@ -3673,7 +3712,8 @@ class _HomeScreenState extends State<HomeScreen> {
     // Extract data from WebSocket message format
     final rideData = ride['data'] ?? ride; // Handle both formats
     final rideId = rideData['RideID'] ?? rideData['ID'] ?? 0;
-    final passengerName = rideData['Passenger']['first_name'] ?? 'Unknown Passenger';
+    final passengerName =
+        rideData['Passenger']['first_name'] ?? 'Unknown Passenger';
     final pickupAddress =
         rideData['PickupAddress'] ?? 'Unknown pickup location';
     final destAddress = rideData['DestAddress'] ?? 'Unknown destination';
@@ -4008,323 +4048,317 @@ class _HomeScreenState extends State<HomeScreen> {
   //   });
   // }
 
+  void _showRideAcceptedSheet(
+    Map<String, dynamic> ride,
+    Map<String, dynamic> acceptedData,
+  ) {
+    if (mounted) {
+      setState(() {
+        _activeRide = ride;
+        _isRideSheetVisible = true;
+      });
+    }
 
+    // Start ride tracking only if not already started
+    if (_mapMarkers.isEmpty) {
+      RideTrackingService.startRideTracking(
+        ride: ride,
+        onUpdate: (markers, polylines) {
+          if (mounted) {
+            setState(() {
+              _mapMarkers = markers;
+              _mapPolylines = polylines;
+            });
+            _centerMapOnActiveRide();
+          }
+        },
+        onTimeUpdate: (eta, location) {
+          if (mounted) {
+            setState(() {
+              _currentETA = eta;
+              _currentLocationName = location;
+            });
+          }
+        },
+      );
+    } else {
+      _centerMapOnActiveRide();
+    }
 
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: true,
+      enableDrag: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (context) => _RideAcceptedSheet(
+        ride: ride,
+        acceptedData: acceptedData,
+        onRideStatusChanged: (updatedRide) {
+          AppLogger.log('🔔 onRideStatusChanged callback triggered');
+          AppLogger.log('   Updated Status: ${updatedRide['Status']}');
 
+          _onRideStatusChanged(updatedRide);
 
+          AppLogger.log('📤 Closing current sheet...');
+          Navigator.of(context).pop();
 
-
-
-
-
-
-void _showRideAcceptedSheet(
-  Map<String, dynamic> ride,
-  Map<String, dynamic> acceptedData,
-) {
-  if (mounted) {
-    setState(() {
-      _activeRide = ride;
-      _isRideSheetVisible = true;
+          AppLogger.log('🔍 Checking status for next action...');
+          if (updatedRide['Status'] == 'completed') {
+            AppLogger.log(
+              '✅ Status is completed, scheduling completion sheet...',
+            );
+            Future.delayed(Duration(milliseconds: 400), () {
+              AppLogger.log('⏰ Delay elapsed, checking mounted state...');
+              if (mounted) {
+                AppLogger.log(
+                  '✅ Still mounted, calling _showCompletedSheet...',
+                );
+                _showCompletedSheet(context, updatedRide);
+              } else {
+                AppLogger.log('❌ Widget no longer mounted!');
+              }
+            });
+          } else if (updatedRide['Status'] != 'cancelled') {
+            AppLogger.log(
+              '🔄 Status is ${updatedRide['Status']}, reopening sheet...',
+            );
+            Future.delayed(Duration(milliseconds: 300), () {
+              if (mounted) {
+                _showRideAcceptedSheet(updatedRide, acceptedData);
+              }
+            });
+          } else {
+            AppLogger.log('🚫 Status is cancelled, no further action');
+          }
+        },
+      ),
+    ).whenComplete(() {
+      if (mounted) {
+        setState(() {
+          _isRideSheetVisible = false;
+        });
+      }
     });
   }
 
-  // Start ride tracking only if not already started
-  if (_mapMarkers.isEmpty) {
-    RideTrackingService.startRideTracking(
-      ride: ride,
-      onUpdate: (markers, polylines) {
-        if (mounted) {
-          setState(() {
-            _mapMarkers = markers;
-            _mapPolylines = polylines;
-          });
-          _centerMapOnActiveRide();
-        }
-      },
-      onTimeUpdate: (eta, location) {
-        if (mounted) {
-          setState(() {
-            _currentETA = eta;
-            _currentLocationName = location;
-          });
-        }
-      },
-    );
-  } else {
-    _centerMapOnActiveRide();
-  }
+  void _showCompletedSheet(BuildContext context, Map<String, dynamic> ride) {
+    AppLogger.log('🎉 === _showCompletedSheet CALLED ===');
+    AppLogger.log('   Mounted: $mounted');
+    AppLogger.log('   Ride data: $ride');
 
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    isDismissible: true,
-    enableDrag: true,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-    ),
-    builder: (context) => _RideAcceptedSheet(
-      ride: ride,
-      acceptedData: acceptedData,
-      onRideStatusChanged: (updatedRide) {
-        AppLogger.log('🔔 onRideStatusChanged callback triggered');
-        AppLogger.log('   Updated Status: ${updatedRide['Status']}');
-        
-        _onRideStatusChanged(updatedRide);
-        
-        AppLogger.log('📤 Closing current sheet...');
-        Navigator.of(context).pop();
-        
-        AppLogger.log('🔍 Checking status for next action...');
-        if (updatedRide['Status'] == 'completed') {
-          AppLogger.log('✅ Status is completed, scheduling completion sheet...');
-          Future.delayed(Duration(milliseconds: 400), () {
-            AppLogger.log('⏰ Delay elapsed, checking mounted state...');
-            if (mounted) {
-              AppLogger.log('✅ Still mounted, calling _showCompletedSheet...');
-              _showCompletedSheet(context, updatedRide);
-            } else {
-              AppLogger.log('❌ Widget no longer mounted!');
-            }
-          });
-        } else if (updatedRide['Status'] != 'cancelled') {
-          AppLogger.log('🔄 Status is ${updatedRide['Status']}, reopening sheet...');
-          Future.delayed(Duration(milliseconds: 300), () {
-            if (mounted) {
-              _showRideAcceptedSheet(updatedRide, acceptedData);
-            }
-          });
-        } else {
-          AppLogger.log('🚫 Status is cancelled, no further action');
-        }
-        }
-      
-    ),
-  ).whenComplete(() {
-    if (mounted) {
-      setState(() {
-        _isRideSheetVisible = false;
-      });
+    if (!mounted) {
+      AppLogger.log('❌ Widget not mounted, cannot show sheet');
+      return;
     }
-  });
-}
-void _showCompletedSheet(BuildContext context, Map<String, dynamic> ride) {
-  AppLogger.log('🎉 === _showCompletedSheet CALLED ===');
-  AppLogger.log('   Mounted: $mounted');
-  AppLogger.log('   Ride data: $ride');
-  
-  if (!mounted) {
-    AppLogger.log('❌ Widget not mounted, cannot show sheet');
-    return;
-  }
 
-  final passenger = ride['Passenger'] ?? {};
-  final passengerName = '${passenger['first_name'] ?? 'Unknown'} ${passenger['last_name'] ?? 'Passenger'}';
-  final note = ride['Note'] ?? '';
-  final stopAddress = ride['StopAddress'];
-  final hasStop = stopAddress != null && stopAddress.toString().isNotEmpty;
+    final passenger = ride['Passenger'] ?? {};
+    final passengerName =
+        '${passenger['first_name'] ?? 'Unknown'} ${passenger['last_name'] ?? 'Passenger'}';
+    final note = ride['Note'] ?? '';
+    final stopAddress = ride['StopAddress'];
+    final hasStop = stopAddress != null && stopAddress.toString().isNotEmpty;
 
-  AppLogger.log('   Passenger: $passengerName');
-  AppLogger.log('   Price: ${ride['Price']}');
+    AppLogger.log('   Passenger: $passengerName');
+    AppLogger.log('   Price: ${ride['Price']}');
 
-  final parentContext = context;
+    final parentContext = context;
 
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    isDismissible: false,
-    enableDrag: false,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-    ),
-    builder: (sheetContext) => WillPopScope(
-      onWillPop: () async => false,
-      child: Container(
-        padding: EdgeInsets.all(20.w),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 69.w,
-                height: 5.h,
-                margin: EdgeInsets.only(bottom: 20.h),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2.5.r),
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: false,
+      enableDrag: false,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (sheetContext) => WillPopScope(
+        onWillPop: () async => false,
+        child: Container(
+          padding: EdgeInsets.all(20.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 69.w,
+                  height: 5.h,
+                  margin: EdgeInsets.only(bottom: 20.h),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2.5.r),
+                  ),
                 ),
-              ),
-              Container(
-                width: 80.w,
-                height: 80.h,
-                decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
-                  shape: BoxShape.circle,
+                Container(
+                  width: 80.w,
+                  height: 80.h,
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.check_circle,
+                    color: Colors.green,
+                    size: 50.sp,
+                  ),
                 ),
-                child: Icon(
-                  Icons.check_circle,
-                  color: Colors.green,
-                  size: 50.sp,
-                ),
-              ),
-              SizedBox(height: 15.h),
-              Text(
-                'Trip Completed!',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w700,
-                  fontSize: 28.sp,
-                  color: Colors.green,
-                ),
-              ),
-              SizedBox(height: 20.h),
-              Text(
-                'Amount Earned',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w500,
-                  fontSize: 16.sp,
-                  color: Colors.grey[600],
-                ),
-              ),
-              SizedBox(height: 10.h),
-              Text(
-                '₦${ride['Price']}',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w700,
-                  fontSize: 36.sp,
-                  height: 1.0,
-                  letterSpacing: -0.32,
-                  color: Color(ConstColors.mainColor),
-                ),
-              ),
-              SizedBox(height: 20.h),
-              Divider(thickness: 1, color: Colors.grey.shade300),
-              SizedBox(height: 20.h),
-              _buildDetailRow('Passenger', passengerName),
-              SizedBox(height: 15.h),
-              _buildDetailRow('Pickup', ride['PickupAddress'] ?? 'Unknown'),
-              if (hasStop) ...[
                 SizedBox(height: 15.h),
-                _buildDetailRow('Stop', stopAddress, isStop: true),
-              ],
-              SizedBox(height: 15.h),
-              _buildDetailRow('Destination', ride['DestAddress'] ?? 'Unknown'),
-              if (note.isNotEmpty) ...[
-                SizedBox(height: 15.h),
-                _buildDetailRow('Note', note),
-              ],
-              SizedBox(height: 15.h),
-              _buildDetailRow('Payment', _formatPaymentMethod(ride['PaymentMethod'])),
-              SizedBox(height: 30.h),
-              Container(
-                width: 353.w,
-                height: 48.h,
-                decoration: BoxDecoration(
-                  color: Color(ConstColors.mainColor),
-                  borderRadius: BorderRadius.circular(8.r),
+                Text(
+                  'Trip Completed!',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 28.sp,
+                    color: Colors.green,
+                  ),
                 ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
+                SizedBox(height: 20.h),
+                Text(
+                  'Amount Earned',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w500,
+                    fontSize: 16.sp,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                SizedBox(height: 10.h),
+                Text(
+                  '₦${ride['Price']}',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w700,
+                    fontSize: 36.sp,
+                    height: 1.0,
+                    letterSpacing: -0.32,
+                    color: Color(ConstColors.mainColor),
+                  ),
+                ),
+                SizedBox(height: 20.h),
+                Divider(thickness: 1, color: Colors.grey.shade300),
+                SizedBox(height: 20.h),
+                _buildDetailRow('Passenger', passengerName),
+                SizedBox(height: 15.h),
+                _buildDetailRow('Pickup', ride['PickupAddress'] ?? 'Unknown'),
+                if (hasStop) ...[
+                  SizedBox(height: 15.h),
+                  _buildDetailRow('Stop', stopAddress, isStop: true),
+                ],
+                SizedBox(height: 15.h),
+                _buildDetailRow(
+                  'Destination',
+                  ride['DestAddress'] ?? 'Unknown',
+                ),
+                if (note.isNotEmpty) ...[
+                  SizedBox(height: 15.h),
+                  _buildDetailRow('Note', note),
+                ],
+                SizedBox(height: 15.h),
+                _buildDetailRow(
+                  'Payment',
+                  _formatPaymentMethod(ride['PaymentMethod']),
+                ),
+                SizedBox(height: 30.h),
+                Container(
+                  width: 353.w,
+                  height: 48.h,
+                  decoration: BoxDecoration(
+                    color: Color(ConstColors.mainColor),
                     borderRadius: BorderRadius.circular(8.r),
-                    onTap: () {
-                      Navigator.of(sheetContext).pop();
-                      Future.delayed(Duration(milliseconds: 200), () {
-                        Navigator.push(
-                          parentContext,
-                          MaterialPageRoute(
-                            builder: (context) => HistoryCompletedScreen(
-                              rideId: ride['ID'],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8.r),
+                      onTap: () {
+                        Navigator.of(sheetContext).pop();
+                        Future.delayed(Duration(milliseconds: 200), () {
+                          Navigator.push(
+                            parentContext,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  HistoryCompletedScreen(rideId: ride['ID']),
                             ),
+                          );
+                        });
+                      },
+                      child: Center(
+                        child: Text(
+                          'View History',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w600,
                           ),
-                        );
-                      });
-                    },
-                    child: Center(
-                      child: Text(
-                        'View History',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              SizedBox(height: 10.h),
-              TextButton(
-                onPressed: () {
-                  Navigator.of(sheetContext).pop();
-                },
-                child: Text(
-                  'Close',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14.sp,
+                SizedBox(height: 10.h),
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(sheetContext).pop();
+                  },
+                  child: Text(
+                    'Close',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 14.sp),
                   ),
                 ),
-              ),
-              SizedBox(height: 20.h),
-            ],
+                SizedBox(height: 20.h),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
+    );
+  }
 
-
-Widget _buildDetailRow(String label, String value, {bool isStop = false}) {
-  return Container(
-    padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
-    decoration: BoxDecoration(
-      color: isStop ? Colors.yellow.withOpacity(0.1) : Colors.transparent,
-      borderRadius: BorderRadius.circular(8.r),
-    ),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            if (isStop)
-              Icon(
-                Icons.location_on,
-                size: 16.sp,
-                color: Colors.orange,
+  Widget _buildDetailRow(String label, String value, {bool isStop = false}) {
+    return Container(
+      padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
+      decoration: BoxDecoration(
+        color: isStop ? Colors.yellow.withOpacity(0.1) : Colors.transparent,
+        borderRadius: BorderRadius.circular(8.r),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              if (isStop)
+                Icon(Icons.location_on, size: 16.sp, color: Colors.orange),
+              if (isStop) SizedBox(width: 5.w),
+              Text(
+                label,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w500,
+                  fontSize: 14.sp,
+                  color: isStop ? Colors.orange : Colors.grey[600],
+                ),
               ),
-            if (isStop) SizedBox(width: 5.w),
-            Text(
-              label,
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w500,
-                fontSize: 14.sp,
-                color: isStop ? Colors.orange : Colors.grey[600],
-              ),
-            ),
-          ],
-        ),
-        SizedBox(height: 5.h),
-        Text(
-          value,
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontWeight: FontWeight.w600,
-            fontSize: 16.sp,
+            ],
           ),
-        ),
-      ],
-    ),
-  );
-}
+          SizedBox(height: 5.h),
+          Text(
+            value,
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w600,
+              fontSize: 16.sp,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   void _onRideStatusChanged(Map<String, dynamic> updatedRide) {
     AppLogger.log('=== RIDE STATUS CHANGED ===');
@@ -4447,7 +4481,7 @@ Widget _buildDetailRow(String label, String value, {bool isStop = false}) {
                         width: 60.w,
                         height: 60.h,
                         decoration: BoxDecoration(
-                          color: Color(ConstColors.mainColor), 
+                          color: Color(ConstColors.mainColor),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -4498,7 +4532,8 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
     AppLogger.log('DEBUG first_name: ${passenger['first_name']}');
     final tip = widget.acceptedData['tip'] ?? 0;
     final waitFee = widget.acceptedData['wait_fee'] ?? 0;
-    final passengerName = '${passenger['first_name'] ?? 'Unknown'} ${passenger['last_name'] ?? 'Passenger'}';
+    final passengerName =
+        '${passenger['first_name'] ?? 'Unknown'} ${passenger['last_name'] ?? 'Passenger'}';
 
     return Container(
       padding: EdgeInsets.all(20.w),
@@ -4659,8 +4694,10 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
                           _showGreenSlider
                               ? 'Arrived!'
                               : (_rideStatus == 'arrived'
-                                  ? (_isStarted ? 'Ride started' : 'Swipe to start')
-                                  : 'Slide to mark as arrived'),
+                                    ? (_isStarted
+                                          ? 'Ride started'
+                                          : 'Swipe to start')
+                                    : 'Slide to mark as arrived'),
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 16.sp,
@@ -4708,42 +4745,38 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
     );
   }
 
-Future<void> _markAsArrived() async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('auth_token');
+  Future<void> _markAsArrived() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
 
-  if (token != null) {
-    final result = await ApiService.arriveRide(token, widget.ride['ID']);
-    AppLogger.log('ARRIVE RIDE RESPONSE: $result');
+    if (token != null) {
+      final result = await ApiService.arriveRide(token, widget.ride['ID']);
+      AppLogger.log('ARRIVE RIDE RESPONSE: $result');
 
-    if (result['success'] == true) {
-      setState(() {
-        _isArrived = true;
-        _showGreenSlider = true;
-        _sliderValue = 1.0;
-      });
+      if (result['success'] == true) {
+        setState(() {
+          _isArrived = true;
+          _showGreenSlider = true;
+          _sliderValue = 1.0;
+        });
 
-      await Future.delayed(Duration(milliseconds: 800));
-      
-      if (mounted) {
-        final updatedRide = Map<String, dynamic>.from(widget.ride);
-        updatedRide['Status'] = 'arrived';
-        
-        // Call the callback which will close and reopen the sheet
-        widget.onRideStatusChanged(updatedRide);
+        await Future.delayed(Duration(milliseconds: 800));
+
+        if (mounted) {
+          final updatedRide = Map<String, dynamic>.from(widget.ride);
+          updatedRide['Status'] = 'arrived';
+
+          // Call the callback which will close and reopen the sheet
+          widget.onRideStatusChanged(updatedRide);
+        }
+      } else {
+        setState(() {
+          _sliderValue = 0.0;
+        });
+        _showDistanceErrorDialog(context);
       }
-    } else {
-      setState(() {
-        _sliderValue = 0.0;
-      });
-      _showDistanceErrorDialog(context);
     }
   }
-}
-
-
-
-
 
   // Future<void> _startRide() async {
   //   final prefs = await SharedPreferences.getInstance();
@@ -4760,16 +4793,16 @@ Future<void> _markAsArrived() async {
   //       });
 
   //       await Future.delayed(Duration(milliseconds: 800));
-        
+
   //       if (mounted) {
   //         final updatedRide = Map<String, dynamic>.from(widget.ride);
   //         updatedRide['Status'] = 'started';
-          
+
   //         setState(() {
   //           _sliderValue = 0.0;
   //           _isStarted = false;
   //         });
-          
+
   //         widget.onRideStatusChanged(updatedRide);
   //       }
   //     } else {
@@ -4781,255 +4814,161 @@ Future<void> _markAsArrived() async {
   //   }
   // }
 
+  Future<void> _startRide() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
 
-Future<void> _startRide() async {
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('auth_token');
+    if (token != null) {
+      final result = await ApiService.startRide(token, widget.ride['ID']);
+      AppLogger.log('START RIDE RESPONSE: $result');
 
-  if (token != null) {
-    final result = await ApiService.startRide(token, widget.ride['ID']);
-    AppLogger.log('START RIDE RESPONSE: $result');
+      if (result['success'] == true) {
+        setState(() {
+          _isStarted = true;
+          _sliderValue = 1.0;
+        });
 
-    if (result['success'] == true) {
-      setState(() {
-        _isStarted = true;
-        _sliderValue = 1.0;
-      });
+        await Future.delayed(Duration(milliseconds: 800));
 
-      await Future.delayed(Duration(milliseconds: 800));
-      
-      if (mounted) {
-        final updatedRide = Map<String, dynamic>.from(widget.ride);
-        updatedRide['Status'] = 'started';
-        
-        // Call the callback which will close and reopen the sheet
-        widget.onRideStatusChanged(updatedRide);
+        if (mounted) {
+          final updatedRide = Map<String, dynamic>.from(widget.ride);
+          updatedRide['Status'] = 'started';
+
+          // Call the callback which will close and reopen the sheet
+          widget.onRideStatusChanged(updatedRide);
+        }
+      } else {
+        CustomFlushbar.showError(
+          context: context,
+          message: result['message'] ?? 'Failed to start ride',
+        );
+        setState(() {
+          _sliderValue = 0.0;
+        });
       }
-    } else {
-      CustomFlushbar.showError(
-        context: context,
-        message: result['message'] ?? 'Failed to start ride',
-      );
-      setState(() {
-        _sliderValue = 0.0;
-      });
     }
   }
-}
 
-Future<void> _completeRide() async {
-  AppLogger.log('=== COMPLETE RIDE CALLED ===');
-  
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('auth_token');
+  Future<void> _completeRide() async {
+    AppLogger.log('=== COMPLETE RIDE CALLED ===');
 
-  if (token != null) {
-    final result = await ApiService.completeRide(token, widget.ride['ID']);
-    AppLogger.log('COMPLETE RIDE API RESPONSE: $result');
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
 
-    if (result['success'] == true) {
-      AppLogger.log('Ride completed successfully');
+    if (token != null) {
+      final result = await ApiService.completeRide(token, widget.ride['ID']);
+      AppLogger.log('COMPLETE RIDE API RESPONSE: $result');
 
-      final updatedRide = Map<String, dynamic>.from(widget.ride);
-      updatedRide['Status'] = 'completed';
-      
-      // Brief animation before closing
-      setState(() {
-        _sliderValue = 1.0;
-      });
-      
-      await Future.delayed(Duration(milliseconds: 500));
-      
-      // Update parent state - this will trigger the callback which shows the completion sheet
-      widget.onRideStatusChanged(updatedRide);
-      
-      AppLogger.log('State updated and callback called');
-    } else {
-      AppLogger.log('Failed to complete ride: ${result['message']}');
-      setState(() {
-        _sliderValue = 0.0;
-      });
-      CustomFlushbar.showError(
-        context: context,
-        message: result['message'] ?? 'Failed to complete ride',
-      );
+      if (result['success'] == true) {
+        AppLogger.log('Ride completed successfully');
+
+        final updatedRide = Map<String, dynamic>.from(widget.ride);
+        updatedRide['Status'] = 'completed';
+
+        // Brief animation before closing
+        setState(() {
+          _sliderValue = 1.0;
+        });
+
+        await Future.delayed(Duration(milliseconds: 500));
+
+        // Update parent state - this will trigger the callback which shows the completion sheet
+        widget.onRideStatusChanged(updatedRide);
+
+        AppLogger.log('State updated and callback called');
+      } else {
+        AppLogger.log('Failed to complete ride: ${result['message']}');
+        setState(() {
+          _sliderValue = 0.0;
+        });
+        CustomFlushbar.showError(
+          context: context,
+          message: result['message'] ?? 'Failed to complete ride',
+        );
+      }
     }
   }
-}
 
-void _showCompletionSheet(BuildContext context, Map<String, dynamic> ride) {
-  final passenger = ride['Passenger'] ?? {};
-  final passengerFirstName = passenger['first_name'] ?? 'Unknown';
-  final passengerLastName = passenger['last_name'] ?? '';
-  final passengerName = '$passengerFirstName $passengerLastName'.trim();
-  final note = ride['Note'] ?? '';
-  final stopAddress = ride['StopAddress'];
-  final hasStop = stopAddress != null && stopAddress.toString().isNotEmpty;
-  final price = ride['Price']?.toString() ?? '0';
-  final pickupAddress = ride['PickupAddress'] ?? 'Unknown pickup';
-  final destAddress = ride['DestAddress'] ?? 'Unknown destination';
-  final paymentMethod = ride['PaymentMethod'] ?? 'in_car';
+  void _showCompletionSheet(BuildContext context, Map<String, dynamic> ride) {
+    final passenger = ride['Passenger'] ?? {};
+    final passengerFirstName = passenger['first_name'] ?? 'Unknown';
+    final passengerLastName = passenger['last_name'] ?? '';
+    final passengerName = '$passengerFirstName $passengerLastName'.trim();
+    final note = ride['Note'] ?? '';
+    final stopAddress = ride['StopAddress'];
+    final hasStop = stopAddress != null && stopAddress.toString().isNotEmpty;
+    final price = ride['Price']?.toString() ?? '0';
+    final pickupAddress = ride['PickupAddress'] ?? 'Unknown pickup';
+    final destAddress = ride['DestAddress'] ?? 'Unknown destination';
+    final paymentMethod = ride['PaymentMethod'] ?? 'in_car';
 
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    isDismissible: false,
-    enableDrag: false,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-    ),
-    builder: (context) => WillPopScope(
-      onWillPop: () async => false,
-      child: Container(
-        padding: EdgeInsets.all(20.w),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Handle bar
-              Container(
-                width: 69.w,
-                height: 5.h,
-                margin: EdgeInsets.only(bottom: 20.h),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2.5.r),
-                ),
-              ),
-              
-              // Header with icon
-              Container(
-                width: 80.w,
-                height: 80.h,
-                decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.check_circle,
-                  color: Colors.green,
-                  size: 50.sp,
-                ),
-              ),
-              SizedBox(height: 15.h),
-              
-              // Title
-              Text(
-                'Trip Completed!',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w700,
-                  fontSize: 28.sp,
-                  color: Colors.green,
-                ),
-              ),
-              
-              SizedBox(height: 20.h),
-              Divider(thickness: 1, color: Colors.grey.shade300),
-              SizedBox(height: 20.h),
-              
-              // Amount section
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Amount',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 18.sp,
-                    color: Colors.black,
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      isDismissible: false,
+      enableDrag: false,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (context) => WillPopScope(
+        onWillPop: () async => false,
+        child: Container(
+          padding: EdgeInsets.all(20.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Handle bar
+                Container(
+                  width: 69.w,
+                  height: 5.h,
+                  margin: EdgeInsets.only(bottom: 20.h),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(2.5.r),
                   ),
                 ),
-              ),
-              SizedBox(height: 10.h),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  '₦$price',
+
+                // Header with icon
+                Container(
+                  width: 80.w,
+                  height: 80.h,
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.check_circle,
+                    color: Colors.green,
+                    size: 50.sp,
+                  ),
+                ),
+                SizedBox(height: 15.h),
+
+                // Title
+                Text(
+                  'Trip Completed!',
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w700,
-                    fontSize: 32.sp,
-                    color: Color(ConstColors.mainColor),
+                    fontSize: 28.sp,
+                    color: Colors.green,
                   ),
                 ),
-              ),
-              
-              SizedBox(height: 20.h),
-              Divider(thickness: 1, color: Colors.grey.shade300),
-              SizedBox(height: 20.h),
-              
-              // Passenger name section
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Passenger name',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 18.sp,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-              SizedBox(height: 10.h),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  passengerName,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
-                    fontSize: 16.sp,
-                    color: Colors.black87,
-                  ),
-                ),
-              ),
-              
-              SizedBox(height: 20.h),
-              Divider(thickness: 1, color: Colors.grey.shade300),
-              SizedBox(height: 20.h),
-              
-              // Destination section
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Destination',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 18.sp,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-              SizedBox(height: 10.h),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  destAddress,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
-                    fontSize: 16.sp,
-                    color: Colors.black87,
-                  ),
-                ),
-              ),
-              
-              // Stop section (if exists)
-              if (hasStop) ...[
+
                 SizedBox(height: 20.h),
                 Divider(thickness: 1, color: Colors.grey.shade300),
                 SizedBox(height: 20.h),
+
+                // Amount section
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Stop',
+                    'Amount',
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w600,
@@ -5039,49 +4978,180 @@ void _showCompletionSheet(BuildContext context, Map<String, dynamic> ride) {
                   ),
                 ),
                 SizedBox(height: 10.h),
-                Container(
-                  padding: EdgeInsets.all(12.w),
-                  decoration: BoxDecoration(
-                    color: Colors.orange.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8.r),
-                    border: Border.all(
-                      color: Colors.orange.withOpacity(0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.location_on,
-                        size: 20.sp,
-                        color: Colors.orange,
-                      ),
-                      SizedBox(width: 10.w),
-                      Expanded(
-                        child: Text(
-                          stopAddress,
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w500,
-                            fontSize: 16.sp,
-                            color: Colors.black87,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-              
-              // Note section (if exists)
-              if (note.isNotEmpty) ...[
-                SizedBox(height: 20.h),
-                Divider(thickness: 1, color: Colors.grey.shade300),
-                SizedBox(height: 20.h),
                 Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
-                    'Note',
+                    '₦$price',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w700,
+                      fontSize: 32.sp,
+                      color: Color(ConstColors.mainColor),
+                    ),
+                  ),
+                ),
+
+                SizedBox(height: 20.h),
+                Divider(thickness: 1, color: Colors.grey.shade300),
+                SizedBox(height: 20.h),
+
+                // Passenger name section
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Passenger name',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18.sp,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 10.h),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    passengerName,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w500,
+                      fontSize: 16.sp,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+
+                SizedBox(height: 20.h),
+                Divider(thickness: 1, color: Colors.grey.shade300),
+                SizedBox(height: 20.h),
+
+                // Destination section
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Destination',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18.sp,
+                      color: Colors.black,
+                    ),
+                  ),
+                ),
+                SizedBox(height: 10.h),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    destAddress,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w500,
+                      fontSize: 16.sp,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+
+                // Stop section (if exists)
+                if (hasStop) ...[
+                  SizedBox(height: 20.h),
+                  Divider(thickness: 1, color: Colors.grey.shade300),
+                  SizedBox(height: 20.h),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Stop',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w600,
+                        fontSize: 18.sp,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 10.h),
+                  Container(
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                      color: Colors.orange.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(
+                        color: Colors.orange.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          size: 20.sp,
+                          color: Colors.orange,
+                        ),
+                        SizedBox(width: 10.w),
+                        Expanded(
+                          child: Text(
+                            stopAddress,
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16.sp,
+                              color: Colors.black87,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                // Note section (if exists)
+                if (note.isNotEmpty) ...[
+                  SizedBox(height: 20.h),
+                  Divider(thickness: 1, color: Colors.grey.shade300),
+                  SizedBox(height: 20.h),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Note',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w600,
+                        fontSize: 18.sp,
+                        color: Colors.black,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 10.h),
+                  Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(12.w),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Text(
+                      note,
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontWeight: FontWeight.w400,
+                        fontSize: 14.sp,
+                        color: Colors.black87,
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                ],
+
+                SizedBox(height: 20.h),
+                Divider(thickness: 1, color: Colors.grey.shade300),
+                SizedBox(height: 20.h),
+
+                // Payment method section
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Payment Method',
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontWeight: FontWeight.w600,
@@ -5093,134 +5163,92 @@ void _showCompletionSheet(BuildContext context, Map<String, dynamic> ride) {
                 SizedBox(height: 10.h),
                 Container(
                   width: double.infinity,
-                  padding: EdgeInsets.all(12.w),
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 12.w,
+                    vertical: 10.h,
+                  ),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
+                    border: Border.all(color: Colors.grey.shade300),
                     borderRadius: BorderRadius.circular(8.r),
                   ),
-                  child: Text(
-                    note,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w400,
-                      fontSize: 14.sp,
-                      color: Colors.black87,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ),
-              ],
-              
-              SizedBox(height: 20.h),
-              Divider(thickness: 1, color: Colors.grey.shade300),
-              SizedBox(height: 20.h),
-              
-              // Payment method section
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Payment Method',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 18.sp,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-              SizedBox(height: 10.h),
-              Container(
-                width: double.infinity,
-                padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.payment, size: 20.sp, color: Colors.grey[700]),
-                    SizedBox(width: 10.w),
-                    Text(
-                      _formatPaymentMethod(paymentMethod),
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w500,
-                        fontSize: 16.sp,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              
-              SizedBox(height: 30.h),
-              
-              // History button
-              Container(
-                width: 353.w,
-                height: 48.h,
-                decoration: BoxDecoration(
-                  color: Color(ConstColors.mainColor),
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(8.r),
-                    onTap: () {
-                      Navigator.of(context).pop();
-                      Future.delayed(Duration(milliseconds: 200), () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => HistoryCompletedScreen(
-                              rideId: ride['ID'],
-                            ),
-                          ),
-                        );
-                      });
-                    },
-                    child: Center(
-                      child: Text(
-                        'History',
+                  child: Row(
+                    children: [
+                      Icon(Icons.payment, size: 20.sp, color: Colors.grey[700]),
+                      SizedBox(width: 10.w),
+                      Text(
+                        _formatPaymentMethod(paymentMethod),
                         style: TextStyle(
-                          color: Colors.white,
+                          fontFamily: 'Inter',
+                          fontWeight: FontWeight.w500,
                           fontSize: 16.sp,
-                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                SizedBox(height: 30.h),
+
+                // History button
+                Container(
+                  width: 353.w,
+                  height: 48.h,
+                  decoration: BoxDecoration(
+                    color: Color(ConstColors.mainColor),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(8.r),
+                      onTap: () {
+                        Navigator.of(context).pop();
+                        Future.delayed(Duration(milliseconds: 200), () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  HistoryCompletedScreen(rideId: ride['ID']),
+                            ),
+                          );
+                        });
+                      },
+                      child: Center(
+                        child: Text(
+                          'History',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              
-              SizedBox(height: 10.h),
-              
-              // Close button
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text(
-                  'Close',
-                  style: TextStyle(
-                    color: Colors.grey[600],
-                    fontSize: 14.sp,
+
+                SizedBox(height: 10.h),
+
+                // Close button
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(
+                    'Close',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 14.sp),
                   ),
                 ),
-              ),
-              
-              SizedBox(height: 20.h),
-            ],
+
+                SizedBox(height: 20.h),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
-}
-
-
-
+    );
+  }
 
   void _showCancelDialog() {
     final TextEditingController reasonController = TextEditingController();
@@ -5356,7 +5384,12 @@ void _showCompletionSheet(BuildContext context, Map<String, dynamic> ride) {
     }
   }
 
-  Widget _buildActiveRideContent(Map<String, dynamic> passenger, int tip, int waitFee, String passengerName) {
+  Widget _buildActiveRideContent(
+    Map<String, dynamic> passenger,
+    int tip,
+    int waitFee,
+    String passengerName,
+  ) {
     return Column(
       children: [
         Text(
@@ -5605,7 +5638,8 @@ void _showCompletionSheet(BuildContext context, Map<String, dynamic> ride) {
             fontSize: 16.sp,
           ),
         ),
-        if (widget.ride['StopAddress'] != null && widget.ride['StopAddress'].toString().isNotEmpty) ...[
+        if (widget.ride['StopAddress'] != null &&
+            widget.ride['StopAddress'].toString().isNotEmpty) ...[
           SizedBox(height: 20.h),
           Text(
             'Stop',
@@ -5682,9 +5716,8 @@ void _showCompletionSheet(BuildContext context, Map<String, dynamic> ride) {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (context) => HistoryCompletedScreen(
-                    rideId: widget.ride['ride_id'],
-                  ),
+                  builder: (context) =>
+                      HistoryCompletedScreen(rideId: widget.ride['ride_id']),
                 ),
               );
             },
@@ -5704,23 +5737,18 @@ void _showCompletionSheet(BuildContext context, Map<String, dynamic> ride) {
     );
   }
 
-
-
-
-String _formatPaymentMethod(String? method) {
-  switch (method) {
-    case 'in_car':
-      return 'Pay in car';
-    case 'wallet':
-      return 'Pay with wallet';
-    case 'card':
-      return 'Pay with card';
-    case null:
-      return 'Pay in car';
-    default:
-      return method;
+  String _formatPaymentMethod(String? method) {
+    switch (method) {
+      case 'in_car':
+        return 'Pay in car';
+      case 'wallet':
+        return 'Pay with wallet';
+      case 'card':
+        return 'Pay with card';
+      case null:
+        return 'Pay in car';
+      default:
+        return method;
+    }
   }
 }
-
-}
-

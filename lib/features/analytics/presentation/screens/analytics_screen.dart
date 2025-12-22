@@ -1,163 +1,216 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/features/analytics/data/providers/earnings_provider.dart';
+import 'package:muvam_rider/features/analytics/presentation/widgets/weekly_earnings_chart.dart';
+import 'package:provider/provider.dart';
 
 class AnalyticsScreen extends StatefulWidget {
+  const AnalyticsScreen({super.key});
+
   @override
-  _AnalyticsScreenState createState() => _AnalyticsScreenState();
+  AnalyticsScreenState createState() => AnalyticsScreenState();
 }
 
-class _AnalyticsScreenState extends State<AnalyticsScreen> {
+class AnalyticsScreenState extends State<AnalyticsScreen> {
   int _selectedPeriodIndex = 0;
   int _selectedTabIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchData();
+    });
+  }
+
+  void _fetchData() {
+    final earningsProvider = Provider.of<EarningsProvider>(
+      context,
+      listen: false,
+    );
+    final period = earningsProvider.getPeriodFromIndex(_selectedPeriodIndex);
+    earningsProvider.fetchEarningsSummary(period);
+    if (_selectedTabIndex == 0) {
+      earningsProvider.fetchWeeklyOverview('weekly');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      body: Stack(
-        children: [
-          Positioned(
-            top: 70.h,
-            left: 20.w,
-            child: GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                width: 45.w,
-                height: 45.h,
-                decoration: BoxDecoration(
-                  color: Theme.of(context).cardColor,
-                  borderRadius: BorderRadius.circular(100.r),
+      body: Consumer<EarningsProvider>(
+        builder: (context, earningsProvider, child) {
+          return Stack(
+            children: [
+              Positioned(
+                top: 40.h,
+                left: 20.w,
+                child: GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Container(
+                    width: 45.w,
+                    height: 45.h,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).cardColor,
+                      borderRadius: BorderRadius.circular(100.r),
+                    ),
+                    child: Icon(
+                      Icons.arrow_back,
+                      color: Theme.of(context).iconTheme.color,
+                      size: 20.sp,
+                    ),
+                  ),
                 ),
-                child: Icon(
-                  Icons.arrow_back,
-                  color: Theme.of(context).iconTheme.color,
-                  size: 20.sp,
+              ),
+              Positioned(
+                top: 100.h,
+                left: 0,
+                right: 0,
+                child: Text(
+                  'Analytics',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w600,
+                    fontSize: 24.sp,
+                    color: Theme.of(context).textTheme.titleLarge?.color,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               ),
-            ),
-          ),
-          Positioned(
-            top: 100.h,
-            left: 0,
-            right: 0,
-            child: Text(
-              'Analytics',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w600,
-                fontSize: 24.sp,
-                color: Theme.of(context).textTheme.titleLarge?.color,
+              Positioned(
+                top: 140.h,
+                left: 20.w,
+                child: Container(
+                  width: 353.w,
+                  height: 40.h,
+                  decoration: BoxDecoration(
+                    color: Color(0x767680).withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  padding: EdgeInsets.all(2.w),
+                  child: Row(
+                    children: [
+                      _buildPeriodTab('Today', 0),
+                      Container(
+                        width: 0.5.w,
+                        height: 36.h,
+                        color: Theme.of(context).dividerColor,
+                      ),
+                      _buildPeriodTab('Weekly', 1),
+                      Container(
+                        width: 0.5.w,
+                        height: 36.h,
+                        color: Theme.of(context).dividerColor,
+                      ),
+                      _buildPeriodTab('Monthly', 2),
+                    ],
+                  ),
+                ),
               ),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          Positioned(
-            top: 140.h,
-            left: 20.w,
-            child: Container(
-              width: 353.w,
-              height: 40.h,
-              decoration: BoxDecoration(
-                color: Color(0x767680).withOpacity(0.12),
-                borderRadius: BorderRadius.circular(8.r),
+              if (earningsProvider.isLoading)
+                Positioned(
+                  top: 195.h,
+                  left: 20.w,
+                  child: Container(
+                    width: 353.w,
+                    height: 200.h,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF2A8359),
+                      ),
+                    ),
+                  ),
+                )
+              else
+                Positioned(
+                  top: 195.h,
+                  left: 20.w,
+                  child: Container(
+                    width: 353.w,
+                    height: 200.h,
+                    child: GridView.count(
+                      crossAxisCount: 2,
+                      mainAxisSpacing: 15.h,
+                      crossAxisSpacing: 15.w,
+                      childAspectRatio: 170.w / 95.h,
+                      physics: NeverScrollableScrollPhysics(),
+                      children: [
+                        _buildStatCard(
+                          earningsProvider.earningsSummary?.totalRides
+                                  .toString() ??
+                              '0',
+                          'Today\'s ride',
+                          Color(0xFFF0FDF4),
+                          Color(0xFF2A8359),
+                        ),
+                        _buildStatCard(
+                          earningsProvider.formatPrice(
+                            earningsProvider.earningsSummary?.totalEarnings ??
+                                0,
+                          ),
+                          'Earnings',
+                          Color(0xFFE2EBFF),
+                          Color(0xFF2664EB),
+                        ),
+                        _buildStatCard(
+                          '4.8',
+                          'Ratings',
+                          Color(0xFFFEFBE8),
+                          Color(0xFFCA8A00),
+                        ),
+                        _buildStatCard(
+                          earningsProvider.formatHours(
+                            earningsProvider.earningsSummary?.onlineHours ?? 0,
+                            earningsProvider.earningsSummary?.onlineMinutes ??
+                                0,
+                          ),
+                          'Hours online',
+                          Color(0xFFF1F0F2),
+                          Color(0xFF9334EA),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              Positioned(
+                top: 425.h,
+                left: 20.w,
+                child: Container(
+                  width: 353.w,
+                  height: 40.h,
+                  decoration: BoxDecoration(
+                    color: Color(0x767680).withOpacity(0.12),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
+                  padding: EdgeInsets.all(2.w),
+                  child: Row(
+                    children: [
+                      _buildMainTab('Overview', 0),
+                      Container(
+                        width: 0.5.w,
+                        height: 36.h,
+                        color: Theme.of(context).dividerColor,
+                      ),
+                      _buildMainTab('Earnings', 1),
+                    ],
+                  ),
+                ),
               ),
-              padding: EdgeInsets.all(2.w),
-              child: Row(
-                children: [
-                  _buildPeriodTab('Today', 0),
-                  Container(
-                    width: 0.5.w,
-                    height: 36.h,
-                    color: Theme.of(context).dividerColor,
-                  ),
-                  _buildPeriodTab('Weekly', 1),
-                  Container(
-                    width: 0.5.w,
-                    height: 36.h,
-                    color: Theme.of(context).dividerColor,
-                  ),
-                  _buildPeriodTab('Monthly', 2),
-                ],
+              Positioned(
+                top: 485.h,
+                left: 20.w,
+                right: 20.w,
+                bottom: 20.h,
+                child: SingleChildScrollView(
+                  child: _selectedTabIndex == 0
+                      ? _buildOverviewTab(earningsProvider)
+                      : _buildEarningsTab(),
+                ),
               ),
-            ),
-          ),
-          Positioned(
-            top: 195.h,
-            left: 20.w,
-            child: Container(
-              width: 353.w,
-              height: 200.h,
-              child: GridView.count(
-                crossAxisCount: 2,
-                mainAxisSpacing: 15.h,
-                crossAxisSpacing: 15.w,
-                childAspectRatio: 170.w / 95.h,
-                physics: NeverScrollableScrollPhysics(),
-                children: [
-                  _buildStatCard(
-                    '5',
-                    'Today\'s ride',
-                    Color(0xFFF0FDF4),
-                    Color(0xFF2A8359),
-                  ),
-                  _buildStatCard(
-                    '₦12,000',
-                    'Earnings',
-                    Color(0xFFE2EBFF),
-                    Color(0xFF2664EB),
-                  ),
-                  _buildStatCard(
-                    '4.8',
-                    'Ratings',
-                    Color(0xFFFEFBE8),
-                    Color(0xFFCA8A00),
-                  ),
-                  _buildStatCard(
-                    '8',
-                    'Hours online',
-                    Color(0xFFF1F0F2),
-                    Color(0xFF9334EA),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Positioned(
-            top: 425.h,
-            left: 20.w,
-            child: Container(
-              width: 353.w,
-              height: 40.h,
-              decoration: BoxDecoration(
-                color: Color(0x767680).withOpacity(0.12),
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              padding: EdgeInsets.all(2.w),
-              child: Row(
-                children: [
-                  _buildMainTab('Overview', 0),
-                  Container(
-                    width: 0.5.w,
-                    height: 36.h,
-                    color: Theme.of(context).dividerColor,
-                  ),
-                  _buildMainTab('Earnings', 1),
-                ],
-              ),
-            ),
-          ),
-          Positioned(
-            top: 485.h,
-            left: 20.w,
-            right: 20.w,
-            bottom: 20.h,
-            child: SingleChildScrollView(
-              child: _selectedTabIndex == 0
-                  ? _buildOverviewTab()
-                  : _buildEarningsTab(),
-            ),
-          ),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
@@ -166,7 +219,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final isSelected = _selectedPeriodIndex == index;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _selectedPeriodIndex = index),
+        onTap: () {
+          setState(() => _selectedPeriodIndex = index);
+          _fetchData();
+        },
         child: Container(
           height: 38.h,
           decoration: BoxDecoration(
@@ -193,7 +249,17 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final isSelected = _selectedTabIndex == index;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _selectedTabIndex = index),
+        onTap: () {
+          setState(() => _selectedTabIndex = index);
+          if (index == 0) {
+            final earningsProvider = Provider.of<EarningsProvider>(
+              context,
+              listen: false,
+            );
+            // CHANGED: fetchEarningsOverview to fetchWeeklyOverview
+            earningsProvider.fetchWeeklyOverview('weekly');
+          }
+        },
         child: Container(
           height: 38.h,
           decoration: BoxDecoration(
@@ -261,7 +327,20 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildOverviewTab() {
+  Widget _buildOverviewTab(EarningsProvider earningsProvider) {
+    if (earningsProvider.isLoadingOverview) {
+      return Container(
+        height: 255.h,
+        child: Center(
+          child: CircularProgressIndicator(color: Color(0xFF2A8359)),
+        ),
+      );
+    }
+
+    // CHANGED: earningsOverview to weeklyOverview
+    final overview = earningsProvider.weeklyOverview;
+    final totalEarnings = overview?.totalEarnings ?? 0;
+
     return Column(
       children: [
         Container(
@@ -287,20 +366,16 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                 ),
               ),
               SizedBox(height: 20.h),
-              Container(
-                width: 318.w,
-                height: 109.h,
-                child: Image.asset(
-                  'assets/images/graph.png',
-                  fit: BoxFit.contain,
-                ),
+              WeeklyEarningsChart(
+                overview: overview,
+                formatPrice: earningsProvider.formatPrice,
               ),
               SizedBox(height: 20.h),
               Center(
                 child: Column(
                   children: [
                     Text(
-                      '₦128,000',
+                      earningsProvider.formatPrice(totalEarnings),
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontWeight: FontWeight.w600,
@@ -328,7 +403,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
             ],
           ),
         ),
-        SizedBox(height: 25.h),
+        SizedBox(height: 15.h),
         Container(
           width: 353.w,
           height: 285.h,
@@ -447,16 +522,21 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     return Column(
       children: [
         Stack(
+          clipBehavior: Clip.none,
           children: [
             Container(
-              width: 353.w,
-              height: 147.h,
+              width: double.infinity,
+              height: 120.h,
               decoration: BoxDecoration(
-                color: Color(0xFF2A8359),
-                borderRadius: BorderRadius.circular(8.r),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF4A9D7A), Color(0xFF1F5D42)],
+                ),
+                borderRadius: BorderRadius.circular(16.r),
               ),
               child: Padding(
-                padding: EdgeInsets.all(15.w),
+                padding: EdgeInsets.symmetric(horizontal: 24.w, vertical: 20.h),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -465,27 +545,22 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
                       'Total earned',
                       style: TextStyle(
                         fontFamily: 'Inter',
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w500,
-                        height: 1.0,
-                        letterSpacing: -0.32,
-                        color: Colors.white,
+                        fontSize: 16.sp,
+                        fontWeight: FontWeight.w400,
+                        height: 1.2,
+                        color: Colors.white.withOpacity(0.85),
                       ),
                     ),
-                    SizedBox(height: 8.h),
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        '₦245,000',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 24.sp,
-                          fontWeight: FontWeight.w600,
-                          height: 1.0,
-                          letterSpacing: -0.32,
-                          color: Colors.white,
-                        ),
+                    SizedBox(height: 12.h),
+                    Text(
+                      '#58,589.00',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 40.sp,
+                        fontWeight: FontWeight.w700,
+                        height: 1.1,
+                        letterSpacing: -1.0,
+                        color: Colors.white,
                       ),
                     ),
                   ],
@@ -493,96 +568,81 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
               ),
             ),
             Positioned(
-              top: -54.h,
-              left: -43.w,
+              top: -30.h,
+              left: -35.w,
               child: Container(
-                width: 103.w,
-                height: 103.h,
+                width: 100.w,
+                height: 100.h,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.12),
+                  color: Colors.white.withOpacity(0.08),
                   shape: BoxShape.circle,
                 ),
               ),
             ),
             Positioned(
-              top: 99.h,
-              left: 237.w,
+              bottom: -20.h,
+              right: -10.w,
               child: Container(
-                width: 79.w,
-                height: 79.h,
+                width: 80.w,
+                height: 80.h,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.12),
+                  color: Colors.white.withOpacity(0.08),
                   shape: BoxShape.circle,
                 ),
               ),
             ),
             Positioned(
-              top: 89.h,
-              left: 297.w,
+              bottom: -15.h,
+              right: 40.w,
               child: Container(
-                width: 79.w,
-                height: 79.h,
+                width: 70.w,
+                height: 70.h,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.12),
+                  color: Colors.white.withOpacity(0.08),
                   shape: BoxShape.circle,
                 ),
               ),
             ),
           ],
         ),
-        SizedBox(height: 25.h),
+        SizedBox(height: 24.h),
         Container(
-          width: 353.w,
-          height: 240.h,
+          width: double.infinity,
           decoration: BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.circular(15.r),
+            borderRadius: BorderRadius.circular(16.r),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.04),
+                blurRadius: 10,
+                offset: Offset(0, 2),
+              ),
+            ],
           ),
-          padding: EdgeInsets.all(20.w),
+          padding: EdgeInsets.all(24.w),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Earnings breakdown',
+                'Earning Breakdown',
                 style: TextStyle(
                   fontFamily: 'Inter',
-                  fontWeight: FontWeight.w600,
-                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 18.sp,
                   color: Colors.black,
+                  letterSpacing: -0.3,
                 ),
               ),
-              SizedBox(height: 20.h),
-              _buildBreakdownItem('Gross earning', '₦280,000'),
-              SizedBox(height: 15.h),
-              _buildBreakdownItem('Tips received', '₦15,000'),
-              SizedBox(height: 15.h),
-              _buildBreakdownItem('Platform fee', '-₦50,000'),
-              SizedBox(height: 15.h),
-              Divider(color: Colors.grey.shade300),
-              SizedBox(height: 15.h),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Total',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16.sp,
-                      color: Color(0xFF2A8359),
-                    ),
-                  ),
-                  Text(
-                    '₦245,000',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16.sp,
-                      color: Color(0xFF2A8359),
-                    ),
-                  ),
-                ],
-              ),
+              SizedBox(height: 24.h),
+              _buildBreakdownItem('Gross earning', '#45,099', false),
+              SizedBox(height: 18.h),
+              _buildBreakdownItem('Tips recieved', '#5,099', false),
+              SizedBox(height: 18.h),
+              _buildBreakdownItem('Platform fee', '#3,099', false),
+              SizedBox(height: 18.h),
+              Divider(color: Color(0xFFE5E5E5), thickness: 1),
+              SizedBox(height: 18.h),
+              _buildBreakdownItem('Platform fee', '#45,009', true),
             ],
           ),
         ),
@@ -590,7 +650,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildBreakdownItem(String label, String value) {
+  Widget _buildBreakdownItem(String label, String amount, bool isTotal) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -598,22 +658,20 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
           label,
           style: TextStyle(
             fontFamily: 'Inter',
-            fontWeight: FontWeight.w400,
-            fontSize: 14.sp,
-            height: 20 / 14,
-            letterSpacing: -0.08,
-            color: Colors.black,
+            fontWeight: isTotal ? FontWeight.w700 : FontWeight.w400,
+            fontSize: isTotal ? 18.sp : 16.sp,
+            color: isTotal ? Colors.black : Color(0xFF666666),
+            letterSpacing: -0.3,
           ),
         ),
         Text(
-          value,
+          amount,
           style: TextStyle(
             fontFamily: 'Inter',
-            fontWeight: FontWeight.w500,
-            fontSize: 14.sp,
-            height: 20 / 14,
-            letterSpacing: -0.08,
-            color: Colors.black,
+            fontWeight: isTotal ? FontWeight.w700 : FontWeight.w600,
+            fontSize: isTotal ? 18.sp : 16.sp,
+            color: isTotal ? Color(0xFF2A8359) : Colors.black,
+            letterSpacing: -0.3,
           ),
         ),
       ],
