@@ -21,8 +21,9 @@ class ReferralRulesScreen extends StatelessWidget {
                     onTap: () => Navigator.pop(context),
                     child: Image.asset(
                       ConstImages.back,
-                      width: 24.w,
-                      height: 24.h,
+                      width: 30.w,
+                      height: 30.h,
+                      fit: BoxFit.cover,
                     ),
                   ),
                   Expanded(
@@ -43,8 +44,7 @@ class ReferralRulesScreen extends StatelessWidget {
               ),
               SizedBox(height: 40.h),
               Container(
-                width: 353.w,
-                height: 186.h,
+                width: double.infinity,
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(10.r),
