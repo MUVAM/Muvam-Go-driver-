@@ -15,8 +15,6 @@ import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/activities/data/providers/request_provider.dart';
 import 'package:muvam_rider/features/activities/presentation/screens/activities_screen.dart';
-import 'package:muvam_rider/features/analytics/data/models/earnings_summary_model.dart';
-import 'package:muvam_rider/features/analytics/data/providers/earnings_provider.dart';
 import 'package:muvam_rider/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_selection_screen.dart';
@@ -31,14 +29,12 @@ import 'package:muvam_rider/features/profile/data/providers/profile_provider.dar
 import 'package:muvam_rider/features/profile/presentation/screens/profile_screen.dart';
 import 'package:muvam_rider/features/communication/presentation/screens/call_screen.dart';
 import 'package:muvam_rider/features/communication/presentation/screens/chat_screen.dart';
-import 'package:muvam_rider/features/communication/presentation/screens/inComingCall.dart';
 import 'package:muvam_rider/core/services/call_service.dart';
 import 'package:muvam_rider/features/referral/presentation/screens/referral_screen.dart';
 import 'package:muvam_rider/features/trips/presentation/screen/history_completed_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-//FOR DRIVER
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -67,9 +63,7 @@ class _HomeScreenState extends State<HomeScreen> {
   String _currentETA = '';
   String _currentLocationName = '';
   Map<String, dynamic>? _activeRide;
-  final int _selectedPeriodIndex = 0;
-  final int _selectedTabIndex = 0;
-  bool _isRideSheetVisible = true;
+  bool _isRideSheetVisible = true; // Track ride sheet visibility
   List<String> recentLocations = [
     'Nsukka, Ogige',
     'Holy ghost Enugu',
@@ -174,8 +168,8 @@ class _HomeScreenState extends State<HomeScreen> {
     _rideCheckTimer?.cancel();
     _sessionCheckTimer?.cancel();
     _locationUpdateTimer?.cancel();
-    _callService.dispose();
     context.read<RequestProvider>().stopAutoRefresh();
+    _callService.dispose();
     RideTrackingService.stopTracking();
     super.dispose();
   }
