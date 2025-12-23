@@ -19,6 +19,11 @@ import 'core/utils/app_logger.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Load persisted chat messages
+  final chatProvider = ChatProvider();
+  await chatProvider.loadMessages();
+  
   runApp(
     MultiProvider(
       providers: [
@@ -26,7 +31,7 @@ void main() async {
         ChangeNotifierProvider(create: (context) => AuthProvider()),
         ChangeNotifierProvider(create: (_) => WalletProvider()),
         ChangeNotifierProvider(create: (_) => RidesProvider()),
-        ChangeNotifierProvider(create: (_) => ChatProvider()),
+        ChangeNotifierProvider.value(value: chatProvider),
         ChangeNotifierProvider(create: (context) => DriverProvider()),
         ChangeNotifierProvider(create: (_) => WithdrawalProvider()),
         ChangeNotifierProvider(create: (_) => ProfileProvider()),

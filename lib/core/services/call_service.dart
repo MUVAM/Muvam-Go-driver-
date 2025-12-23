@@ -724,6 +724,7 @@ class CallService {
     }
     
     AppLogger.log('📨 CallService received: $type', tag: 'CALL');
+    AppLogger.log('Message data: ${data['data']}', tag: 'CALL');
     
     if (type == 'call_initiate') {
       AppLogger.log('📞 Incoming call received', tag: 'CALL');
@@ -735,6 +736,7 @@ class CallService {
         _rideId = data['data']['ride_id'];
         _recipientId = data['data']['caller_id'];
         _isInitiator = false;
+        AppLogger.log('Session ID: $_currentSessionId, Ride ID: $_rideId, Caller ID: $_recipientId', tag: 'CALL');
       }
     } else if (type == 'call_answer') {
       AppLogger.log('✅ Call answered by passenger', tag: 'CALL');

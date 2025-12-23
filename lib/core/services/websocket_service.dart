@@ -235,7 +235,7 @@ Function(Map<String, dynamic>)? onChatNotification;
     print('   ✅ All handlers attached successfully');
   }
 
-  void _handleMessage(Map<String, dynamic> data) {
+  void _handleMessage(Map<String, dynamic> data) async {
     final type = data['type'];
     print('🔀 Routing message type: $type');
 
@@ -274,7 +274,8 @@ Function(Map<String, dynamic>)? onChatNotification;
       case 'call_answer_sdp':
       case 'call_ice_candidate':
         print('   → call handler');
-        if (onIncomingCall != null) onIncomingCall!(data);
+        // CRITICAL FIX: Filter call messages based on recipient
+        await _handleCallMessage(data, type);
         break;
       case 'ride_completed':
         print('🎉 Ride completed message received: $data');
@@ -291,6 +292,72 @@ Function(Map<String, dynamic>)? onChatNotification;
         break;
       default:
         print('   ⚠️ Unknown message type: $type');
+    }
+  }
+
+  // CRITICAL FIX: Filter call messages to ensure they go to the right recipient
+  Future<void> _handleCallMessage(Map<String, dynamic> data, String type) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final currentUserId = prefs.getString('user_id');
+      
+      print('═══════════════════════════════════════');
+      print('🔍 CALL MESSAGE FILTERING');
+      print('═══════════════════════════════════════');
+      print('Message type: $type');
+      print('Current user ID: $currentUserId');
+      
+      final messageData = data['data'];
+      if (messageData != null) {
+        final callerId = messageData['caller_id']?.toString();
+        final recipientId = messageData['recipient_id']?.toString();
+        
+        print('Caller ID: $callerId');
+        print('Recipient ID: $recipientId');
+        
+        // For call_initiate: only show to recipient (not the caller)
+        if (type == 'call_initiate') {
+          if (recipientId != null && recipientId == currentUserId) {
+            print('✅ This user IS the recipient - showing incoming call');
+            if (onIncomingCall != null) onIncomingCall!(data);
+          } else if (callerId == currentUserId) {
+            print('⚠️ This user is the CALLER - ignoring call_initiate');
+          } else {
+            print('⚠️ This call is for someone else - ignoring');
+          }
+        } 
+        // For other call messages: route to the appropriate party
+        else {
+          // call_answer, call_reject, call_end should go to the caller
+          if (type == 'call_answer' || type == 'call_reject' || type == 'call_end') {
+            if (callerId == currentUserId) {
+              print('✅ Routing $type to caller');
+              if (onIncomingCall != null) onIncomingCall!(data);
+            } else {
+              print('⚠️ This message is not for this user');
+            }
+          }
+          // WebRTC signaling messages (offer, answer, ICE) should go to both parties
+          else if (type == 'call_offer' || type == 'call_answer_sdp' || type == 'call_ice_candidate') {
+            if (recipientId == currentUserId) {
+              print('✅ Routing WebRTC message to recipient');
+              if (onIncomingCall != null) onIncomingCall!(data);
+            } else {
+              print('⚠️ WebRTC message not for this user');
+            }
+          }
+        }
+      } else {
+        print('⚠️ No data field in call message');
+        // Fallback: route to handler anyway
+        if (onIncomingCall != null) onIncomingCall!(data);
+      }
+      
+      print('═══════════════════════════════════════');
+    } catch (e) {
+      print('❌ Error filtering call message: $e');
+      // Fallback: route to handler anyway
+      if (onIncomingCall != null) onIncomingCall!(data);
     }
   }
 

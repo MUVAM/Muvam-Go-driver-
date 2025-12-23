@@ -1,13 +1,16 @@
 
 
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../models/chat_model.dart';
 
 //FOR DRIVER
 class ChatProvider with ChangeNotifier {
   final Map<int, List<ChatMessageModel>> _messagesByRide = {};
   final Map<int, ChatModel> _chats = {};
-  int? _activeRideId; // Track which ride's chat is currently open
+  int? _activeRideId;
+  static const String _storageKey = 'chat_messages';
 
   Map<int, ChatModel> get chats => _chats;
   int? get activeRideId => _activeRideId;
@@ -36,7 +39,6 @@ class ChatProvider with ChangeNotifier {
     }
     _messagesByRide[rideId]!.insert(0, message);
 
-    // Update last message in chat
     if (_chats.containsKey(rideId)) {
       _chats[rideId] = _chats[rideId]!.copyWith(
         lastMessage: message.message,
@@ -44,6 +46,7 @@ class ChatProvider with ChangeNotifier {
       );
     }
 
+    _saveMessages();
     notifyListeners();
   }
 
@@ -54,6 +57,38 @@ class ChatProvider with ChangeNotifier {
 
   void clearMessages(int rideId) {
     _messagesByRide[rideId]?.clear();
+    _saveMessages();
     notifyListeners();
+  }
+
+  Future<void> loadMessages() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? messagesJson = prefs.getString(_storageKey);
+    
+    if (messagesJson != null) {
+      final Map<String, dynamic> decoded = json.decode(messagesJson);
+      _messagesByRide.clear();
+      
+      decoded.forEach((key, value) {
+        final rideId = int.parse(key);
+        final List<dynamic> messagesList = value;
+        _messagesByRide[rideId] = messagesList
+            .map((m) => ChatMessageModel.fromJson(m))
+            .toList();
+      });
+      
+      notifyListeners();
+    }
+  }
+
+  Future<void> _saveMessages() async {
+    final prefs = await SharedPreferences.getInstance();
+    final Map<String, dynamic> toSave = {};
+    
+    _messagesByRide.forEach((rideId, messages) {
+      toSave[rideId.toString()] = messages.map((m) => m.toJson()).toList();
+    });
+    
+    await prefs.setString(_storageKey, json.encode(toSave));
   }
 }

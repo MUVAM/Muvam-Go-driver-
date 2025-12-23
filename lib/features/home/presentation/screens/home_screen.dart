@@ -168,105 +168,6 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-// void _initializeServices() async {
-//   AppLogger.log('=== INITIALIZING HOME SCREEN SERVICES ===');
-
-//   // Check session expiration first
-//   final authProvider = Provider.of<AuthProvider>(context, listen: false);
-//   final isExpired = await authProvider.isSessionExpired();
-
-//   if (isExpired) {
-//     AppLogger.log('🔒 Session expired, redirecting to login...');
-//     Navigator.pushAndRemoveUntil(
-//       context,
-//       MaterialPageRoute(builder: (context) => RiderSignupSelectionScreen()),
-//       (route) => false,
-//     );
-//     return;
-//   }
-
-//   // Fetch user profile
-//   AppLogger.log('👤 Fetching user profile...');
-//   final profileProvider = Provider.of<ProfileProvider>(
-//     context,
-//     listen: false,
-//   );
-//   await profileProvider.fetchUserProfile();
-
-//   AppLogger.log('🔌 Connecting WebSocket...');
-//   try {
-//     await _webSocketService.connect();
-//     AppLogger.log('✅ WebSocket connection attempt completed');
-
-//     Future.delayed(Duration(seconds: 2), () {
-//       AppLogger.log('🧪 Testing WebSocket connection...');
-//     });
-//   } catch (e) {
-//     AppLogger.log('❌ WebSocket connection failed: $e');
-//   }
-
-//   // CRITICAL: Register chat handler GLOBALLY in HomeScreen
-//   _webSocketService.onChatMessage = (chatData) {
-//     AppLogger.log('💬 Global chat handler called in HomeScreen');
-//     _handleGlobalChatMessage(chatData);
-//   };
-
-//   _webSocketService.onIncomingCall = (callData) {
-//     AppLogger.log('📞 Incoming call received in HomeScreen', tag: 'HOME');
-//     AppLogger.log('Call data: $callData', tag: 'HOME');
-    
-//     if (mounted) {
-//       setState(() {
-//         _incomingCall = callData;
-//       });
-//       AppLogger.log('✅ Incoming call state updated', tag: 'HOME');
-//     } else {
-//       AppLogger.log('⚠️ Widget not mounted, cannot show incoming call', tag: 'HOME');
-//     }
-//   };
-
-//   // Setup WebSocket ride completion handler
-//   _webSocketService.onRideCompleted = (completionData) {
-//     AppLogger.log('🎉 Ride completion received via WebSocket: $completionData');
-//     if (mounted) {
-//       // Close any open sheets first
-//       if (Navigator.of(context).canPop()) {
-//         Navigator.of(context).pop();
-//       }
-      
-//       // Small delay before showing completion sheet
-//       Future.delayed(Duration(milliseconds: 300), () {
-//         if (mounted) {
-//           _showCompletedSheet(context, _activeRide ?? {});
-//         }
-//       });
-      
-//       // Update local state
-//       final updatedRide = Map<String, dynamic>.from(_activeRide ?? {});
-//       updatedRide['Status'] = 'completed';
-//       _onRideStatusChanged(updatedRide);
-//     }
-//   };
-
-//   AppLogger.log('📍 Getting current location...');
-//   _getCurrentLocation();
-
-//   AppLogger.log('👤 Initializing driver status...');
-//   final driverProvider = Provider.of<DriverProvider>(context, listen: false);
-//   await driverProvider.initializeDriverStatus();
-
-//   AppLogger.log('🚗 Checking active rides...');
-//   _checkActiveRides();
-
-//   AppLogger.log('💰 Fetching earnings summary...');
-//   _fetchEarningsSummary();
-
-//   AppLogger.log('⏰ Starting ride checking timer...');
-//   _startRideChecking();
-
-//   AppLogger.log('✅ All services initialized');
-//   AppLogger.log('=== HOME SCREEN READY ===\n');
-// }
 
 
 void _initializeServices() async {
@@ -390,7 +291,7 @@ void _initializeServices() async {
 
 
 // Add this new method to handle global chat messages
-void _handleGlobalChatMessage(Map<String, dynamic> chatData) {
+void _handleGlobalChatMessage(Map<String, dynamic> chatData) async {
   try {
     AppLogger.log('📨 Processing global chat message');
     final data = chatData['data'] ?? {};
@@ -405,6 +306,12 @@ void _handleGlobalChatMessage(Map<String, dynamic> chatData) {
     AppLogger.log('   From: $senderName (ID: $senderId)');
     AppLogger.log('   Ride: $rideId');
 
+    // CRITICAL FIX: Get current user ID to filter out own messages
+    final prefs = await SharedPreferences.getInstance();
+    final currentUserId = prefs.getString('user_id');
+    
+    AppLogger.log('   Current User ID: $currentUserId');
+
     // Add message to ChatProvider so it's available when user opens ChatScreen
     if (mounted && rideId > 0) {
       final chatProvider = Provider.of<ChatProvider>(context, listen: false);
@@ -418,46 +325,53 @@ void _handleGlobalChatMessage(Map<String, dynamic> chatData) {
       chatProvider.addMessage(rideId, message);
       AppLogger.log('✅ Message added to ChatProvider');
 
-      // Show notification
-      ChatNotificationService.showChatNotification(
-        context,
-        senderName: senderName,
-        message: messageText,
-        senderImage: senderImage,
-        onTap: () {
-          AppLogger.log('🔔 Notification tapped, navigating to chat');
-          
-          // Navigate to chat screen
-          if (_activeRide != null) {
-            final passenger = _activeRide!['Passenger'] ?? {};
-            final passengerName = '${passenger['first_name'] ?? 'Unknown'} ${passenger['last_name'] ?? 'Passenger'}';
-            final passengerImage = passenger['profile_image'] ?? passenger['image'];
+      // CRITICAL FIX: Only show notification if message is NOT from current user
+      if (senderId != currentUserId) {
+        AppLogger.log('✅ Message is from other user, showing notification');
+        
+        // Show notification
+        ChatNotificationService.showChatNotification(
+          context,
+          senderName: senderName,
+          message: messageText,
+          senderImage: senderImage,
+          onTap: () {
+            AppLogger.log('🔔 Notification tapped, navigating to chat');
             
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ChatScreen(
-                  rideId: rideId,
-                  driverName: passengerName,
-                  driverImage: passengerImage,
+            // Navigate to chat screen
+            if (_activeRide != null) {
+              final passenger = _activeRide!['Passenger'] ?? {};
+              final passengerName = '${passenger['first_name'] ?? 'Unknown'} ${passenger['last_name'] ?? 'Passenger'}';
+              final passengerImage = passenger['profile_image'] ?? passenger['image'];
+              
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChatScreen(
+                    rideId: rideId,
+                    driverName: passengerName,
+                    driverImage: passengerImage,
+                  ),
                 ),
-              ),
-            );
-          } else {
-            // Fallback if no active ride
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ChatScreen(
-                  rideId: rideId,
-                  driverName: senderName,
-                  driverImage: senderImage,
+              );
+            } else {
+              // Fallback if no active ride
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ChatScreen(
+                    rideId: rideId,
+                    driverName: senderName,
+                    driverImage: senderImage,
+                  ),
                 ),
-              ),
-            );
-          }
-        },
-      );
+              );
+            }
+          },
+        );
+      } else {
+        AppLogger.log('⚠️ Message is from current user, skipping notification');
+      }
     }
   } catch (e, stack) {
     AppLogger.log('❌ Error handling global chat message: $e');
@@ -791,16 +705,24 @@ void _handleGlobalChatMessage(Map<String, dynamic> chatData) {
     final themeManager = Provider.of<ThemeManager>(context);
     return WillPopScope(
       onWillPop: () async {
-        final now = DateTime.now();
-        if (_lastBackPress == null || now.difference(_lastBackPress!) > Duration(seconds: 2)) {
-          _lastBackPress = now;
-          CustomFlushbar.showInfo(
-            context: context,
-            message: 'Press back again to exit',
-          );
-          return false;
-        }
-        return true;
+        final shouldExit = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text('Exit App'),
+            content: Text('Are you sure you want to exit?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text('Cancel'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text('Exit'),
+              ),
+            ],
+          ),
+        );
+        return shouldExit ?? false;
       },
       child: Scaffold(
       key: _scaffoldKey,
@@ -4507,6 +4429,14 @@ Widget _buildDetailRow(String label, String value, {bool isStop = false}) {
 
     if (updatedRide['Status'] == 'completed' ||
         updatedRide['Status'] == 'cancelled') {
+      // Clear chat messages when ride ends
+      final rideId = updatedRide['ID'];
+      if (rideId != null) {
+        final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+        chatProvider.clearMessages(rideId);
+        AppLogger.log('🗑️ Cleared chat messages for ride $rideId');
+      }
+      
       // Stop tracking when ride is completed or cancelled
       AppLogger.log('Stopping tracking for completed/cancelled ride');
       RideTrackingService.stopTracking();

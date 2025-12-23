@@ -1,7 +1,8 @@
 import 'dart:async';
+
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:audioplayers/audioplayers.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
@@ -38,17 +39,17 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
   @override
   void initState() {
     super.initState();
-    
+
     // Setup pulse animation for accept button
     _pulseController = AnimationController(
       duration: Duration(milliseconds: 1500),
       vsync: this,
     )..repeat(reverse: true);
-    
+
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
-    
+
     // Play system ringtone or custom ringtone
     _playRingtone();
   }
@@ -62,7 +63,11 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
       await _ringtonePlayer.play(AssetSource('sounds/calling.mp3'));
       AppLogger.log('🔔 Ringtone started playing', tag: 'INCOMING_CALL');
     } catch (e) {
-      AppLogger.error('❌ Failed to play ringtone', error: e, tag: 'INCOMING_CALL');
+      AppLogger.error(
+        '❌ Failed to play ringtone',
+        error: e,
+        tag: 'INCOMING_CALL',
+      );
     }
   }
 
@@ -103,18 +108,14 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF1a1a2e),
-              Color(0xFF16213e),
-              Color(0xFF0f3460),
-            ],
+            colors: [Color(0xFF1a1a2e), Color(0xFF16213e), Color(0xFF0f3460)],
           ),
         ),
         child: SafeArea(
           child: Column(
             children: [
               SizedBox(height: 80.h),
-              
+
               // Caller name
               Text(
                 widget.callerName,
@@ -127,9 +128,9 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                 ),
                 textAlign: TextAlign.center,
               ),
-              
+
               SizedBox(height: 10.h),
-              
+
               // Call status
               Text(
                 'Incoming call...',
@@ -140,9 +141,9 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                   color: Colors.white70,
                 ),
               ),
-              
+
               SizedBox(height: 60.h),
-              
+
               // Caller image with pulsing ring
               Stack(
                 alignment: Alignment.center,
@@ -164,7 +165,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                       );
                     },
                   ),
-                  
+
                   // Second pulse ring
                   AnimatedBuilder(
                     animation: _pulseAnimation,
@@ -182,17 +183,14 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                       );
                     },
                   ),
-                  
+
                   // Caller image
                   Container(
                     width: 160.w,
                     height: 160.h,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.white,
-                        width: 4,
-                      ),
+                      border: Border.all(color: Colors.white, width: 4),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withOpacity(0.3),
@@ -202,7 +200,9 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                       ],
                     ),
                     child: ClipOval(
-                      child: widget.callerImage != null && widget.callerImage!.isNotEmpty
+                      child:
+                          widget.callerImage != null &&
+                              widget.callerImage!.isNotEmpty
                           ? Image.network(
                               widget.callerImage!,
                               fit: BoxFit.cover,
@@ -213,17 +213,14 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                                 );
                               },
                             )
-                          : Image.asset(
-                              ConstImages.avatar,
-                              fit: BoxFit.cover,
-                            ),
+                          : Image.asset(ConstImages.avatar, fit: BoxFit.cover),
                     ),
                   ),
                 ],
               ),
-              
+
               Spacer(),
-              
+
               // Call action buttons
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 40.w),
@@ -268,7 +265,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                         ),
                       ],
                     ),
-                    
+
                     // Accept button with pulse animation
                     Column(
                       children: [
@@ -287,7 +284,9 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Color(ConstColors.mainColor).withOpacity(0.6),
+                                        color: Color(
+                                          ConstColors.mainColor,
+                                        ).withOpacity(0.6),
                                         blurRadius: 20,
                                         spreadRadius: 5,
                                       ),
@@ -318,7 +317,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                   ],
                 ),
               ),
-              
+
               SizedBox(height: 80.h),
             ],
           ),
