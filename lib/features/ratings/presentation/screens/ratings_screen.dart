@@ -31,13 +31,13 @@ class _RatingsScreenState extends State<RatingsScreen> {
     AppLogger.log('═══════════════════════════════════════', tag: 'RATINGS');
     AppLogger.log('🔵 LOADING RATINGS STARTED', tag: 'RATINGS');
     AppLogger.log('═══════════════════════════════════════', tag: 'RATINGS');
-    
+
     try {
       AppLogger.log('📱 Getting SharedPreferences...', tag: 'RATINGS');
       final prefs = await SharedPreferences.getInstance();
-      
+
       final token = prefs.getString('auth_token');
-      
+
       // Try to get user_id as int first, then as string
       int? userId;
       try {
@@ -49,10 +49,13 @@ class _RatingsScreenState extends State<RatingsScreen> {
           userId = int.tryParse(userIdStr);
         }
       }
-      
+
       AppLogger.log('🔑 Token exists: ${token != null}', tag: 'RATINGS');
       if (token != null) {
-        AppLogger.log('🔑 Token preview: ${token.substring(0, 20)}...', tag: 'RATINGS');
+        AppLogger.log(
+          '🔑 Token preview: ${token.substring(0, 20)}...',
+          tag: 'RATINGS',
+        );
       }
       AppLogger.log('👤 User ID: $userId', tag: 'RATINGS');
       AppLogger.log('👤 User ID type: ${userId.runtimeType}', tag: 'RATINGS');
@@ -67,31 +70,37 @@ class _RatingsScreenState extends State<RatingsScreen> {
 
       AppLogger.log('📤 Calling ApiService.getUserRatings...', tag: 'RATINGS');
       AppLogger.log('   Endpoint: users/$userId/ratings', tag: 'RATINGS');
-      
+
       final response = await ApiService.getUserRatings(token, userId);
-      
+
       AppLogger.log('📥 API Response received:', tag: 'RATINGS');
       AppLogger.log('   Success: ${response['success']}', tag: 'RATINGS');
       AppLogger.log('   Data: ${response['data']}', tag: 'RATINGS');
       AppLogger.log('   Message: ${response['message']}', tag: 'RATINGS');
-      
+
       if (response['success']) {
         AppLogger.log('✅ Response successful, parsing data...', tag: 'RATINGS');
-        
+
         final ratingResponse = RatingResponse.fromJson(response['data']);
-        
-        AppLogger.log('📊 Parsed ${ratingResponse.ratings.length} ratings', tag: 'RATINGS');
-        
+
+        AppLogger.log(
+          '📊 Parsed ${ratingResponse.ratings.length} ratings',
+          tag: 'RATINGS',
+        );
+
         setState(() {
           ratings = ratingResponse.ratings;
           isLoading = false;
         });
-        
+
         AppLogger.log('✅ State updated - isLoading: false', tag: 'RATINGS');
         AppLogger.log('✅ Ratings count: ${ratings.length}', tag: 'RATINGS');
       } else {
         AppLogger.log('❌ API returned success: false', tag: 'RATINGS');
-        AppLogger.log('   Error message: ${response['message']}', tag: 'RATINGS');
+        AppLogger.log(
+          '   Error message: ${response['message']}',
+          tag: 'RATINGS',
+        );
         setState(() => isLoading = false);
       }
     } catch (e, stackTrace) {
@@ -104,7 +113,10 @@ class _RatingsScreenState extends State<RatingsScreen> {
       AppLogger.log('═══════════════════════════════════════', tag: 'RATINGS');
       AppLogger.log('🔵 LOADING RATINGS COMPLETED', tag: 'RATINGS');
       AppLogger.log('   Final isLoading: $isLoading', tag: 'RATINGS');
-      AppLogger.log('   Final ratings count: ${ratings.length}', tag: 'RATINGS');
+      AppLogger.log(
+        '   Final ratings count: ${ratings.length}',
+        tag: 'RATINGS',
+      );
       AppLogger.log('═══════════════════════════════════════', tag: 'RATINGS');
     }
   }
@@ -127,8 +139,9 @@ class _RatingsScreenState extends State<RatingsScreen> {
                         onTap: () => Navigator.pop(context),
                         child: Image.asset(
                           ConstImages.back,
-                          width: 24.w,
-                          height: 24.h,
+                          width: 30.w,
+                          height: 30.h,
+                          fit: BoxFit.cover,
                         ),
                       ),
                       Expanded(
@@ -148,15 +161,19 @@ class _RatingsScreenState extends State<RatingsScreen> {
                     ],
                   ),
                 ),
-                SizedBox(height: 40.h),
+                SizedBox(height: 10.h),
                 profileProvider.userProfilePhoto.isNotEmpty
                     ? CircleAvatar(
                         radius: 40.r,
-                        backgroundImage:
-                            NetworkImage(profileProvider.userProfilePhoto),
+                        backgroundImage: NetworkImage(
+                          profileProvider.userProfilePhoto,
+                        ),
                       )
-                    : Image.asset(ConstImages.avatar, width: 80.w, height: 80.h),
-                SizedBox(height: 20.h),
+                    : Image.asset(
+                        ConstImages.avatar,
+                        width: 80.w,
+                        height: 80.h,
+                      ),
                 Text(
                   profileProvider.userName,
                   style: TextStyle(
@@ -166,7 +183,7 @@ class _RatingsScreenState extends State<RatingsScreen> {
                     color: Colors.black,
                   ),
                 ),
-                SizedBox(height: 15.h),
+                SizedBox(height: 5.h),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(
@@ -210,33 +227,33 @@ class _RatingsScreenState extends State<RatingsScreen> {
                           ),
                         )
                       : ratings.isEmpty
-                          ? Center(
-                              child: Text(
-                                'No ratings yet',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 16.sp,
-                                  color: Colors.grey,
-                                ),
-                              ),
-                            )
-                          : ListView.separated(
-                              padding: EdgeInsets.symmetric(horizontal: 20.w),
-                              itemCount: ratings.length,
-                              separatorBuilder: (context, index) => Divider(
-                                thickness: 1,
-                                color: Colors.grey.shade300,
-                              ),
-                              itemBuilder: (context, index) {
-                                final rating = ratings[index];
-                                return RatingItem(
-                                  name: 'Passenger',
-                                  rating: rating.score,
-                                  time: rating.timeAgo,
-                                  comment: rating.comment,
-                                );
-                              },
+                      ? Center(
+                          child: Text(
+                            'No ratings yet',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 16.sp,
+                              color: Colors.grey,
                             ),
+                          ),
+                        )
+                      : ListView.separated(
+                          padding: EdgeInsets.symmetric(horizontal: 20.w),
+                          itemCount: ratings.length,
+                          separatorBuilder: (context, index) => Divider(
+                            thickness: 1,
+                            color: Colors.grey.shade300,
+                          ),
+                          itemBuilder: (context, index) {
+                            final rating = ratings[index];
+                            return RatingItem(
+                              name: 'Passenger',
+                              rating: rating.score,
+                              time: rating.timeAgo,
+                              comment: rating.comment,
+                            );
+                          },
+                        ),
                 ),
               ],
             ),

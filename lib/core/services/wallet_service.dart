@@ -11,7 +11,6 @@ class WalletService {
     return prefs.getString('auth_token');
   }
 
-  /// Fetch Wallet Summary Only
   Future<WalletSummaryResponse> getWalletSummary() async {
     final token = await _getToken();
 
@@ -22,7 +21,7 @@ class WalletService {
         if (token != null) 'Authorization': 'Bearer $token',
       },
     );
-    AppLogger.log('response===:$response');
+    AppLogger.log('response===:${response.body}');
 
     if (response.statusCode == 200) {
       AppLogger.log('response++++++:${response.body}');
