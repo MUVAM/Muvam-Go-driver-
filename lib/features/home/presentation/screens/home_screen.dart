@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geolocator/geolocator.dart';
@@ -8,6 +9,7 @@ import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/constants/text_styles.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
+import 'package:muvam_rider/core/services/call_service.dart';
 import 'package:muvam_rider/core/services/location_service.dart';
 import 'package:muvam_rider/core/services/ride_tracking_service.dart';
 import 'package:muvam_rider/core/services/websocket_service.dart';
@@ -15,13 +17,13 @@ import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/activities/data/providers/request_provider.dart';
 import 'package:muvam_rider/features/activities/presentation/screens/activities_screen.dart';
-import 'package:muvam_rider/features/analytics/data/models/earnings_summary_model.dart';
-import 'package:muvam_rider/features/analytics/data/providers/earnings_provider.dart';
 import 'package:muvam_rider/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_selection_screen.dart';
 import 'package:muvam_rider/features/communication/data/models/chat_model.dart';
 import 'package:muvam_rider/features/communication/data/providers/chat_provider.dart';
+import 'package:muvam_rider/features/communication/presentation/screens/call_screen.dart';
+import 'package:muvam_rider/features/communication/presentation/screens/chat_screen.dart';
 import 'package:muvam_rider/features/communication/presentation/widgets/notificationchat.dart';
 import 'package:muvam_rider/features/earnings/data/provider/wallet_provider.dart';
 import 'package:muvam_rider/features/earnings/presentation/screens/wallet_screen.dart';
@@ -29,10 +31,6 @@ import 'package:muvam_rider/features/home/data/provider/driver_provider.dart';
 import 'package:muvam_rider/features/home/presentation/widgets/ride_info_widget.dart';
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
 import 'package:muvam_rider/features/profile/presentation/screens/profile_screen.dart';
-import 'package:muvam_rider/features/communication/presentation/screens/call_screen.dart';
-import 'package:muvam_rider/features/communication/presentation/screens/chat_screen.dart';
-import 'package:muvam_rider/features/communication/presentation/screens/inComingCall.dart';
-import 'package:muvam_rider/core/services/call_service.dart';
 import 'package:muvam_rider/features/referral/presentation/screens/referral_screen.dart';
 import 'package:muvam_rider/features/trips/presentation/screen/history_completed_screen.dart';
 import 'package:provider/provider.dart';
@@ -180,8 +178,6 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-
-
   void _initializeServices() async {
     AppLogger.log('=== INITIALIZING HOME SCREEN SERVICES ===');
 
@@ -241,20 +237,6 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     }
 
-    // _webSocketService.onIncomingCall = (callData) {
-    //   AppLogger.log('📞 Incoming call received in HomeScreen', tag: 'HOME');
-    //   AppLogger.log('Call data: $callData', tag: 'HOME');
-
-    //   if (mounted) {
-    //     setState(() {
-    //       _incomingCall = callData;
-    //     });
-    //     AppLogger.log('✅ Incoming call state updated', tag: 'HOME');
-    //   } else {
-    //     AppLogger.log('⚠️ Widget not mounted, cannot show incoming call', tag: 'HOME');
-    //   }
-    // };
-
     // Setup WebSocket ride completion handler
     _webSocketService.onRideCompleted = (completionData) {
       AppLogger.log(
@@ -300,84 +282,100 @@ class _HomeScreenState extends State<HomeScreen> {
     AppLogger.log('=== HOME SCREEN READY ===\n');
   }
 
+  // Add this new method to handle global chat messages
+  void _handleGlobalChatMessage(Map<String, dynamic> chatData) async {
+    try {
+      AppLogger.log('📨 Processing global chat message');
+      final data = chatData['data'] ?? {};
+      final messageText = data['message'] ?? '';
+      final senderName = data['sender_name'] ?? 'Unknown User';
+      final senderImage = data['sender_image'];
+      final senderId = data['sender_id']?.toString() ?? '';
+      final rideId = data['ride_id'] ?? 0;
+      final timestamp =
+          chatData['timestamp'] ?? DateTime.now().toIso8601String();
 
+      AppLogger.log('   Message: "$messageText"');
+      AppLogger.log('   From: $senderName (ID: $senderId)');
+      AppLogger.log('   Ride: $rideId');
 
+      // Get current user ID to check if this is our own message
+      final prefs = await SharedPreferences.getInstance();
+      final currentUserId = prefs.getString('user_id');
 
-// Add this new method to handle global chat messages
-void _handleGlobalChatMessage(Map<String, dynamic> chatData) async {
-  try {
-    AppLogger.log('📨 Processing global chat message');
-    final data = chatData['data'] ?? {};
-    final messageText = data['message'] ?? '';
-    final senderName = data['sender_name'] ?? 'Unknown User';
-    final senderImage = data['sender_image'];
-    final senderId = data['sender_id']?.toString() ?? '';
-    final rideId = data['ride_id'] ?? 0;
-    final timestamp = chatData['timestamp'] ?? DateTime.now().toIso8601String();
+      AppLogger.log('   Current User ID: $currentUserId');
+      AppLogger.log('   Sender ID: $senderId');
 
-    AppLogger.log('   Message: "$messageText"');
-    AppLogger.log('   From: $senderName (ID: $senderId)');
-    AppLogger.log('   Ride: $rideId');
+      // Add message to ChatProvider so it's available when user opens ChatScreen
+      if (mounted && rideId > 0) {
+        final chatProvider = Provider.of<ChatProvider>(context, listen: false);
+        final message = ChatMessageModel(
+          message: messageText,
+          timestamp: timestamp,
+          rideId: rideId,
+          userId: senderId,
+        );
 
-    // Add message to ChatProvider so it's available when user opens ChatScreen
-    if (mounted && rideId > 0) {
-      final chatProvider = Provider.of<ChatProvider>(context, listen: false);
-      final message = ChatMessageModel(
-        message: messageText,
-        timestamp: timestamp,
-        rideId: rideId,
-        userId: senderId,
-      );
-      
-      chatProvider.addMessage(rideId, message);
-      AppLogger.log('✅ Message added to ChatProvider');
+        chatProvider.addMessage(rideId, message);
+        AppLogger.log('✅ Message added to ChatProvider');
 
-      // Show notification
-      ChatNotificationService.showChatNotification(
-        context,
-        senderName: senderName,
-        message: messageText,
-        senderImage: senderImage,
-        onTap: () {
-          AppLogger.log('🔔 Notification tapped, navigating to chat');
-          
-          // Navigate to chat screen
-          if (_activeRide != null) {
-            final passenger = _activeRide!['Passenger'] ?? {};
-            final passengerName = '${passenger['first_name'] ?? 'Unknown'} ${passenger['last_name'] ?? 'Passenger'}';
-            final passengerImage = passenger['profile_image'] ?? passenger['image'];
-            
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ChatScreen(
-                  rideId: rideId,
-                  driverName: passengerName,
-                  driverImage: passengerImage,
-                ),
-              ),
-            );
-          } else {
-            // Fallback if no active ride
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => ChatScreen(
-                  rideId: rideId,
-                  driverName: senderName,
-                  driverImage: senderImage,
-                ),
-              ),
-            );
-          }
-        },
-      );
+        // Only show notification if the message is NOT from the current user
+        if (senderId != currentUserId) {
+          AppLogger.log('📢 Showing notification for message from other user');
+          // Show notification
+          ChatNotificationService.showChatNotification(
+            context,
+            senderName: senderName,
+            message: messageText,
+            senderImage: senderImage,
+            onTap: () {
+              AppLogger.log('🔔 Notification tapped, navigating to chat');
+
+              // Navigate to chat screen
+              if (_activeRide != null) {
+                final passenger = _activeRide!['Passenger'] ?? {};
+                final passengerName =
+                    '${passenger['first_name'] ?? 'Unknown'} ${passenger['last_name'] ?? 'Passenger'}';
+                final passengerImage =
+                    passenger['profile_image'] ?? passenger['image'];
+
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChatScreen(
+                      rideId: rideId,
+                      driverName: passengerName,
+                      driverImage: passengerImage,
+                    ),
+                  ),
+                );
+              } else {
+                // Fallback if no active ride
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ChatScreen(
+                      rideId: rideId,
+                      driverName: senderName,
+                      driverImage: senderImage,
+                    ),
+                  ),
+                );
+              }
+            },
+          );
+        } else {
+          AppLogger.log(
+            '🔇 Skipping notification - message is from current user',
+          );
+        }
+      }
+    } catch (e, stack) {
+      AppLogger.log('❌ Error handling global chat message: $e');
+      AppLogger.log('Stack: $stack');
     }
-  } catch (e, stack) {
-    AppLogger.log('❌ Error handling global chat message: $e');
-    AppLogger.log('Stack: $stack');
   }
-}
+
   void _startRideChecking() {
     // Setup WebSocket ride request listener
     _webSocketService.onRideRequest = (rideData) {
@@ -4042,67 +4040,6 @@ void _handleGlobalChatMessage(Map<String, dynamic> chatData) async {
     AppLogger.log('=== END CHECKING ACTIVE RIDES ===\n');
   }
 
-  // void _showRideAcceptedSheet(
-  //   Map<String, dynamic> ride,
-  //   Map<String, dynamic> acceptedData,
-  // ) {
-  //   if (mounted) {
-  //     setState(() {
-  //       _activeRide = ride;
-  //       _isRideSheetVisible = true;
-  //     });
-  //   }
-
-  //   // Start ride tracking only if not already started
-  //   if (_mapMarkers.isEmpty) {
-  //     RideTrackingService.startRideTracking(
-  //       ride: ride,
-  //       onUpdate: (markers, polylines) {
-  //         if (mounted) {
-  //           setState(() {
-  //             _mapMarkers = markers;
-  //             _mapPolylines = polylines;
-  //           });
-  //           // Center map after markers are updated
-  //           _centerMapOnActiveRide();
-  //         }
-  //       },
-  //       onTimeUpdate: (eta, location) {
-  //         if (mounted) {
-  //           setState(() {
-  //             _currentETA = eta;
-  //             _currentLocationName = location;
-  //           });
-  //         }
-  //       },
-  //     );
-  //   } else {
-  //     // If markers already exist, just center the map
-  //     _centerMapOnActiveRide();
-  //   }
-
-  //   showModalBottomSheet(
-  //     context: context,
-  //     isScrollControlled: true,
-  //     isDismissible: true, // Allow dismissal
-  //     shape: RoundedRectangleBorder(
-  //       borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-  //     ),
-  //     builder: (context) => _RideAcceptedSheet(
-  //       ride: ride,
-  //       acceptedData: acceptedData,
-  //       onRideStatusChanged: _onRideStatusChanged,
-  //     ),
-  //   ).whenComplete(() {
-  //     // Update visibility when sheet is dismissed
-  //     if (mounted) {
-  //       setState(() {
-  //         _isRideSheetVisible = false;
-  //       });
-  //     }
-  //   });
-  // }
-
   void _showRideAcceptedSheet(
     Map<String, dynamic> ride,
     Map<String, dynamic> acceptedData,
@@ -4437,7 +4374,7 @@ void _handleGlobalChatMessage(Map<String, dynamic> chatData) async {
         chatProvider.clearMessages(rideId);
         AppLogger.log('🗑️ Cleared chat messages for ride $rideId');
       }
-      
+
       // Stop tracking when ride is completed or cancelled
       AppLogger.log('Stopping tracking for completed/cancelled ride');
       RideTrackingService.stopTracking();

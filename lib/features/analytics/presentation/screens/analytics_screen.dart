@@ -32,6 +32,8 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
     earningsProvider.fetchEarningsSummary(period);
     if (_selectedTabIndex == 0) {
       earningsProvider.fetchEarningsOverview(period);
+    } else if (_selectedTabIndex == 1) {
+      earningsProvider.fetchEarningsBreakdown(_selectedPeriodIndex);
     }
   }
 
@@ -219,7 +221,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                     padding: EdgeInsets.symmetric(horizontal: 20.w),
                     child: _selectedTabIndex == 0
                         ? _buildOverviewTab(earningsProvider)
-                        : _buildEarningsTab(),
+                        : _buildEarningsTab(earningsProvider),
                   ),
                 ),
               ],
@@ -279,15 +281,17 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
       child: GestureDetector(
         onTap: () {
           setState(() => _selectedTabIndex = index);
+          final earningsProvider = Provider.of<EarningsProvider>(
+            context,
+            listen: false,
+          );
+          final period = earningsProvider.getPeriodFromIndex(
+            _selectedPeriodIndex,
+          );
           if (index == 0) {
-            final earningsProvider = Provider.of<EarningsProvider>(
-              context,
-              listen: false,
-            );
-            final period = earningsProvider.getPeriodFromIndex(
-              _selectedPeriodIndex,
-            );
             earningsProvider.fetchEarningsOverview(period);
+          } else if (index == 1) {
+            earningsProvider.fetchEarningsBreakdown(_selectedPeriodIndex);
           }
         },
         child: Container(
@@ -561,7 +565,18 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildEarningsTab() {
+  Widget _buildEarningsTab(EarningsProvider earningsProvider) {
+    if (earningsProvider.isLoadingBreakdown) {
+      return Container(
+        height: 255.h,
+        child: Center(
+          child: CircularProgressIndicator(color: Color(0xFF2A8359)),
+        ),
+      );
+    }
+
+    final breakdown = earningsProvider.earningsBreakdown;
+
     return Column(
       children: [
         Stack(
@@ -596,7 +611,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                     ),
                     SizedBox(height: 12.h),
                     Text(
-                      '#58,589.00',
+                      earningsProvider.formatPrice(breakdown?.totalEarned ?? 0),
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 40.sp,
@@ -677,15 +692,31 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                 ),
               ),
               SizedBox(height: 24.h),
-              _buildBreakdownItem('Gross earning', '#45,099', false),
+              _buildBreakdownItem(
+                'Gross earning',
+                earningsProvider.formatPrice(breakdown?.grossEarning ?? 0),
+                false,
+              ),
               SizedBox(height: 18.h),
-              _buildBreakdownItem('Tips recieved', '#5,099', false),
+              _buildBreakdownItem(
+                'Tips received',
+                earningsProvider.formatPrice(breakdown?.tipsReceived ?? 0),
+                false,
+              ),
               SizedBox(height: 18.h),
-              _buildBreakdownItem('Platform fee', '#3,099', false),
+              _buildBreakdownItem(
+                'Platform fee',
+                earningsProvider.formatPrice(breakdown?.platformFee ?? 0),
+                false,
+              ),
               SizedBox(height: 18.h),
               Divider(color: Color(0xFFE5E5E5), thickness: 1),
               SizedBox(height: 18.h),
-              _buildBreakdownItem('Net earning', '#45,009', true),
+              _buildBreakdownItem(
+                'Net earning',
+                earningsProvider.formatPrice(breakdown?.netPayout ?? 0),
+                true,
+              ),
             ],
           ),
         ),

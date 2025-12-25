@@ -116,4 +116,53 @@ class EarningsService {
       AppLogger.log('==================================');
     }
   }
+
+  Future<Map<String, dynamic>> getEarningsBreakdown({
+    required String startDate,
+    required String endDate,
+  }) async {
+    final token = await _getToken();
+
+    if (token == null) {
+      AppLogger.log('No auth token found');
+      return {'success': false, 'message': 'No authentication token'};
+    }
+
+    final url = '${UrlConstants.baseUrl}/earnings/breakdown?start_date=$startDate&end_date=$endDate';
+
+    AppLogger.log('==================================');
+    AppLogger.log('FETCHING EARNINGS BREAKDOWN');
+    AppLogger.log('==================================');
+    AppLogger.log('URL: $url');
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      AppLogger.log('Response Status: ${response.statusCode}');
+      AppLogger.log('Response Body: ${response.body}');
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        AppLogger.log('Earnings breakdown fetched successfully');
+        return {'success': true, 'data': data};
+      } else {
+        AppLogger.log('Failed: ${response.body}');
+        return {
+          'success': false,
+          'message': 'Failed with status ${response.statusCode}',
+        };
+      }
+    } catch (e) {
+      AppLogger.log('Exception in getEarningsBreakdown: $e');
+      return {'success': false, 'message': 'Exception: $e'};
+    } finally {
+      AppLogger.log('==================================');
+    }
+  }
 }

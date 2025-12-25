@@ -1,21 +1,10 @@
-
 import 'dart:convert';
 import 'dart:io';
-import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:muvam_rider/core/utils/app_logger.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:web_socket_channel/io.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../constants/url_constants.dart';
-import 'ride_tracking_service.dart';
-// //FOR DRIVER
-
-// FIXED WebSocket Service - Synchronous setup
-import 'dart:convert';
-import 'dart:io';
-import 'package:shared_preferences/shared_preferences.dart';
-
+//FOR DRIVER
 class WebSocketService {
   static WebSocketService? _instance;
   WebSocket? _socket;
@@ -31,8 +20,39 @@ class WebSocketService {
   Function(Map<String, dynamic>)? onRideUpdate;
   Function(Map<String, dynamic>)? onChatMessage;
   Function(Map<String, dynamic>)? onDriverLocation;
-  Function(Map<String, dynamic>)? onIncomingCall;
-  Function(Map<String, dynamic>)? onRideCompleted; // Callback for ride completion
+
+  // List of listeners for incoming calls instead of single callback
+  final List<Function(Map<String, dynamic>)> _incomingCallListeners = [];
+
+  // Deprecated: use addIncomingCallListener
+  set onIncomingCall(Function(Map<String, dynamic>)? callback) {
+    if (callback != null) {
+      addIncomingCallListener(callback);
+    }
+  }
+
+  // Helper to maintain compatibility but it's not a true getter anymore
+  Function(Map<String, dynamic>)? get onIncomingCall =>
+      _incomingCallListeners.isNotEmpty ? _incomingCallListeners.last : null;
+
+  void addIncomingCallListener(Function(Map<String, dynamic>) listener) {
+    if (!_incomingCallListeners.contains(listener)) {
+      _incomingCallListeners.add(listener);
+      print(
+        '✅ Added incoming call listener. Total listeners: ${_incomingCallListeners.length}',
+      );
+    }
+  }
+
+  void removeIncomingCallListener(Function(Map<String, dynamic>) listener) {
+    _incomingCallListeners.remove(listener);
+    print(
+      '✅ Removed incoming call listener. Remaining listeners: ${_incomingCallListeners.length}',
+    );
+  }
+
+  Function(Map<String, dynamic>)?
+  onRideCompleted; // Callback for ride completion
   Function(Map<String, dynamic>)? onRideRequest;
 
   bool get isConnected => _isConnected;
@@ -44,7 +64,7 @@ class WebSocketService {
   }
 
   WebSocketService._internal() : token = null;
-Function(Map<String, dynamic>)? onChatNotification;
+  Function(Map<String, dynamic>)? onChatNotification;
 
   Future<void> connect() async {
     print('🚀 NATIVE WEBSOCKET CONNECT');
@@ -93,27 +113,24 @@ Function(Map<String, dynamic>)? onChatNotification;
 
       // Connect using native WebSocket
       print('🌐 Connecting...');
-      _socket = await WebSocket.connect(
-        uri.toString(), 
-        headers: headers,
-      );
+      _socket = await WebSocket.connect(uri.toString(), headers: headers);
 
       print('✅ WebSocket connected!');
       print('   ReadyState: ${_socket!.readyState}');
       print('');
-      
+
       // CRITICAL: Setup listeners IMMEDIATELY and SYNCHRONOUSLY
       print('🎧 Setting up listeners NOW...');
       _setupListenersSync();
       print('✅ Listeners attached');
       print('');
-      
+
       // Small delay to let the connection stabilize
       print('⏳ Stabilizing connection...');
       await Future.delayed(Duration(milliseconds: 200));
       print('✅ Connection stabilized');
       print('');
-      
+
       // NOW it's safe to mark as connected
       _reconnectAttempts = 0;
       _isConnecting = false;
@@ -146,7 +163,7 @@ Function(Map<String, dynamic>)? onChatNotification;
     print('   Attaching onData handler...');
     print('   Attaching onDone handler...');
     print('   Attaching onError handler...');
-    
+
     _socket!.listen(
       (event) {
         print('');
@@ -167,9 +184,9 @@ Function(Map<String, dynamic>)? onChatNotification;
           } else {
             messageStr = event.toString();
           }
-          
+
           print('Decoded message: $messageStr');
-          
+
           final data = jsonDecode(messageStr);
           print('Parsed JSON: $data');
           print('Message type: ${data['type']}');
@@ -231,7 +248,7 @@ Function(Map<String, dynamic>)? onChatNotification;
       },
       cancelOnError: false,
     );
-    
+
     print('   ✅ All handlers attached successfully');
   }
 
@@ -253,11 +270,6 @@ Function(Map<String, dynamic>)? onChatNotification;
         print('   → chat handler');
         if (onChatMessage != null) {
           onChatMessage!(data);
-        }
-        if (onChatNotification != null) {
-          onChatNotification!(
-            data,
-          ); // Pass null for context, we'll handle it in HomeScreen
         } else {
           print('   ⚠️ No chat handler registered!');
         }
@@ -296,52 +308,93 @@ Function(Map<String, dynamic>)? onChatNotification;
   }
 
   // CRITICAL FIX: Filter call messages to ensure they go to the right recipient
-  Future<void> _handleCallMessage(Map<String, dynamic> data, String type) async {
+  Future<void> _handleCallMessage(
+    Map<String, dynamic> data,
+    String type,
+  ) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final currentUserId = prefs.getString('user_id');
-      
+
       print('═══════════════════════════════════════');
       print('🔍 CALL MESSAGE FILTERING');
       print('═══════════════════════════════════════');
       print('Message type: $type');
       print('Current user ID: $currentUserId');
-      
+
       final messageData = data['data'];
       if (messageData != null) {
         final callerId = messageData['caller_id']?.toString();
         final recipientId = messageData['recipient_id']?.toString();
-        
+
         print('Caller ID: $callerId');
         print('Recipient ID: $recipientId');
-        
+
         // For call_initiate: only show to recipient (not the caller)
         if (type == 'call_initiate') {
           if (recipientId != null && recipientId == currentUserId) {
             print('✅ This user IS the recipient - showing incoming call');
-            if (onIncomingCall != null) onIncomingCall!(data);
+            print(
+              '🔍 onIncomingCall listeners count: ${_incomingCallListeners.length}',
+            );
+            if (_incomingCallListeners.isNotEmpty) {
+              print(
+                '📞 Notify all ${_incomingCallListeners.length} incoming call listeners...',
+              );
+              try {
+                for (var listener in List.from(_incomingCallListeners)) {
+                  try {
+                    listener(data);
+                  } catch (e) {
+                    print('❌ Error in listener: $e');
+                  }
+                }
+                print('✅ All listeners notified successfully');
+              } catch (e, stack) {
+                print('❌ Error calling listeners: $e');
+                print('Stack: $stack');
+              }
+            } else {
+              print('❌ No incoming call listeners registered!');
+            }
           } else if (callerId == currentUserId) {
             print('⚠️ This user is the CALLER - ignoring call_initiate');
           } else {
             print('⚠️ This call is for someone else - ignoring');
           }
-        } 
+        }
         // For other call messages: route to the appropriate party
         else {
           // call_answer, call_reject, call_end should go to the caller
-          if (type == 'call_answer' || type == 'call_reject' || type == 'call_end') {
+          if (type == 'call_answer' ||
+              type == 'call_reject' ||
+              type == 'call_end') {
             if (callerId == currentUserId) {
               print('✅ Routing $type to caller');
-              if (onIncomingCall != null) onIncomingCall!(data);
+              for (var listener in List.from(_incomingCallListeners)) {
+                try {
+                  listener(data);
+                } catch (e) {
+                  print('❌ Error in listener: $e');
+                }
+              }
             } else {
               print('⚠️ This message is not for this user');
             }
           }
           // WebRTC signaling messages (offer, answer, ICE) should go to both parties
-          else if (type == 'call_offer' || type == 'call_answer_sdp' || type == 'call_ice_candidate') {
+          else if (type == 'call_offer' ||
+              type == 'call_answer_sdp' ||
+              type == 'call_ice_candidate') {
             if (recipientId == currentUserId) {
               print('✅ Routing WebRTC message to recipient');
-              if (onIncomingCall != null) onIncomingCall!(data);
+              for (var listener in List.from(_incomingCallListeners)) {
+                try {
+                  listener(data);
+                } catch (e) {
+                  print('❌ Error in listener: $e');
+                }
+              }
             } else {
               print('⚠️ WebRTC message not for this user');
             }
@@ -350,20 +403,34 @@ Function(Map<String, dynamic>)? onChatNotification;
       } else {
         print('⚠️ No data field in call message');
         // Fallback: route to handler anyway
-        if (onIncomingCall != null) onIncomingCall!(data);
+        print('⚠️ No data field in call message');
+        // Fallback: route to listeners anyway
+        for (var listener in List.from(_incomingCallListeners)) {
+          try {
+            listener(data);
+          } catch (e) {
+            print('❌ Error in listener: $e');
+          }
+        }
       }
-      
+
       print('═══════════════════════════════════════');
     } catch (e) {
       print('❌ Error filtering call message: $e');
       // Fallback: route to handler anyway
-      if (onIncomingCall != null) onIncomingCall!(data);
+      print('❌ Error filtering call message: $e');
+      // Fallback: route to listeners anyway
+      for (var listener in List.from(_incomingCallListeners)) {
+        listener(data);
+      }
     }
   }
 
   void _reconnect() async {
     final delay = _getReconnectDelay();
-    print('⏰ Reconnecting in ${delay}s... (attempt ${_reconnectAttempts}/${_maxReconnectAttempts})');
+    print(
+      '⏰ Reconnecting in ${delay}s... (attempt $_reconnectAttempts/$_maxReconnectAttempts)',
+    );
     await Future.delayed(Duration(seconds: delay));
 
     if (!_isConnected && !_isConnecting) {
@@ -391,13 +458,13 @@ Function(Map<String, dynamic>)? onChatNotification;
     print('📤 ATTEMPTING TO SEND MESSAGE');
     print('═══════════════════════════════════════');
     print('Time: ${DateTime.now()}');
-    
+
     // Pre-flight checks
     print('PRE-FLIGHT CHECKS:');
     print('   _isConnected: $_isConnected');
     print('   _isConnecting: $_isConnecting');
     print('   _socket != null: ${_socket != null}');
-    
+
     if (_socket != null) {
       print('   _socket.readyState: ${_socket!.readyState}');
       print('   WebSocket.open: ${WebSocket.open}');
@@ -405,7 +472,7 @@ Function(Map<String, dynamic>)? onChatNotification;
       print('   _socket.closeCode: ${_socket!.closeCode}');
       print('   _socket.closeReason: ${_socket!.closeReason}');
     }
-    
+
     print('');
     print('MESSAGE PAYLOAD:');
     print('   $message');
@@ -435,7 +502,7 @@ Function(Map<String, dynamic>)? onChatNotification;
       print('   Expected state: ${WebSocket.open}');
       print('═══════════════════════════════════════');
       print('');
-      
+
       // Try to reconnect if socket is closed
       _isConnected = false;
       _reconnect();
@@ -449,9 +516,9 @@ Function(Map<String, dynamic>)? onChatNotification;
       print('   JSON string: $jsonMessage');
       print('   Length: ${jsonMessage.length} bytes');
       print('');
-      
+
       _socket!.add(jsonMessage);
-      
+
       print('✅ MESSAGE SENT SUCCESSFULLY');
       print('   Message added to socket send buffer');
       print('   Socket state after send: ${_socket!.readyState}');
@@ -464,7 +531,7 @@ Function(Map<String, dynamic>)? onChatNotification;
       print('$stackTrace');
       print('═══════════════════════════════════════');
       print('');
-      
+
       // Mark as disconnected and try to reconnect
       _isConnected = false;
       _reconnect();
@@ -479,42 +546,45 @@ Function(Map<String, dynamic>)? onChatNotification;
     // }
     _sendJson(message);
   }
-Future<void> sendChatMessage(int rideId, String message) async {
-  print('💬 sendChatMessage called');
-  print('   Ride: $rideId');
-  print('   Message: "$message"');
-  
-  // Get user info from SharedPreferences
-  final prefs = await SharedPreferences.getInstance();
-  final userId = prefs.getString('user_id');
-  final userName = prefs.getString('user_name') ?? 
-                   prefs.getString('name') ?? 
-                   'Unknown User';
-  
-  print('   User ID: $userId');
-  print('   User Name: $userName');
-  
-  // Create timestamp with timezone offset (mimicking Postman format)
-  final now = DateTime.now();
-  final offset = now.timeZoneOffset;
-  final offsetHours = offset.inHours;
-  final offsetMinutes = offset.inMinutes.remainder(60);
-  final offsetString = '${offsetHours >= 0 ? '+' : ''}${offsetHours.toString().padLeft(2, '0')}:${offsetMinutes.abs().toString().padLeft(2, '0')}';
-  final timestamp = '${now.toIso8601String()}$offsetString';
-  
-  final payload = {
-    "type": "chat",
-    "data": {
-      "ride_id": rideId,  // ← Now uses actual ride ID
-      "message": message,  // ← Now uses actual message
-    },
-    "timestamp": timestamp,  // ← Proper timezone format
-  };
-  
-  print('   Full payload: $payload');
-  print('   Timestamp format: $timestamp');
-  _sendJson(payload);
-}
+
+  Future<void> sendChatMessage(int rideId, String message) async {
+    print('💬 sendChatMessage called');
+    print('   Ride: $rideId');
+    print('   Message: "$message"');
+
+    // Get user info from SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getString('user_id');
+    final userName =
+        prefs.getString('user_name') ??
+        prefs.getString('name') ??
+        'Unknown User';
+
+    print('   User ID: $userId');
+    print('   User Name: $userName');
+
+    // Create timestamp with timezone offset (mimicking Postman format)
+    final now = DateTime.now();
+    final offset = now.timeZoneOffset;
+    final offsetHours = offset.inHours;
+    final offsetMinutes = offset.inMinutes.remainder(60);
+    final offsetString =
+        '${offsetHours >= 0 ? '+' : ''}${offsetHours.toString().padLeft(2, '0')}:${offsetMinutes.abs().toString().padLeft(2, '0')}';
+    final timestamp = '${now.toIso8601String()}$offsetString';
+
+    final payload = {
+      "type": "chat",
+      "data": {
+        "ride_id": rideId, // ← Now uses actual ride ID
+        "message": message, // ← Now uses actual message
+      },
+      "timestamp": timestamp, // ← Proper timezone format
+    };
+
+    print('   Full payload: $payload');
+    print('   Timestamp format: $timestamp');
+    _sendJson(payload);
+  }
 
   void sendRideRequest(Map<String, dynamic> rideData) {
     _sendJson({

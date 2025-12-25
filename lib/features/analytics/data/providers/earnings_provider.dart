@@ -4,23 +4,28 @@ import 'package:muvam_rider/core/services/earnings_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/features/analytics/data/models/earnings_summary_model.dart';
 import 'package:muvam_rider/features/analytics/data/models/overview_response_model.dart';
+import 'package:muvam_rider/features/analytics/data/models/earnings_breakdown_model.dart';
 
 class EarningsProvider extends ChangeNotifier {
   final EarningsService _earningsService = EarningsService();
 
   EarningsSummary? _earningsSummary;
   OverviewResponse? _overviewResponse;
+  EarningsBreakdown? _earningsBreakdown;
 
   bool _isLoading = false;
   bool _isLoadingOverview = false;
+  bool _isLoadingBreakdown = false;
   String? _errorMessage;
   EarningsSummary? get earningsSummary => _earningsSummary;
   OverviewResponse? get overviewResponse => _overviewResponse;
   WeeklyOverviewData? get weeklyOverview => _overviewResponse?.overview;
   RecentRides? get recentRides => _overviewResponse?.recentRides;
+  EarningsBreakdown? get earningsBreakdown => _earningsBreakdown;
 
   bool get isLoading => _isLoading;
   bool get isLoadingOverview => _isLoadingOverview;
+  bool get isLoadingBreakdown => _isLoadingBreakdown;
   String? get errorMessage => _errorMessage;
 
   Future<void> fetchEarningsSummary(String period) async {
@@ -136,9 +141,75 @@ class EarningsProvider extends ChangeNotifier {
     }
   }
 
+  (String, String) getDateRangeFromIndex(int index) {
+    final now = DateTime.now();
+    String startDate, endDate;
+
+    switch (index) {
+      case 0: // Today
+        startDate = DateFormat('yyyy-MM-dd').format(now);
+        endDate = DateFormat('yyyy-MM-dd').format(now.add(Duration(days: 1)));
+        break;
+      case 1: // Weekly
+        final weekStart = now.subtract(Duration(days: now.weekday - 1));
+        startDate = DateFormat('yyyy-MM-dd').format(weekStart);
+        endDate = DateFormat('yyyy-MM-dd').format(now.add(Duration(days: 1)));
+        break;
+      case 2: // Monthly
+        final monthStart = DateTime(now.year, now.month, 1);
+        startDate = DateFormat('yyyy-MM-dd').format(monthStart);
+        endDate = DateFormat('yyyy-MM-dd').format(now.add(Duration(days: 1)));
+        break;
+      default:
+        startDate = DateFormat('yyyy-MM-dd').format(now);
+        endDate = DateFormat('yyyy-MM-dd').format(now.add(Duration(days: 1)));
+    }
+
+    return (startDate, endDate);
+  }
+
+  Future<void> fetchEarningsBreakdown(int periodIndex) async {
+    _isLoadingBreakdown = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final (startDate, endDate) = getDateRangeFromIndex(periodIndex);
+      AppLogger.log('Fetching earnings breakdown from $startDate to $endDate');
+
+      final result = await _earningsService.getEarningsBreakdown(
+        startDate: startDate,
+        endDate: endDate,
+      );
+
+      if (result['success'] == true && result['data'] != null) {
+        final breakdownData = result['data']['breakdown'];
+        if (breakdownData != null) {
+          _earningsBreakdown = EarningsBreakdown.fromJson(breakdownData);
+          _errorMessage = null;
+          AppLogger.log('Earnings breakdown parsed successfully');
+        } else {
+          _errorMessage = 'No breakdown data available';
+          _earningsBreakdown = null;
+        }
+      } else {
+        _errorMessage = result['message'] ?? 'Failed to fetch earnings breakdown';
+        _earningsBreakdown = null;
+      }
+    } catch (e) {
+      _errorMessage = 'Error fetching earnings breakdown: $e';
+      AppLogger.log('Exception in fetchEarningsBreakdown: $e');
+      _earningsBreakdown = null;
+    } finally {
+      _isLoadingBreakdown = false;
+      notifyListeners();
+    }
+  }
+
   void clearData() {
     _earningsSummary = null;
     _overviewResponse = null;
+    _earningsBreakdown = null;
     _errorMessage = null;
     notifyListeners();
   }

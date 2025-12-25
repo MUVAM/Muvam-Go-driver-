@@ -1,9 +1,9 @@
 // lib/core/services/global_call_service.dart
 
-import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:muvam_rider/core/utils/app_logger.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
+import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 
 class GlobalCallService {
@@ -17,6 +17,11 @@ class GlobalCallService {
   final AudioPlayer _ringtonePlayer = AudioPlayer();
   bool _isRinging = false;
   Map<String, dynamic>? _currentCallData;
+  final List<Map<String, dynamic>> _pendingMessages = [];
+
+  // Helper to access pending messages
+  List<Map<String, dynamic>> get pendingMessages =>
+      List.unmodifiable(_pendingMessages);
 
   // Initialize with navigation key
   GlobalKey<NavigatorState>? _navigatorKey;
@@ -37,12 +42,17 @@ class GlobalCallService {
       return;
     }
 
+    final overlayState = _navigatorKey!.currentState!.overlay;
+    if (overlayState == null) {
+      AppLogger.log('❌ Overlay state not available', tag: 'GLOBAL_CALL');
+      return;
+    }
+
     // Remove any existing overlay
     hideIncomingCall();
 
     _currentCallData = callData;
-    final context = _navigatorKey!.currentContext;
-    if (context == null) return;
+    _pendingMessages.clear(); // Clear any old messages
 
     AppLogger.log(
       '📞 Showing global incoming call overlay',
@@ -72,7 +82,7 @@ class GlobalCallService {
     );
     WakelockPlus.enable();
 
-    Overlay.of(context).insert(_overlayEntry!);
+    overlayState.insert(_overlayEntry!);
   }
 
   // Play system ringtone or custom ringtone
@@ -102,13 +112,27 @@ class GlobalCallService {
   // Hide incoming call overlay
   void hideIncomingCall() {
     _stopRingtone();
-    _overlayEntry?.remove();
+    if (_overlayEntry != null && _overlayEntry!.mounted) {
+      _overlayEntry!.remove();
+    }
     _overlayEntry = null;
     _currentCallData = null;
 
     WakelockPlus.disable();
 
     AppLogger.log('📵 Incoming call overlay hidden', tag: 'GLOBAL_CALL');
+  }
+
+  void addPendingMessage(Map<String, dynamic> message) {
+    AppLogger.log(
+      '💾 Buffering pending message: ${message['type']}',
+      tag: 'GLOBAL_CALL',
+    );
+    _pendingMessages.add(message);
+  }
+
+  void clearPendingMessages() {
+    _pendingMessages.clear();
   }
 
   void dispose() {
