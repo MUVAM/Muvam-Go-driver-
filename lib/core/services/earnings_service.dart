@@ -128,7 +128,8 @@ class EarningsService {
       return {'success': false, 'message': 'No authentication token'};
     }
 
-    final url = '${UrlConstants.baseUrl}/earnings/breakdown?start_date=$startDate&end_date=$endDate';
+    final url =
+        '${UrlConstants.baseUrl}/earnings/breakdown?start_date=$startDate&end_date=$endDate';
 
     AppLogger.log('==================================');
     AppLogger.log('FETCHING EARNINGS BREAKDOWN');

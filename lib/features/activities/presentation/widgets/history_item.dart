@@ -127,6 +127,8 @@ class HistoryItem extends StatelessWidget {
                     fontSize: 14.sp,
                     color: Theme.of(context).textTheme.titleMedium?.color,
                   ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),

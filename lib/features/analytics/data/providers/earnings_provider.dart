@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:muvam_rider/core/services/earnings_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
-import 'package:muvam_rider/features/analytics/data/models/earnings_summary_model.dart';
 import 'package:muvam_rider/features/analytics/data/models/overview_response_model.dart';
+import 'package:muvam_rider/features/analytics/data/models/earnings_summary_model.dart';
 import 'package:muvam_rider/features/analytics/data/models/earnings_breakdown_model.dart';
 
 class EarningsProvider extends ChangeNotifier {
@@ -193,7 +193,8 @@ class EarningsProvider extends ChangeNotifier {
           _earningsBreakdown = null;
         }
       } else {
-        _errorMessage = result['message'] ?? 'Failed to fetch earnings breakdown';
+        _errorMessage =
+            result['message'] ?? 'Failed to fetch earnings breakdown';
         _earningsBreakdown = null;
       }
     } catch (e) {

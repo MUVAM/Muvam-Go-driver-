@@ -12,6 +12,7 @@ import 'package:muvam_rider/features/earnings/data/provider/wallet_provider.dart
 import 'package:muvam_rider/features/earnings/data/provider/withdrawal_provider.dart';
 import 'package:muvam_rider/features/home/data/provider/driver_provider.dart';
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
+import 'package:muvam_rider/features/referral/data/providers/referral_provider.dart';
 import 'package:muvam_rider/features/services/globalincomingcall.dart';
 import 'package:muvam_rider/shared/presentation/screens/splash_screen.dart';
 import 'package:provider/provider.dart';
@@ -160,6 +161,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => ProfileProvider()),
         ChangeNotifierProvider(create: (_) => RequestProvider()),
         ChangeNotifierProvider(create: (_) => EarningsProvider()),
+        ChangeNotifierProvider(create: (_) => ReferralProvider()),
       ],
       child: const MyApp(),
     ),

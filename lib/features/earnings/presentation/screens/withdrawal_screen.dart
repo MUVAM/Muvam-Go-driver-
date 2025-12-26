@@ -263,12 +263,15 @@ class WithdrawalScreenState extends State<WithdrawalScreen> {
               children: [
                 Expanded(
                   child: provider.isLoading
-                      ? SizedBox(
-                          width: 20.w,
-                          height: 20.h,
-                          child: CircularProgressIndicator(
-                            color: themeManager.getTextColor(context),
-                            strokeWidth: 2,
+                      ? Align(
+                          alignment: Alignment.centerLeft,
+                          child: SizedBox(
+                            width: 20.w,
+                            height: 20.h,
+                            child: CircularProgressIndicator(
+                              color: themeManager.getTextColor(context),
+                              strokeWidth: 2,
+                            ),
                           ),
                         )
                       : Text(

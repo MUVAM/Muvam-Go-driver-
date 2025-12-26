@@ -88,7 +88,7 @@ class ActivitiesScreenState extends State<ActivitiesScreen> {
             ),
           ),
           Positioned(
-            top: 170.h,
+            top: 150.h,
             left: 20.w,
             right: 20.w,
             bottom: 20.h,
