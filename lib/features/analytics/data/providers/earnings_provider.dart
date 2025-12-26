@@ -67,7 +67,7 @@ class EarningsProvider extends ChangeNotifier {
     try {
       AppLogger.log('Fetching weekly overview for period: $period');
 
-      final result = await _earningsService.getWeeklyOverview(period: period);
+      final result = await _earningsService.getEarningsOverview(period: period);
 
       if (result['success'] == true && result['data'] != null) {
         _weeklyOverview = WeeklyOverviewData.fromJson(result['data']);
