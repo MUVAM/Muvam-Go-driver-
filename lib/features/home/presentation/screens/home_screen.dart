@@ -90,6 +90,8 @@ class _HomeScreenState extends State<HomeScreen> {
   };
   final CallService _callService = CallService();
   DateTime? _lastBackPress;
+  final String _driverArrivalTime =
+      '5'; // Default driver arrival time in minutes
 
   void _showContactBottomSheet() {
     Navigator.pop(context); // Close drawer
@@ -969,6 +971,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                   ),
+                  // Stop Address Marker (if exists)
+                  if (_activeRide != null &&
+                      _activeRide!['StopAddress'] != null &&
+                      _activeRide!['StopAddress'].toString().isNotEmpty)
+                    Positioned(
+                      top: 120.h,
+                      left: 0,
+                      right: 0,
+                      child: Center(child: _buildStopMarkerWidget()),
+                    ),
                   // Bottom sheet
                   Positioned(
                     bottom: _isBottomSheetVisible ? 0 : -294.h,
@@ -3630,6 +3642,44 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  // Widget for stop marker
+  Widget _buildStopMarkerWidget() {
+    String stopText = _activeRide?['StopAddress']?.toString() ?? 'Stop';
+
+    return Container(
+      width: 200.w,
+      height: 40.h,
+      padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 6.h),
+      decoration: BoxDecoration(
+        color: Colors.orange,
+        borderRadius: BorderRadius.circular(8.r),
+        boxShadow: [
+          BoxShadow(color: Colors.black26, blurRadius: 4, offset: Offset(0, 2)),
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.stop_circle, color: Colors.white, size: 16.sp),
+          SizedBox(width: 4.w),
+          Expanded(
+            child: Text(
+              stopText,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 10.sp,
+                fontWeight: FontWeight.w600,
+                color: Colors.white,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildRequestsScreen() {
     final themeManager = Provider.of<ThemeManager>(context);
     return Scaffold(
@@ -3795,7 +3845,9 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                // Driver Arrival Time Timer (Left)
                 Stack(
                   children: [
                     Container(
@@ -3805,38 +3857,77 @@ class _HomeScreenState extends State<HomeScreen> {
                         color: Color(ConstColors.mainColor),
                         shape: BoxShape.circle,
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            eta.replaceAll(' min', ''),
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w600,
-                            ),
+                      child: Center(
+                        child: Text(
+                          _driverArrivalTime,
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
                           ),
-                          Text(
-                            'min',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 10.sp,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ],
+                        ),
+                      ),
+                    ),
+                    // White line decoration at top left
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      child: Image.asset(
+                        'assets/images/whiteline.png',
+                        width: 20.w,
+                        height: 20.h,
+                        fit: BoxFit.contain,
                       ),
                     ),
                   ],
                 ),
-                SizedBox(width: 15.w),
-                Text(
-                  'New Order',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
+                // ETA Timer and "New Order" Text (Right)
+                Row(
+                  children: [
+                    Stack(
+                      children: [
+                        Container(
+                          width: 60.w,
+                          height: 60.h,
+                          decoration: BoxDecoration(
+                            color: Color(ConstColors.mainColor),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                eta.replaceAll(' min', ''),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              Text(
+                                'min',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10.sp,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(width: 15.w),
+                    Text(
+                      'New Order',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -4397,6 +4488,88 @@ class _HomeScreenState extends State<HomeScreen> {
 
     AppLogger.log('=== RIDE STATUS CHANGE HANDLED ===\n');
   }
+
+  Future<void> _handleEmergencySOS() async {
+    try {
+      AppLogger.log('🚨 Emergency SOS button tapped', tag: 'SOS');
+
+      if (_activeRide == null) {
+        CustomFlushbar.showError(
+          context: context,
+          message: 'No active ride to send SOS alert',
+        );
+        return;
+      }
+
+      final rideId = _activeRide!['ID'];
+
+      // Get current location
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      // Convert to POINT format
+      final location = 'POINT(${position.longitude} ${position.latitude})';
+
+      // Get location address (you can use reverse geocoding here if needed)
+      final locationAddress = _currentLocationName.isNotEmpty
+          ? _currentLocationName
+          : 'Lat: ${position.latitude}, Lng: ${position.longitude}';
+
+      AppLogger.log('📍 SOS Location: $location', tag: 'SOS');
+      AppLogger.log('📍 SOS Address: $locationAddress', tag: 'SOS');
+      AppLogger.log('🚗 SOS Ride ID: $rideId', tag: 'SOS');
+
+      // Get auth token
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (token == null) {
+        CustomFlushbar.showError(
+          context: context,
+          message: 'Authentication error. Please login again.',
+        );
+        return;
+      }
+
+      // Show loading indicator
+      CustomFlushbar.showInfo(
+        context: context,
+        message: 'Sending emergency alert...',
+      );
+
+      // Send SOS alert
+      final result = await ApiService.sendSOS(
+        token: token,
+        location: location,
+        locationAddress: locationAddress,
+        rideId: rideId,
+      );
+
+      if (result['success'] == true) {
+        AppLogger.log('✅ SOS alert sent successfully', tag: 'SOS');
+        CustomFlushbar.showSuccess(
+          context: context,
+          message: 'Emergency alert sent! Help is on the way.',
+        );
+      } else {
+        AppLogger.log(
+          '❌ Failed to send SOS alert: ${result['message']}',
+          tag: 'SOS',
+        );
+        CustomFlushbar.showError(
+          context: context,
+          message: result['message'] ?? 'Failed to send emergency alert',
+        );
+      }
+    } catch (e) {
+      AppLogger.log('❌ Error handling emergency SOS: $e', tag: 'SOS');
+      CustomFlushbar.showError(
+        context: context,
+        message: 'Failed to send emergency alert. Please try again.',
+      );
+    }
+  }
 }
 
 class _RideAcceptedSheet extends StatefulWidget {
@@ -4516,12 +4689,15 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
                   ),
                 ),
                 SizedBox(height: 10.h),
-                Text(
-                  'Emergency Situation?',
-                  style: TextStyle(
-                    color: Color(ConstColors.mainColor),
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w500,
+                GestureDetector(
+                  onTap: () => _handleEmergencySOS(),
+                  child: Text(
+                    'Emergency Situation?',
+                    style: TextStyle(
+                      color: Color(ConstColors.mainColor),
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
               ],
@@ -4782,6 +4958,79 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
           message: result['message'] ?? 'Failed to complete ride',
         );
       }
+    }
+  }
+
+  Future<void> _handleEmergencySOS() async {
+    try {
+      AppLogger.log('🚨 Emergency SOS button tapped', tag: 'SOS');
+
+      final rideId = widget.ride['ID'];
+
+      // Get current location
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      // Convert to POINT format
+      final location = 'POINT(${position.longitude} ${position.latitude})';
+
+      // Get location address
+      final locationAddress =
+          'Lat: ${position.latitude}, Lng: ${position.longitude}';
+
+      AppLogger.log('📍 SOS Location: $location', tag: 'SOS');
+      AppLogger.log('📍 SOS Address: $locationAddress', tag: 'SOS');
+      AppLogger.log('🚗 SOS Ride ID: $rideId', tag: 'SOS');
+
+      // Get auth token
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (token == null) {
+        CustomFlushbar.showError(
+          context: context,
+          message: 'Authentication error. Please login again.',
+        );
+        return;
+      }
+
+      // Show loading indicator
+      CustomFlushbar.showInfo(
+        context: context,
+        message: 'Sending emergency alert...',
+      );
+
+      // Send SOS alert
+      final result = await ApiService.sendSOS(
+        token: token,
+        location: location,
+        locationAddress: locationAddress,
+        rideId: rideId,
+      );
+
+      if (result['success'] == true) {
+        AppLogger.log('✅ SOS alert sent successfully', tag: 'SOS');
+        CustomFlushbar.showSuccess(
+          context: context,
+          message: 'Emergency alert sent! Help is on the way.',
+        );
+      } else {
+        AppLogger.log(
+          '❌ Failed to send SOS alert: ${result['message']}',
+          tag: 'SOS',
+        );
+        CustomFlushbar.showError(
+          context: context,
+          message: result['message'] ?? 'Failed to send emergency alert',
+        );
+      }
+    } catch (e) {
+      AppLogger.log('❌ Error handling emergency SOS: $e', tag: 'SOS');
+      CustomFlushbar.showError(
+        context: context,
+        message: 'Failed to send emergency alert. Please try again.',
+      );
     }
   }
 

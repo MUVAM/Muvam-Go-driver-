@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:http/http.dart' as http;
 import 'package:muvam_rider/core/constants/url_constants.dart';
 import 'package:muvam_rider/core/services/location_service.dart';
@@ -724,7 +725,7 @@ class ApiService {
         return {'success': true, 'data': data};
       } else {
         final error = jsonDecode(response.body);
-        AppLogger.log('Error getting active rides: ${error}');
+        AppLogger.log('Error getting active rides: $error');
         return {
           'success': false,
           'message':
@@ -768,7 +769,7 @@ class ApiService {
         return {'success': true, 'data': data};
       } else {
         final error = jsonDecode(response.body);
-        AppLogger.log('Error starting ride: ${error}');
+        AppLogger.log('Error starting ride: $error');
         return {
           'success': false,
           'message':
@@ -823,7 +824,7 @@ class ApiService {
       AppLogger.log('Token: ${token.substring(0, 20)}...');
       AppLogger.log('Ride ID: $rideId');
       AppLogger.log('Point Location: $pointLocation');
-      
+
       final requestBody = {'location': pointLocation};
       AppLogger.log('Request Body: ${jsonEncode(requestBody)}');
 
@@ -845,7 +846,7 @@ class ApiService {
         return {'success': true, 'data': data};
       } else {
         final error = jsonDecode(response.body);
-        AppLogger.log('❌ Location update failed: ${error}');
+        AppLogger.log('❌ Location update failed: $error');
         return {
           'success': false,
           'message': error['message'] ?? 'Failed to update location',
@@ -867,15 +868,15 @@ class ApiService {
   ) async {
     try {
       final locationPoint = 'POINT($lng $lat)';
-      
+
       AppLogger.log('=== GENERAL LOCATION UPDATE ===');
       AppLogger.log('📍 Raw coordinates: lat=$lat, lng=$lng');
       AppLogger.log('📍 POINT format: $locationPoint');
       AppLogger.log('📍 Token: ${token.substring(0, 20)}...');
-      
+
       final requestBody = {'location': locationPoint};
       AppLogger.log('📍 Request Body: ${jsonEncode(requestBody)}');
-      
+
       final response = await http.put(
         Uri.parse('$baseUrl${UrlConstants.updateLocation}'),
         headers: {
@@ -890,7 +891,9 @@ class ApiService {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        AppLogger.log('✅ General location updated successfully with POINT format');
+        AppLogger.log(
+          '✅ General location updated successfully with POINT format',
+        );
         return {'success': true, 'data': data};
       } else {
         AppLogger.log('❌ General location update failed');
@@ -968,7 +971,7 @@ class ApiService {
         return {'success': true, 'data': data};
       } else {
         final error = jsonDecode(response.body);
-        AppLogger.log('Error completing ride: ${error}');
+        AppLogger.log('Error completing ride: $error');
         return {
           'success': false,
           'message':
@@ -1020,7 +1023,7 @@ class ApiService {
       AppLogger.log('URL: $endpoint', tag: 'API');
       AppLogger.log('User ID: $userId', tag: 'API');
       AppLogger.log('Token: ${token.substring(0, 20)}...', tag: 'API');
-      
+
       final response = await http.get(
         Uri.parse(endpoint),
         headers: {
@@ -1049,6 +1052,61 @@ class ApiService {
       return {'success': false, 'message': 'Network error: $e'};
     } finally {
       AppLogger.log('=== END GET USER RATINGS API ===\n', tag: 'API');
+    }
+  }
+
+  // Send SOS emergency alert
+  static Future<Map<String, dynamic>> sendSOS({
+    required String token,
+    required String location,
+    required String locationAddress,
+    required int rideId,
+  }) async {
+    try {
+      AppLogger.log('=== SEND SOS ALERT ===', tag: 'SOS');
+      final endpoint = '$baseUrl/sos';
+      AppLogger.log('URL: $endpoint', tag: 'SOS');
+      AppLogger.log('Ride ID: $rideId', tag: 'SOS');
+      AppLogger.log('Location: $location', tag: 'SOS');
+      AppLogger.log('Address: $locationAddress', tag: 'SOS');
+
+      final requestBody = {
+        'location': location,
+        'location_address': locationAddress,
+        'ride_id': rideId,
+      };
+
+      AppLogger.log('Request Body: ${jsonEncode(requestBody)}', tag: 'SOS');
+
+      final response = await http.post(
+        Uri.parse(endpoint),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      AppLogger.log('Response Status: ${response.statusCode}', tag: 'SOS');
+      AppLogger.log('Response Body: ${response.body}', tag: 'SOS');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        AppLogger.log('✅ SOS alert sent successfully', tag: 'SOS');
+        return {'success': true, 'data': data};
+      } else {
+        AppLogger.log('❌ Failed to send SOS alert', tag: 'SOS');
+        final error = jsonDecode(response.body);
+        return {
+          'success': false,
+          'message': error['message'] ?? 'Failed to send SOS alert',
+        };
+      }
+    } catch (e) {
+      AppLogger.log('❌ Exception in sendSOS: $e', tag: 'SOS');
+      return {'success': false, 'message': 'Network error: $e'};
+    } finally {
+      AppLogger.log('=== END SEND SOS ALERT ===\n', tag: 'SOS');
     }
   }
 }
