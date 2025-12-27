@@ -101,7 +101,10 @@ class _RideInfoWidgetState extends State<RideInfoWidget> {
                 ),
                 child: Center(
                   child: Text(
-                    widget.eta.replaceAll(' min', '').replaceAll('< ', ''),
+                    widget.eta
+                        .replaceAll(' min', '')
+                        .replaceAll('< ', '')
+                        .replaceAll('s', 'm'),
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 14.sp,

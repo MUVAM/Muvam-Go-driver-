@@ -1,13 +1,16 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:http/http.dart' as http;
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/constants/text_styles.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
+import 'package:muvam_rider/core/constants/url_constants.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
 import 'package:muvam_rider/core/services/call_service.dart';
 import 'package:muvam_rider/core/services/location_service.dart';
@@ -489,6 +492,9 @@ class _HomeScreenState extends State<HomeScreen> {
             'PaymentMethod': ride['PaymentMethod'] ?? 'in_car',
             'Passenger': ride['Passenger'] ?? {},
             'Status': ride['Status'] ?? 'requested',
+            // CRITICAL: Include location data for markers
+            'PickupLocation': ride['PickupLocation'],
+            'DestLocation': ride['DestLocation'],
           };
         }).toList();
 
@@ -550,6 +556,8 @@ class _HomeScreenState extends State<HomeScreen> {
           // CRITICAL: Include location data for ride tracking
           'PickupLocation': rideData['PickupLocation'],
           'DestLocation': rideData['DestLocation'],
+          'PickupAddress': rideData['PickupAddress'] ?? 'Unknown pickup',
+          'DestAddress': rideData['DestAddress'] ?? 'Unknown destination',
           // Keep original data structure for tracking service
           'data': rideData,
         };
@@ -561,13 +569,104 @@ class _HomeScreenState extends State<HomeScreen> {
         );
         AppLogger.log('   DestLocation: ${transformedRide['DestLocation']}');
         AppLogger.log('   Has data field: ${transformedRide['data'] != null}');
-        _showRideAcceptedSheet(transformedRide, result['data']);
+
+        // CRITICAL DEBUG: Log ALL location-related fields from rideData
+        AppLogger.log('🚨 LOCATION DATA DEBUG (from rideData):');
+        AppLogger.log('   rideData keys: ${rideData.keys.toList()}');
+        AppLogger.log('   PickupLocation: ${rideData['PickupLocation']}');
+        AppLogger.log('   DestLocation: ${rideData['DestLocation']}');
+        AppLogger.log('   PickupLat: ${rideData['PickupLat']}');
+        AppLogger.log('   PickupLng: ${rideData['PickupLng']}');
+        AppLogger.log('   DestLat: ${rideData['DestLat']}');
+        AppLogger.log('   DestLng: ${rideData['DestLng']}');
+        AppLogger.log('   pickup_location: ${rideData['pickup_location']}');
+        AppLogger.log('   dest_location: ${rideData['dest_location']}');
+
+        // If location coordinates are missing, geocode the addresses
+        if (transformedRide['PickupLocation'] == null ||
+            transformedRide['DestLocation'] == null) {
+          AppLogger.log(
+            '🌍 Location coordinates missing, geocoding addresses...',
+          );
+          await _geocodeAndShowRide(transformedRide, result['data']);
+        } else {
+          _showRideAcceptedSheet(transformedRide, result['data']);
+        }
       } else {
         CustomFlushbar.showError(
           context: context,
           message: result['message'] ?? 'Failed to accept ride',
         );
       }
+    }
+  }
+
+  Future<void> _geocodeAndShowRide(
+    Map<String, dynamic> ride,
+    Map<String, dynamic> acceptedData,
+  ) async {
+    try {
+      final pickupAddress = ride['PickupAddress'] ?? '';
+      final destAddress = ride['DestAddress'] ?? '';
+
+      AppLogger.log('📍 Geocoding pickup address: $pickupAddress');
+      AppLogger.log('📍 Geocoding dest address: $destAddress');
+
+      // Geocode pickup address
+      final pickupUrl = Uri.parse(
+        'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(pickupAddress)}&key=${UrlConstants.googleMapsApiKey}',
+      );
+
+      final pickupResponse = await http.get(pickupUrl);
+      final pickupData = json.decode(pickupResponse.body);
+
+      // Geocode destination address
+      final destUrl = Uri.parse(
+        'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(destAddress)}&key=${UrlConstants.googleMapsApiKey}',
+      );
+
+      final destResponse = await http.get(destUrl);
+      final destData = json.decode(destResponse.body);
+
+      if (pickupData['status'] == 'OK' &&
+          pickupData['results'].isNotEmpty &&
+          destData['status'] == 'OK' &&
+          destData['results'].isNotEmpty) {
+        final pickupLat =
+            pickupData['results'][0]['geometry']['location']['lat'];
+        final pickupLng =
+            pickupData['results'][0]['geometry']['location']['lng'];
+        final destLat = destData['results'][0]['geometry']['location']['lat'];
+        final destLng = destData['results'][0]['geometry']['location']['lng'];
+
+        AppLogger.log('✅ Geocoded pickup: $pickupLat, $pickupLng');
+        AppLogger.log('✅ Geocoded dest: $destLat, $destLng');
+
+        // Convert to WKB format (POINT format) for compatibility
+        final pickupWKB = 'POINT($pickupLng $pickupLat)';
+        final destWKB = 'POINT($destLng $destLat)';
+
+        // Update ride data with geocoded locations
+        ride['PickupLocation'] = pickupWKB;
+        ride['DestLocation'] = destWKB;
+
+        // Also update the nested data object
+        if (ride['data'] != null) {
+          ride['data']['PickupLocation'] = pickupWKB;
+          ride['data']['DestLocation'] = destWKB;
+        }
+
+        AppLogger.log('✅ Updated ride with geocoded locations');
+        _showRideAcceptedSheet(ride, acceptedData);
+      } else {
+        AppLogger.log('❌ Geocoding failed, showing ride without markers');
+        AppLogger.log('   Pickup status: ${pickupData['status']}');
+        AppLogger.log('   Dest status: ${destData['status']}');
+        _showRideAcceptedSheet(ride, acceptedData);
+      }
+    } catch (e) {
+      AppLogger.log('❌ Error geocoding addresses: $e');
+      _showRideAcceptedSheet(ride, acceptedData);
     }
   }
 
@@ -3848,40 +3947,40 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 // Driver Arrival Time Timer (Left)
-                Stack(
-                  children: [
-                    Container(
-                      width: 60.w,
-                      height: 60.h,
-                      decoration: BoxDecoration(
-                        color: Color(ConstColors.mainColor),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Center(
-                        child: Text(
-                          _driverArrivalTime,
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                    // White line decoration at top left
-                    Positioned(
-                      top: 0,
-                      left: 0,
-                      child: Image.asset(
-                        'assets/images/whiteline.png',
-                        width: 20.w,
-                        height: 20.h,
-                        fit: BoxFit.contain,
-                      ),
-                    ),
-                  ],
-                ),
+                // Stack(
+                //   children: [
+                //     Container(
+                //       width: 60.w,
+                //       height: 60.h,
+                //       decoration: BoxDecoration(
+                //         color: Color(ConstColors.mainColor),
+                //         shape: BoxShape.circle,
+                //       ),
+                //       child: Center(
+                //         child: Text(
+                //           _driverArrivalTime,
+                //           style: TextStyle(
+                //             fontFamily: 'Inter',
+                //             fontSize: 18.sp,
+                //             fontWeight: FontWeight.w600,
+                //             color: Colors.white,
+                //           ),
+                //         ),
+                //       ),
+                //     ),
+                // White line decoration at top left
+                // Positioned(
+                //   top: 0,
+                //   left: 0,
+                //   child: Image.asset(
+                //     'assets/images/whiteline.png',
+                //     width: 20.w,
+                //     height: 20.h,
+                //     fit: BoxFit.contain,
+                //   ),
+                // ),
+                //   ],
+                // ),
                 // ETA Timer and "New Order" Text (Right)
                 Row(
                   children: [
@@ -3914,6 +4013,16 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ),
                             ],
+                          ),
+                        ),
+                        Positioned(
+                          top: 0,
+                          left: 11.w,
+                          child: Image.asset(
+                            'assets/images/whiteline.png',
+                            width: 20.w,
+                            height: 20.h,
+                            fit: BoxFit.contain,
                           ),
                         ),
                       ],
@@ -4142,31 +4251,28 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     }
 
-    // Start ride tracking only if not already started
-    if (_mapMarkers.isEmpty) {
-      RideTrackingService.startRideTracking(
-        ride: ride,
-        onUpdate: (markers, polylines) {
-          if (mounted) {
-            setState(() {
-              _mapMarkers = markers;
-              _mapPolylines = polylines;
-            });
-            _centerMapOnActiveRide();
-          }
-        },
-        onTimeUpdate: (eta, location) {
-          if (mounted) {
-            setState(() {
-              _currentETA = eta;
-              _currentLocationName = location;
-            });
-          }
-        },
-      );
-    } else {
-      _centerMapOnActiveRide();
-    }
+    // Always start/restart ride tracking to ensure markers are displayed
+    AppLogger.log('🗺️ Starting ride tracking for accepted ride');
+    RideTrackingService.startRideTracking(
+      ride: ride,
+      onUpdate: (markers, polylines) {
+        if (mounted) {
+          setState(() {
+            _mapMarkers = markers;
+            _mapPolylines = polylines;
+          });
+          _centerMapOnActiveRide();
+        }
+      },
+      onTimeUpdate: (eta, location) {
+        if (mounted) {
+          setState(() {
+            _currentETA = eta;
+            _currentLocationName = location;
+          });
+        }
+      },
+    );
 
     showModalBottomSheet(
       context: context,
@@ -4548,25 +4654,113 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (result['success'] == true) {
         AppLogger.log('✅ SOS alert sent successfully', tag: 'SOS');
-        CustomFlushbar.showSuccess(
+        // Show success dialog
+        showDialog(
           context: context,
-          message: 'Emergency alert sent! Help is on the way.',
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.green, size: 28.sp),
+                  SizedBox(width: 10.w),
+                  Text('SOS Alert Sent'),
+                ],
+              ),
+              content: Text(
+                'Emergency alert sent successfully! Help is on the way.',
+                style: TextStyle(fontSize: 16.sp),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(
+                    'OK',
+                    style: TextStyle(
+                      color: Color(ConstColors.mainColor),
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       } else {
         AppLogger.log(
           '❌ Failed to send SOS alert: ${result['message']}',
           tag: 'SOS',
         );
-        CustomFlushbar.showError(
+        // Show error dialog
+        showDialog(
           context: context,
-          message: result['message'] ?? 'Failed to send emergency alert',
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Row(
+                children: [
+                  Icon(Icons.error, color: Colors.red, size: 28.sp),
+                  SizedBox(width: 10.w),
+                  Text('Alert Failed'),
+                ],
+              ),
+              content: Text(
+                result['message'] ??
+                    'Failed to send emergency alert. Please try again.',
+                style: TextStyle(fontSize: 16.sp),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(
+                    'OK',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       }
     } catch (e) {
       AppLogger.log('❌ Error handling emergency SOS: $e', tag: 'SOS');
-      CustomFlushbar.showError(
+      // Show error dialog
+      showDialog(
         context: context,
-        message: 'Failed to send emergency alert. Please try again.',
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Row(
+              children: [
+                Icon(Icons.error, color: Colors.red, size: 28.sp),
+                SizedBox(width: 10.w),
+                Text('Error'),
+              ],
+            ),
+            content: Text(
+              'Failed to send emergency alert. Please try again.',
+              style: TextStyle(fontSize: 16.sp),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(
+                  'OK',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       );
     }
   }
@@ -5011,25 +5205,113 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
 
       if (result['success'] == true) {
         AppLogger.log('✅ SOS alert sent successfully', tag: 'SOS');
-        CustomFlushbar.showSuccess(
+        // Show success dialog
+        showDialog(
           context: context,
-          message: 'Emergency alert sent! Help is on the way.',
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.green, size: 28.sp),
+                  SizedBox(width: 10.w),
+                  Text('SOS Alert Sent'),
+                ],
+              ),
+              content: Text(
+                'Emergency alert sent successfully! Help is on the way.',
+                style: TextStyle(fontSize: 16.sp),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(
+                    'OK',
+                    style: TextStyle(
+                      color: Color(ConstColors.mainColor),
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       } else {
         AppLogger.log(
           '❌ Failed to send SOS alert: ${result['message']}',
           tag: 'SOS',
         );
-        CustomFlushbar.showError(
+        // Show error dialog
+        showDialog(
           context: context,
-          message: result['message'] ?? 'Failed to send emergency alert',
+          barrierDismissible: false,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Row(
+                children: [
+                  Icon(Icons.error, color: Colors.red, size: 28.sp),
+                  SizedBox(width: 10.w),
+                  Text('Alert Failed'),
+                ],
+              ),
+              content: Text(
+                result['message'] ??
+                    'Failed to send emergency alert. Please try again.',
+                style: TextStyle(fontSize: 16.sp),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: Text(
+                    'OK',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
         );
       }
     } catch (e) {
       AppLogger.log('❌ Error handling emergency SOS: $e', tag: 'SOS');
-      CustomFlushbar.showError(
+      // Show error dialog
+      showDialog(
         context: context,
-        message: 'Failed to send emergency alert. Please try again.',
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Row(
+              children: [
+                Icon(Icons.error, color: Colors.red, size: 28.sp),
+                SizedBox(width: 10.w),
+                Text('Error'),
+              ],
+            ),
+            content: Text(
+              'Failed to send emergency alert. Please try again.',
+              style: TextStyle(fontSize: 16.sp),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text(
+                  'OK',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       );
     }
   }

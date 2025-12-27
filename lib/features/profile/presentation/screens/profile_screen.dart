@@ -3,16 +3,19 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
-// import 'package:muvam_rider/core/utils/token_manager.dart';
+import 'package:muvam_rider/core/services/ride_tracking_service.dart';
+import 'package:muvam_rider/core/services/websocket_service.dart';
+import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/delete_account_screen.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/edit_full_name_screen.dart';
+import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_selection_screen.dart';
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
-import 'package:muvam_rider/features/profile/presentation/widgets/profile_field.dart';
 import 'package:muvam_rider/features/profile/presentation/screens/update_location_screen.dart';
+import 'package:muvam_rider/features/profile/presentation/widgets/profile_field.dart';
 import 'package:muvam_rider/features/ratings/presentation/screens/ratings_screen.dart';
 import 'package:muvam_rider/features/vehicles/data/models/vehicle_response.dart';
-import 'package:muvam_rider/features/vehicles/presentation/screens/vehicle_selection_screen.dart';
 import 'package:muvam_rider/features/vehicles/presentation/screens/car_information_screen.dart';
+import 'package:muvam_rider/features/vehicles/presentation/screens/vehicle_selection_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -145,7 +148,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ],
                 ),
-                Container(
+                SizedBox(
                   width: 120.w,
                   height: 20.h,
                   child: Row(
@@ -492,43 +495,54 @@ class _ProfileScreenState extends State<ProfileScreen> {
             SizedBox(height: 30.h),
             Row(
               children: [
-                Container(
-                  width: 170.w,
-                  height: 47.h,
-                  decoration: BoxDecoration(
-                    color: Color(0xFFB1B1B1),
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  padding: EdgeInsets.all(10.w),
-                  child: Center(
-                    child: Text(
-                      'Log out',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () async {
+                      // Close the bottom sheet first
+                      Navigator.pop(context);
+
+                      // Perform logout
+                      await _performLogout(context);
+                    },
+                    child: Container(
+                      height: 47.h,
+                      decoration: BoxDecoration(
+                        color: Color(0xFFB1B1B1),
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      padding: EdgeInsets.all(10.w),
+                      child: Center(
+                        child: Text(
+                          'Log out',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
                       ),
                     ),
                   ),
                 ),
                 SizedBox(width: 10.w),
-                Container(
-                  width: 170.w,
-                  height: 47.h,
-                  decoration: BoxDecoration(
-                    color: Color(ConstColors.mainColor),
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  padding: EdgeInsets.all(10.w),
+                Expanded(
                   child: GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Center(
-                      child: Text(
-                        'Go Back',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w600,
+                    child: Container(
+                      height: 47.h,
+                      decoration: BoxDecoration(
+                        color: Color(ConstColors.mainColor),
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      padding: EdgeInsets.all(10.w),
+                      child: Center(
+                        child: Text(
+                          'Go Back',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
@@ -540,5 +554,46 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _performLogout(BuildContext context) async {
+    try {
+      // Clear SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+
+      // Logout from providers
+      if (context.mounted) {
+        await context.read<AuthProvider>().logout();
+        await context.read<ProfileProvider>().clearProfile();
+      }
+
+      // Stop ride tracking
+      RideTrackingService.stopTracking();
+
+      // Disconnect WebSocket
+      WebSocketService.instance.disconnect();
+
+      // Navigate to rider selection screen and clear navigation stack
+      if (context.mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => const RiderSignupSelectionScreen(),
+          ),
+          (route) => false, // Remove all previous routes
+        );
+      }
+    } catch (e) {
+      print('Error during logout: $e');
+      // Even if there's an error, try to navigate to login screen
+      if (context.mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => const RiderSignupSelectionScreen(),
+          ),
+          (route) => false,
+        );
+      }
+    }
   }
 }

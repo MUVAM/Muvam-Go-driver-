@@ -18,6 +18,7 @@ import 'package:muvam_rider/shared/presentation/screens/splash_screen.dart';
 import 'package:provider/provider.dart';
 
 import 'core/constants/theme_manager.dart';
+import 'core/services/connectivity_service.dart';
 import 'core/utils/app_logger.dart';
 
 // void main() async {
@@ -378,11 +379,45 @@ class _MyAppState extends State<MyApp> {
               themeMode: themeManager.isDarkMode
                   ? ThemeMode.dark
                   : ThemeMode.light,
-              home: const SplashScreen(),
+              home: const ConnectivityWrapper(child: SplashScreen()),
             );
           },
         );
       },
     );
+  }
+}
+
+/// Wrapper widget to initialize connectivity monitoring
+class ConnectivityWrapper extends StatefulWidget {
+  final Widget child;
+
+  const ConnectivityWrapper({super.key, required this.child});
+
+  @override
+  State<ConnectivityWrapper> createState() => _ConnectivityWrapperState();
+}
+
+class _ConnectivityWrapperState extends State<ConnectivityWrapper> {
+  @override
+  void initState() {
+    super.initState();
+    // Initialize connectivity service after first frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        ConnectivityService().initialize(context);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    ConnectivityService().dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return widget.child;
   }
 }
