@@ -35,6 +35,8 @@ import 'package:muvam_rider/features/home/presentation/widgets/ride_info_widget.
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
 import 'package:muvam_rider/features/profile/presentation/screens/profile_screen.dart';
 import 'package:muvam_rider/features/referral/presentation/screens/referral_screen.dart';
+import 'package:muvam_rider/features/support/presentation/screens/about_us_screen.dart';
+import 'package:muvam_rider/features/support/presentation/screens/faq_screen.dart';
 import 'package:muvam_rider/features/trips/presentation/screen/history_completed_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -1984,8 +1986,28 @@ class _HomeScreenState extends State<HomeScreen> {
             ConstImages.phoneCall,
             onTap: _showContactBottomSheet,
           ),
-          _buildDrawerItem('FAQ', ConstImages.faq),
-          _buildDrawerItem('About', ConstImages.about),
+          _buildDrawerItem(
+            'FAQ',
+            ConstImages.faq,
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => FaqScreen()),
+              );
+            },
+          ),
+          _buildDrawerItem(
+            'About',
+            ConstImages.about,
+            onTap: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => AboutUsScreen()),
+              );
+            },
+          ),
           Consumer<ThemeManager>(
             builder: (context, themeManager, child) {
               return SwitchListTile(
