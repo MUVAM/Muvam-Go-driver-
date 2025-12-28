@@ -40,6 +40,7 @@ import 'package:muvam_rider/features/support/presentation/screens/faq_screen.dar
 import 'package:muvam_rider/features/trips/presentation/screen/history_completed_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 //FOR DRIVER
 class HomeScreen extends StatefulWidget {
@@ -137,6 +138,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 size: 12.sp,
                 color: Colors.grey,
               ),
+              onTap: () async {
+                Navigator.pop(context); // Close bottom sheet
+                final Uri phoneUri = Uri(scheme: 'tel', path: '07032992768');
+                if (await canLaunchUrl(phoneUri)) {
+                  await launchUrl(phoneUri);
+                } else {
+                  if (mounted) {
+                    CustomFlushbar.showError(
+                      context: context,
+                      message: 'Could not open phone dialer',
+                    );
+                  }
+                }
+              },
             ),
             Divider(thickness: 1, color: Colors.grey.shade300),
             ListTile(
@@ -151,6 +166,26 @@ class _HomeScreenState extends State<HomeScreen> {
                 size: 12.sp,
                 color: Colors.grey,
               ),
+              onTap: () async {
+                Navigator.pop(context); // Close bottom sheet
+                // WhatsApp URL with phone number (remove leading 0, add country code)
+                final Uri whatsappUri = Uri.parse(
+                  'https://wa.me/2347032992768', // Nigeria country code +234
+                );
+                if (await canLaunchUrl(whatsappUri)) {
+                  await launchUrl(
+                    whatsappUri,
+                    mode: LaunchMode.externalApplication,
+                  );
+                } else {
+                  if (mounted) {
+                    CustomFlushbar.showError(
+                      context: context,
+                      message: 'Could not open WhatsApp',
+                    );
+                  }
+                }
+              },
             ),
           ],
         ),
