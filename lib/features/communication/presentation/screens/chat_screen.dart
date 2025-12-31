@@ -5,6 +5,8 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
+import 'package:muvam_rider/core/services/firebase_config_service.dart';
+import 'package:muvam_rider/core/services/unifiedNotifiationService.dart';
 import 'package:muvam_rider/core/services/websocket_service.dart'; // CHANGED
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/communication/data/models/chat_model.dart';
@@ -15,19 +17,21 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../widgets/chat_bubble.dart';
 import 'call_screen.dart';
-
+import 'package:googleapis_auth/auth_io.dart' as auth;
+import 'package:http/http.dart' as http;
 // //FOR DRIVER
 // ChatScreen using Pure Native WebSocket (No packages)
 class ChatScreen extends StatefulWidget {
   final int rideId;
   final String driverName;
   final String? driverImage;
-
+  final String driverId;
   const ChatScreen({
     super.key,
     required this.rideId,
     required this.driverName,
     this.driverImage,
+    required this.driverId
   });
 
   @override
@@ -271,6 +275,29 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+Future<String> getAccessToken() async {
+    final serviceAccountJson =
+        await FirebaseConfigService.getServiceAccountConfig();
+    List<String> scopes = [
+      "https://www.googleapis.com/auth/userinfo.email",
+      "https://www.googleapis.com/auth/firebase.database",
+      "https://www.googleapis.com/auth/firebase.messaging",
+    ];
+    http.Client client = await auth.clientViaServiceAccount(
+      auth.ServiceAccountCredentials.fromJson(serviceAccountJson),
+      scopes,
+    );
+    // get access token using this client
+    auth.AccessCredentials credentials = await auth
+        .obtainAccessCredentialsViaServiceAccount(
+          auth.ServiceAccountCredentials.fromJson(serviceAccountJson),
+          scopes,
+          client,
+        );
+    // close the client
+    client.close();
+    return credentials.accessToken.data;
+  }
   void _sendMessage() async {
     print('');
     print('🚀 ═══════════════════════════════════════');
@@ -327,6 +354,31 @@ class _ChatScreenState extends State<ChatScreen> {
       });
 
       print('   ✅ Passed to WebSocket service');
+
+      // Send FCM notification to driver
+      print('   📤 Sending FCM notification to driver...');
+      try {
+        // TODO: Get driver's user ID from ride data
+        // For now, you need to pass driver ID or get it from your ride data
+        // Example: await FCMSenderService.sendMessageNotification(
+        //   recipientUserId: driverUserId,
+        //   senderName: userName,
+        //   message: text,
+        //   rideId: widget.rideId.toString(),
+        // );
+await UnifiedNotificationService.sendChatNotification(
+            receiverId: widget.driverId!,
+            senderName: userName,
+            messageText: text,
+            chatRoomId: widget.rideId.toString(),
+          );
+
+
+        print('   ⚠️ FCM: Driver ID needed to send notification');
+      } catch (e) {
+        print('   ❌ FCM notification error: $e');
+      }
+
       print('   🔄 Clearing input field');
 
       _messageController.clear();

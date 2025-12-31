@@ -1,6 +1,11 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/services/call_service.dart';
+import 'package:muvam_rider/core/services/fcmTokenService.dart';
+import 'package:muvam_rider/core/services/fcm_notification_service.dart';
+import 'package:muvam_rider/core/services/fcm_provider.dart';
 import 'package:muvam_rider/core/services/websocket_service.dart';
 import 'package:muvam_rider/features/activities/data/providers/request_provider.dart';
 import 'package:muvam_rider/features/activities/data/providers/rides_provider.dart';
@@ -142,6 +147,25 @@ import 'core/utils/app_logger.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize Firebase
+  try {
+    await Firebase.initializeApp();
+    AppLogger.log('✅ Firebase initialized successfully', tag: 'FIREBASE');
+await FCMTokenService.initializeFCM();
+
+    // Initialize enhanced notifications with vibration for all features
+    EnhancedNotificationService.initEnhancedNotifications();
+    // Register FCM background message handler
+    // FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
+    AppLogger.log('✅ FCM background handler registered', tag: 'FIREBASE');
+  } catch (e) {
+    AppLogger.error(
+      '❌ Firebase initialization failed',
+      error: e,
+      tag: 'FIREBASE',
+    );
+  }
+
   // Load persisted chat messages
   final chatProvider = ChatProvider();
   await chatProvider.loadMessages();
@@ -152,6 +176,11 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
+
+
+
+
+
         ChangeNotifierProvider(create: (context) => ThemeManager()),
         ChangeNotifierProvider(create: (context) => AuthProvider()),
         ChangeNotifierProvider.value(value: chatProvider),
@@ -163,6 +192,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => RequestProvider()),
         ChangeNotifierProvider(create: (_) => EarningsProvider()),
         ChangeNotifierProvider(create: (_) => ReferralProvider()),
+        // ChangeNotifierProvider(create: (_) => FCMProvider()),
       ],
       child: const MyApp(),
     ),
@@ -351,10 +381,18 @@ class _MyAppState extends State<MyApp> {
 
     // Initialize global call service with navigator key
     GlobalCallService.instance.initialize(MyApp.navigatorKey);
+    // _initializeFCM();
 
     AppLogger.log('✅ GlobalCallService initialized', tag: 'APP_INIT');
   }
-
+// Future<void> _initializeFCM() async {
+//     try {
+//       EnhancedNotificationService.initEnhancedNotifications();
+//       AppLogger.log('FCM service initialized in MyApp', tag: 'MAIN');
+//     } catch (e) {
+//       AppLogger.error('Error initializing FCM in MyApp', error: e, tag: 'MAIN');
+//     }
+//   }
   @override
   void dispose() {
     GlobalCallService.instance.dispose();

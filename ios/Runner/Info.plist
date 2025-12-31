@@ -53,6 +53,18 @@
 	<string>This app needs location access to show your current location on the map.</string>
 	<key>io.flutter.embedded_views_preview</key>
 	<true/>
+	
+	<!-- FCM Background Modes -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>remote-notification</string>
+	</array>
+	
+	<!-- Firebase Configuration -->
+	<key>FirebaseAppDelegateProxyEnabled</key>
+	<false/>
+	
 	<key>GoogleMapsAPIKey</key>
 	<string>AIzaSyBcA7Yq13sDyx-8nrLn0y0XMjY6xVcYVlE</string>
 </dict>

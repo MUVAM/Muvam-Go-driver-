@@ -43,3 +43,9 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Environment variables and secrets
+# .env (commented out - user needs to configure this file)
+firebase-service-account.json
+# google-services.json (commented out - needed for build)
+# GoogleService-Info.plist (commented out - needed for iOS build)

@@ -13,6 +13,7 @@ import 'package:muvam_rider/core/constants/theme_manager.dart';
 import 'package:muvam_rider/core/constants/url_constants.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
 import 'package:muvam_rider/core/services/call_service.dart';
+import 'package:muvam_rider/core/services/fcm_provider.dart';
 import 'package:muvam_rider/core/services/location_service.dart';
 import 'package:muvam_rider/core/services/ride_tracking_service.dart';
 import 'package:muvam_rider/core/services/websocket_service.dart';
@@ -245,6 +246,21 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     await profileProvider.fetchUserProfile();
 
+    // Initialize FCM for push notifications
+    AppLogger.log('🔔 Initializing FCM notifications...');
+    try {
+      // final fcmProvider = Provider.of<FCMProvider>(context, listen: false);
+      final userId = profileProvider.userProfile?.id.toString();
+      if (userId != null) {
+        // await fcmProvider.initializeFCM(userId);
+        AppLogger.log('✅ FCM initialized for user: $userId');
+      } else {
+        AppLogger.log('⚠️ Could not initialize FCM: User ID is null');
+      }
+    } catch (e) {
+      AppLogger.log('❌ FCM initialization error: $e');
+    }
+
     AppLogger.log('🔌 Connecting WebSocket...');
     try {
       await _webSocketService.connect();
@@ -380,11 +396,13 @@ class _HomeScreenState extends State<HomeScreen> {
                     '${passenger['first_name'] ?? 'Unknown'} ${passenger['last_name'] ?? 'Passenger'}';
                 final passengerImage =
                     passenger['profile_image'] ?? passenger['image'];
-
+final passengerId =
+                    passenger['ID'] ?? 1;
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => ChatScreen(
+                      driverId: passengerId,
                       rideId: rideId,
                       driverName: passengerName,
                       driverImage: passengerImage,
@@ -398,6 +416,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   MaterialPageRoute(
                     builder: (context) => ChatScreen(
                       rideId: rideId,
+                      driverId:senderId,
                       driverName: senderName,
                       driverImage: senderImage,
                     ),
@@ -2582,6 +2601,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final passenger = ride['Passenger'] ?? {};
     final passengerFirstName = passenger['first_name'] ?? 'Unknown';
     final passengerLastName = passenger['last_name'] ?? '';
+        final passengerID = passenger['ID'] ?? 1;
+
     final passengerName = '$passengerFirstName $passengerLastName'.trim();
     final passengerImage =
         passenger['profile_image'] ?? passenger['image'] ?? '';
@@ -2927,6 +2948,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => ChatScreen(
+                                driverId: passengerID,
                                 rideId: rideId,
                                 driverName: passengerName,
                                 driverImage: passengerImage.isNotEmpty
@@ -4854,6 +4876,7 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
     final waitFee = widget.acceptedData['wait_fee'] ?? 0;
     final passengerName =
         '${passenger['first_name'] ?? 'Unknown'} ${passenger['last_name'] ?? 'Passenger'}';
+    final passengerID = passenger['ID'] ?? '1';
 
     return Container(
       padding: EdgeInsets.all(20.w),
@@ -4876,7 +4899,7 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
           if (_rideStatus == 'completed')
             _buildCompletedContent(passengerName)
           else
-            _buildActiveRideContent(passenger, tip, waitFee, passengerName),
+            _buildActiveRideContent(passenger, tip, waitFee,passengerID, passengerName),
           if (_rideStatus == 'started')
             Column(
               children: [
@@ -5968,6 +5991,7 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
     Map<String, dynamic> passenger,
     int tip,
     int waitFee,
+    String passengerID,
     String passengerName,
   ) {
     return Column(
@@ -6082,6 +6106,7 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
                       MaterialPageRoute(
                         builder: (context) => ChatScreen(
                           driverName: passengerName,
+                          driverId: passengerID,
                           rideId: widget.ride['ID'],
                         ),
                       ),
