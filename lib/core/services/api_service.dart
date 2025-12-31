@@ -665,7 +665,7 @@ class ApiService {
       AppLogger.log('Token: $token');
       AppLogger.log('Latitude: $lat, Longitude: $lng');
 
-      final locationPoint = 'POINT($lat $lng)';
+      final locationPoint = 'POINT($lng $lat)';
       AppLogger.log('Location Point: $locationPoint');
 
       final response = await http.put(

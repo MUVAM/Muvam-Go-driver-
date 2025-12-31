@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/images.dart';
+import 'package:muvam_rider/core/services/biometric_auth_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
+import 'package:muvam_rider/features/auth/presentation/screens/biometric_lock_screen.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_selection_screen.dart';
 import 'package:muvam_rider/features/earnings/data/provider/withdrawal_provider.dart';
 import 'package:muvam_rider/features/home/presentation/screens/home_screen.dart';
@@ -69,13 +71,37 @@ class _SplashScreenState extends State<SplashScreen>
       );
     } else {
       print('fetch the user bank....');
-      // Valid session, fetch banks in background and go to home
+      // Valid session, fetch banks in background
       withdrawalProvider.fetchBanks();
       await authProvider.updateLastLoginTime();
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
-      );
+
+      // Check if biometric authentication is enabled
+      final biometricService = BiometricAuthService();
+      final isBiometricEnabled = await biometricService.isBiometricEnabled();
+
+      if (isBiometricEnabled && mounted) {
+        // Show biometric lock screen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => BiometricLockScreen(
+              isLoginScreen: true,
+              onAuthenticated: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => HomeScreen()),
+                );
+              },
+            ),
+          ),
+        );
+      } else {
+        // Go directly to home
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomeScreen()),
+        );
+      }
     }
   }
 

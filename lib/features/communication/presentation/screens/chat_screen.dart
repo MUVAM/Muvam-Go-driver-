@@ -603,18 +603,28 @@ class _ChatScreenState extends State<ChatScreen> {
             Container(
               margin: EdgeInsets.all(20.w),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Expanded(
                     child: Container(
-                      width: 324.w,
-                      height: 50.h,
-                      padding: EdgeInsets.all(10.w),
+                      constraints: BoxConstraints(
+                        minHeight: 50.h,
+                        maxHeight: 120.h, // Approximately 5 lines
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 15.w,
+                        vertical: 10.h,
+                      ),
                       decoration: BoxDecoration(
                         color: Color(0xFFB1B1B1).withOpacity(0.2),
                         borderRadius: BorderRadius.circular(15.r),
                       ),
                       child: TextField(
                         controller: _messageController,
+                        maxLines: null, // Allow unlimited lines
+                        minLines: 1, // Start with 1 line
+                        keyboardType: TextInputType.multiline,
+                        textInputAction: TextInputAction.newline,
                         decoration: InputDecoration(
                           hintText: 'Send message',
                           hintStyle: TextStyle(
@@ -626,9 +636,15 @@ class _ChatScreenState extends State<ChatScreen> {
                             color: Color(0xFFB1B1B1),
                           ),
                           border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(vertical: 15.h),
+                          contentPadding: EdgeInsets.zero,
+                          isDense: true,
                         ),
-                        onSubmitted: (_) => _sendMessage(),
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 14.sp,
+                          fontWeight: FontWeight.w400,
+                          color: Colors.black,
+                        ),
                       ),
                     ),
                   ),
@@ -640,6 +656,9 @@ class _ChatScreenState extends State<ChatScreen> {
                       child: Container(
                         width: 21.w,
                         height: 21.h,
+                        margin: EdgeInsets.only(
+                          bottom: 15.h,
+                        ), // Align with text baseline
                         child: Icon(
                           Icons.send,
                           size: 21.sp,

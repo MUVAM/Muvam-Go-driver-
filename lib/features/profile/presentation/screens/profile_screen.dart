@@ -10,6 +10,7 @@ import 'package:muvam_rider/features/auth/presentation/screens/delete_account_sc
 import 'package:muvam_rider/features/auth/presentation/screens/edit_full_name_screen.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_selection_screen.dart';
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
+import 'package:muvam_rider/features/profile/presentation/screens/app_lock_settings_screen.dart';
 import 'package:muvam_rider/features/profile/presentation/screens/update_location_screen.dart';
 import 'package:muvam_rider/features/profile/presentation/widgets/profile_field.dart';
 import 'package:muvam_rider/features/ratings/presentation/screens/ratings_screen.dart';
@@ -246,6 +247,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) => UpdateLocationScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        SizedBox(height: 15.h),
+                        ProfileField(
+                          label: 'Biometric Authentication',
+                          value: 'Set up your biometrics',
+                          hasEdit: true,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AppLockSettingsScreen(),
                               ),
                             );
                           },
@@ -558,21 +573,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _performLogout(BuildContext context) async {
     try {
-      // Clear SharedPreferences
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
-
-      // Logout from providers
-      if (context.mounted) {
-        await context.read<AuthProvider>().logout();
-        await context.read<ProfileProvider>().clearProfile();
-      }
-
-      // Stop ride tracking
+      // Stop ride tracking first
       RideTrackingService.stopTracking();
 
       // Disconnect WebSocket
       WebSocketService.instance.disconnect();
+
+      // Clear all provider states
+      if (context.mounted) {
+        // Clear auth and profile
+        await context.read<AuthProvider>().logout();
+        await context.read<ProfileProvider>().clearProfile();
+
+        // Reset all other providers to initial state
+        // Note: Some providers might not have explicit clear methods,
+        // but clearing SharedPreferences and navigating away will reset them
+      }
+
+      // Clear SharedPreferences (this will clear all stored data)
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
 
       // Navigate to rider selection screen and clear navigation stack
       if (context.mounted) {

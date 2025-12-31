@@ -5739,33 +5739,129 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
 
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Cancel Ride'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Please provide a reason for cancellation:'),
-            SizedBox(height: 10.h),
-            TextField(
-              controller: reasonController,
-              decoration: InputDecoration(
-                hintText: 'Enter cancellation reason',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-          ],
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.r),
+          side: BorderSide(color: Color(ConstColors.mainColor), width: 2),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
+        backgroundColor: Colors.white,
+        child: Container(
+          padding: EdgeInsets.all(20.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20.r),
           ),
-          TextButton(
-            onPressed: () => _cancelRide(reasonController.text),
-            child: Text('Submit'),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Cancel Ride',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 20.sp,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                ),
+              ),
+              SizedBox(height: 20.h),
+              Text(
+                'Please provide a reason for cancellation:',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 14.sp,
+                  fontWeight: FontWeight.w400,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              SizedBox(height: 15.h),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 5.h),
+                decoration: BoxDecoration(
+                  color: Color(0xFFB1B1B1).withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(8.r),
+                  border: Border.all(color: Colors.grey.shade300, width: 1),
+                ),
+                child: TextField(
+                  controller: reasonController,
+                  decoration: InputDecoration(
+                    hintText: 'Enter cancellation reason',
+                    hintStyle: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFFB1B1B1),
+                    ),
+                    border: InputBorder.none,
+                  ),
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w400,
+                    color: Colors.black,
+                  ),
+                  maxLines: 3,
+                ),
+              ),
+              SizedBox(height: 25.h),
+              Row(
+                children: [
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Container(
+                        height: 47.h,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          border: Border.all(
+                            color: Color(ConstColors.mainColor),
+                            width: 1.5,
+                          ),
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              color: Color(ConstColors.mainColor),
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 10.w),
+                  Expanded(
+                    child: GestureDetector(
+                      onTap: () => _cancelRide(reasonController.text),
+                      child: Container(
+                        height: 47.h,
+                        decoration: BoxDecoration(
+                          color: Color(ConstColors.mainColor),
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
+                        child: Center(
+                          child: Text(
+                            'Submit',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              color: Colors.white,
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
