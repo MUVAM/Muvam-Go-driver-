@@ -1,3 +1,4 @@
+import 'package:muvam_rider/core/services/call_notification_helper.dart';
 import 'package:muvam_rider/core/services/fcmTokenService.dart';
 import 'package:muvam_rider/core/services/fcm_notification_service.dart';
 
@@ -21,7 +22,7 @@ class UnifiedNotificationService {
       try {
         await EnhancedNotificationService.sendNotificationWithVibration(
           deviceToken: token,
-          title: "New Message From Passenger",
+          title: "New Message From Driver",
           body: 'New Message: $messageText',
           type: 'chat_message',
           additionalData: {
@@ -99,10 +100,10 @@ class UnifiedNotificationService {
       // Send notification to all user's devices
       for (String token in tokens) {
         try {
-          await EnhancedNotificationService.sendNotificationWithVibration(
+          await CallNotificationService.sendCallNotificationWithActions(
             deviceToken: token,
             title: "Incoming Call",
-            body: 'Passenger is calling you',
+            body: '$callerName is calling you',
             type: 'incoming_call',
             additionalData: {
               'caller_name': callerName,

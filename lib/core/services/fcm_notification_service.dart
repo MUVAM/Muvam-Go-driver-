@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -204,7 +205,7 @@ class EnhancedNotificationService {
           .get();
 
       if (userDoc.exists) {
-        final userData = userDoc.data() as Map<String, dynamic>?;
+        final userData = userDoc.data();
         userName = userData?['name'] as String? ?? 'User';
         print('👤 ENHANCED_NOTIF DEBUG: Found vendor name: $userName');
       } else {
@@ -218,7 +219,7 @@ class EnhancedNotificationService {
             .get();
 
         if (userDoc.exists) {
-          final userData = userDoc.data() as Map<String, dynamic>?;
+          final userData = userDoc.data();
           userName =
               userData?['username'] as String? ??
               userData?['name'] as String? ??
@@ -333,7 +334,7 @@ class EnhancedNotificationService {
           .get();
 
       if (userDoc.exists) {
-        final userData = userDoc.data() as Map<String, dynamic>?;
+        final userData = userDoc.data();
         userName = userData?['name'] as String? ?? 'User';
       } else {
         userDoc = await FirebaseFirestore.instance
@@ -342,7 +343,7 @@ class EnhancedNotificationService {
             .get();
 
         if (userDoc.exists) {
-          final userData = userDoc.data() as Map<String, dynamic>?;
+          final userData = userDoc.data();
           userName =
               userData?['username'] as String? ??
               userData?['name'] as String? ??
@@ -431,7 +432,7 @@ class EnhancedNotificationService {
           .get();
 
       if (userDoc.exists) {
-        final userData = userDoc.data() as Map<String, dynamic>?;
+        final userData = userDoc.data();
         userName = userData?['name'] as String? ?? 'User';
       } else {
         // Try customers collection
@@ -441,7 +442,7 @@ class EnhancedNotificationService {
             .get();
 
         if (userDoc.exists) {
-          final userData = userDoc.data() as Map<String, dynamic>?;
+          final userData = userDoc.data();
           userName =
               userData?['username'] as String? ??
               userData?['name'] as String? ??
@@ -499,7 +500,7 @@ class EnhancedNotificationService {
             .get();
 
         if (userDoc.exists) {
-          final userData = userDoc.data() as Map<String, dynamic>?;
+          final userData = userDoc.data();
           parentAuthorName = userData?['name'] as String? ?? 'User';
         } else {
           // Try customers collection
@@ -509,7 +510,7 @@ class EnhancedNotificationService {
               .get();
 
           if (userDoc.exists) {
-            final userData = userDoc.data() as Map<String, dynamic>?;
+            final userData = userDoc.data();
             parentAuthorName =
                 userData?['username'] as String? ??
                 userData?['name'] as String? ??
@@ -589,7 +590,7 @@ class EnhancedNotificationService {
             .get();
 
         if (userDoc.exists) {
-          final userData = userDoc.data() as Map<String, dynamic>?;
+          final userData = userDoc.data();
           userName = userData?['name'] as String? ?? 'User';
         } else {
           // Try customers collection
@@ -599,7 +600,7 @@ class EnhancedNotificationService {
               .get();
 
           if (userDoc.exists) {
-            final userData = userDoc.data() as Map<String, dynamic>?;
+            final userData = userDoc.data();
             userName =
                 userData?['username'] as String? ??
                 userData?['name'] as String? ??
@@ -850,11 +851,9 @@ class EnhancedNotificationService {
       // Check if this user is currently authenticated
       // final currentUser = FirebaseAuth.instance.currentUser;
 
-       final prefs = await SharedPreferences.getInstance();
+      final prefs = await SharedPreferences.getInstance();
       final currentUser = prefs.getString('user_id');
-      print(
-        '👤 TOKEN_REFRESH DEBUG: Current authenticated user: ${currentUser}',
-      );
+      print('👤 TOKEN_REFRESH DEBUG: Current authenticated user: $currentUser');
 
       if (currentUser != null && currentUser == userId) {
         print(

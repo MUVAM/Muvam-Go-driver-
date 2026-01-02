@@ -504,8 +504,6 @@ import '../widgets/call_button.dart';
 //   }
 // }
 
-
-
 class CallScreen extends StatefulWidget {
   final String driverName;
   final int rideId;
@@ -572,21 +570,18 @@ class _CallScreenState extends State<CallScreen> with WidgetsBindingObserver {
     super.didChangeAppLifecycleState(state);
     AppLogger.log('📱 App lifecycle state changed: $state', tag: 'CALL_SCREEN');
 
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.detached) {
+    // Don't end call when app goes to background - allow call to continue
+    // Audio will keep running through Agora even when app is backgrounded
+    if (state == AppLifecycleState.paused) {
       AppLogger.log(
-        '⚠️⚠️⚠️ APP GOING TO BACKGROUND/CLOSING ⚠️⚠️⚠️',
+        '⚠️ APP GOING TO BACKGROUND - Call will continue',
         tag: 'CALL_SCREEN',
       );
-      // We might not want to end call on background for Agora (audio continues).
-      // But keeping logic consistent with previous behavior:
-
-      // _endCallProperly();
-      // User might want to keep call alive in background?
-      // Usually audio calls should persist.
-      // Previous logic ended it. I will keep it commented out or respect previous logic if critical.
-      // Previous logic: _endCallProperly();
-      // I will leave it as is if it was ending call.
+      // DO NOT end call on background - user might be multitasking
+      // _endCallProperly(); // REMOVED - This was causing calls to end
+    } else if (state == AppLifecycleState.detached) {
+      AppLogger.log('⚠️ APP BEING CLOSED - Ending call', tag: 'CALL_SCREEN');
+      // Only end call when app is actually being closed/killed
       _endCallProperly();
     }
   }

@@ -16,7 +16,6 @@ import 'package:muvam_rider/core/services/call_service.dart';
 import 'package:muvam_rider/core/services/location_service.dart';
 import 'package:muvam_rider/core/services/ride_tracking_service.dart';
 import 'package:muvam_rider/core/services/unifiedNotifiationService.dart';
-import 'package:muvam_rider/core/services/unifiedNotifiationService.dart';
 import 'package:muvam_rider/core/services/websocket_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
@@ -398,6 +397,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 final passengerImage =
                     passenger['profile_image'] ?? passenger['image'];
                 final passengerId = passenger['ID'] ?? 1;
+                final passengerPhone =
+                    passenger['phone'] ?? ''; // Extract phone
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -406,11 +407,12 @@ class _HomeScreenState extends State<HomeScreen> {
                       rideId: rideId,
                       driverName: passengerName,
                       driverImage: passengerImage,
+                      driverPhone: passengerPhone, // Pass phone
                     ),
                   ),
                 );
               } else {
-                // Fallback if no active ride
+                // Fallback if no active ride (phone not available in this case)
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -419,6 +421,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       driverId: senderId,
                       driverName: senderName,
                       driverImage: senderImage,
+                      driverPhone: null, // Phone not available in fallback
                     ),
                   ),
                 );
@@ -2686,6 +2689,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final passengerFirstName = passenger['first_name'] ?? 'Unknown';
     final passengerLastName = passenger['last_name'] ?? '';
     final passengerID = passenger['ID'] ?? 1;
+    final passengerPhone = passenger['phone'] ?? ''; // Extract phone number
 
     final passengerName = '$passengerFirstName $passengerLastName'.trim();
     final passengerImage =
@@ -3038,6 +3042,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 driverImage: passengerImage.isNotEmpty
                                     ? passengerImage
                                     : null,
+                                driverPhone:
+                                    passengerPhone, // Pass phone number
                               ),
                             ),
                           );
@@ -4960,6 +4966,8 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
     final waitFee = widget.acceptedData['wait_fee'] ?? 0;
     final passengerName =
         '${passenger['first_name'] ?? 'Unknown'} ${passenger['last_name'] ?? 'Passenger'}';
+          final passengerPhone =
+        passenger['phone'] ?? '';
     final String passengerID = (passenger['ID'] ?? 1).toString();
 
     return Container(
@@ -4989,6 +4997,8 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
               waitFee,
               passengerID,
               passengerName,
+              passengerPhone
+
             ),
           if (_rideStatus == 'started')
             Column(
@@ -5540,6 +5550,8 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
     final passengerFirstName = passenger['first_name'] ?? 'Unknown';
     final passengerLastName = passenger['last_name'] ?? '';
     final passengerName = '$passengerFirstName $passengerLastName'.trim();
+        final passengerPhone = passenger["phone"]??'';
+
     final note = ride['Note'] ?? '';
     final stopAddress = ride['StopAddress'];
     final hasStop = stopAddress != null && stopAddress.toString().isNotEmpty;
@@ -6132,6 +6144,7 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
     int waitFee,
     String passengerID,
     String passengerName,
+    String passengerPhone, // Add phone parameter
   ) {
     return Column(
       children: [
@@ -6247,6 +6260,7 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
                           driverName: passengerName,
                           driverId: passengerID,
                           rideId: widget.ride['ID'],
+                          driverPhone: passengerPhone, // Pass phone number
                         ),
                       ),
                     );

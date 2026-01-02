@@ -27,12 +27,15 @@ class ChatScreen extends StatefulWidget {
   final String driverName;
   final String? driverImage;
   final String driverId;
+  final String? driverPhone; // Add phone number parameter
+
   const ChatScreen({
     super.key,
     required this.rideId,
     required this.driverName,
     this.driverImage,
     required this.driverId,
+    this.driverPhone, // Add phone parameter
   });
 
   @override
@@ -45,6 +48,7 @@ class _ChatScreenState extends State<ChatScreen> {
   bool isConnected = false;
   String? currentUserId;
   bool _userIdLoaded = false;
+  bool _isSending = false; // Flag to prevent multiple sends
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _messageController = TextEditingController();
 
@@ -307,6 +311,13 @@ class _ChatScreenState extends State<ChatScreen> {
     print('   SEND MESSAGE INITIATED');
     print('   ═══════════════════════════════════════');
 
+    // Prevent multiple sends
+    if (_isSending) {
+      print('   ⏸️ Already sending a message, ignoring');
+      print('');
+      return;
+    }
+
     if (!_userIdLoaded) {
       print('   ❌ User ID not loaded');
       print('');
@@ -329,6 +340,15 @@ class _ChatScreenState extends State<ChatScreen> {
       print('');
       return;
     }
+
+    // Set sending flag and clear text field immediately for better UX
+    setState(() {
+      _isSending = true;
+    });
+
+    // Clear the text field immediately after capturing the message
+    _messageController.clear();
+    print('   🔄 Input field cleared');
 
     try {
       print('   📝 Message: "$text"');
@@ -370,20 +390,16 @@ class _ChatScreenState extends State<ChatScreen> {
         //   rideId: widget.rideId.toString(),
         // );
         await UnifiedNotificationService.sendChatNotification(
-          receiverId: widget.driverId!,
+          receiverId: widget.driverId,
           senderName: userName,
           messageText: text,
           chatRoomId: widget.rideId.toString(),
         );
 
-        print('   ⚠️ FCM: Driver ID needed to send notification');
+        print('   ✅ FCM notification sent');
       } catch (e) {
         print('   ❌ FCM notification error: $e');
       }
-
-      print('   🔄 Clearing input field');
-
-      _messageController.clear();
 
       print('   ⏳ Waiting for server response...');
       print('   ═══════════════════════════════════════');
@@ -397,6 +413,14 @@ class _ChatScreenState extends State<ChatScreen> {
         context: context,
         message: 'Failed to send message',
       );
+    } finally {
+      // Reset sending flag
+      if (mounted) {
+        setState(() {
+          _isSending = false;
+        });
+      }
+      print('   ✅ Send operation completed');
     }
   }
 
@@ -704,20 +728,35 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                   SizedBox(width: 10.w),
                   GestureDetector(
-                    onTap: isConnected && _userIdLoaded ? _sendMessage : null,
+                    onTap: isConnected && _userIdLoaded && !_isSending
+                        ? _sendMessage
+                        : null,
                     child: Opacity(
-                      opacity: isConnected && _userIdLoaded ? 1.0 : 0.4,
+                      opacity: isConnected && _userIdLoaded && !_isSending
+                          ? 1.0
+                          : 0.4,
                       child: Container(
                         width: 21.w,
                         height: 21.h,
                         margin: EdgeInsets.only(
                           bottom: 15.h,
                         ), // Align with text baseline
-                        child: Icon(
-                          Icons.send,
-                          size: 21.sp,
-                          color: Colors.black,
-                        ),
+                        child: _isSending
+                            ? SizedBox(
+                                width: 21.sp,
+                                height: 21.sp,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.black,
+                                  ),
+                                ),
+                              )
+                            : Icon(
+                                Icons.send,
+                                size: 21.sp,
+                                color: Colors.black,
+                              ),
                       ),
                     ),
                   ),
