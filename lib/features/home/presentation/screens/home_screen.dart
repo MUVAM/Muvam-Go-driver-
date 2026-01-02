@@ -13,9 +13,10 @@ import 'package:muvam_rider/core/constants/theme_manager.dart';
 import 'package:muvam_rider/core/constants/url_constants.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
 import 'package:muvam_rider/core/services/call_service.dart';
-import 'package:muvam_rider/core/services/fcm_provider.dart';
 import 'package:muvam_rider/core/services/location_service.dart';
 import 'package:muvam_rider/core/services/ride_tracking_service.dart';
+import 'package:muvam_rider/core/services/unifiedNotifiationService.dart';
+import 'package:muvam_rider/core/services/unifiedNotifiationService.dart';
 import 'package:muvam_rider/core/services/websocket_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
@@ -396,8 +397,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     '${passenger['first_name'] ?? 'Unknown'} ${passenger['last_name'] ?? 'Passenger'}';
                 final passengerImage =
                     passenger['profile_image'] ?? passenger['image'];
-final passengerId =
-                    passenger['ID'] ?? 1;
+                final passengerId = passenger['ID'] ?? 1;
                 Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -416,7 +416,7 @@ final passengerId =
                   MaterialPageRoute(
                     builder: (context) => ChatScreen(
                       rideId: rideId,
-                      driverId:senderId,
+                      driverId: senderId,
                       driverName: senderName,
                       driverImage: senderImage,
                     ),
@@ -534,6 +534,18 @@ final passengerId =
 
     if (token != null) {
       final result = await ApiService.getNearbyRides(token);
+
+      // Check for invalid token error
+      if (result['success'] == false) {
+        final errorMessage = result['message']?.toString().toLowerCase() ?? '';
+        if (errorMessage.contains('invalid token') ||
+            errorMessage.contains('token')) {
+          AppLogger.log('🔒 Invalid token detected, logging out...');
+          await _handleInvalidToken();
+          return;
+        }
+      }
+
       if (result['success'] == true) {
         final rideRequests = List<Map<String, dynamic>>.from(result['data']);
         final transformedRides = rideRequests.map((request) {
@@ -565,6 +577,50 @@ final passengerId =
     }
   }
 
+  /// Handles invalid token by logging out and navigating to login screen
+  Future<void> _handleInvalidToken() async {
+    try {
+      AppLogger.log('🚪 Handling invalid token - logging out user');
+
+      // Cancel all timers
+      _rideCheckTimer?.cancel();
+      _sessionCheckTimer?.cancel();
+      _locationUpdateTimer?.cancel();
+
+      // Disconnect WebSocket
+      _webSocketService.disconnect();
+
+      // Clear all stored data
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+
+      AppLogger.log('✅ User data cleared');
+
+      // Show message to user
+      if (mounted) {
+        CustomFlushbar.showError(
+          context: context,
+          message: 'Session expired. Please login again.',
+        );
+
+        // Navigate to login screen
+        await Future.delayed(Duration(seconds: 1));
+
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RiderSignupSelectionScreen(),
+            ),
+            (route) => false,
+          );
+        }
+      }
+    } catch (e) {
+      AppLogger.log('❌ Error handling invalid token: $e');
+    }
+  }
+
   // _updateDriverLocation method removed - will be added back later
 
   Future<void> _acceptRide() async {
@@ -581,6 +637,9 @@ final passengerId =
 
     if (token != null) {
       final result = await ApiService.acceptRide(token, rideId);
+
+      print('ACCEPT RIDE RESPONSE: $result');
+
       AppLogger.log('ACCEPT RIDE RESPONSE: $result');
       if (result['success'] == true) {
         if (mounted) {
@@ -589,6 +648,7 @@ final passengerId =
             _nearbyRides.clear();
           });
         }
+
         // Transform WebSocket data to expected format for ride sheet
         final transformedRide = {
           'ID': rideId,
@@ -618,6 +678,30 @@ final passengerId =
           'data': rideData,
         };
 
+        // Get passenger ID for notification
+        final passengerId =
+            transformedRide['Passenger']['ID']?.toString() ??
+            rideData['Passenger']?['ID']?.toString() ??
+            rideData['PassengerID']?.toString();
+
+        // Send notification to passenger about ride acceptance
+        if (passengerId != null) {
+          try {
+            await UnifiedNotificationService.sendRideNotification(
+              receiverId: passengerId,
+              senderName: "Driver",
+              messageText: "A Driver Has Accepted Your Ride And is On The Way",
+              chatRoomId: rideId.toString(),
+            );
+            AppLogger.log(
+              '✅ Ride accepted notification sent to passenger $passengerId',
+            );
+          } catch (e) {
+            AppLogger.log('❌ Failed to send ride accepted notification: $e');
+          }
+        }
+
+        print("PASSENGER ID ${transformedRide['Passenger']['ID']}");
         AppLogger.log('🔄 TRANSFORMED RIDE DATA:');
         AppLogger.log('   Transformed keys: ${transformedRide.keys.toList()}');
         AppLogger.log(
@@ -2601,7 +2685,7 @@ final passengerId =
     final passenger = ride['Passenger'] ?? {};
     final passengerFirstName = passenger['first_name'] ?? 'Unknown';
     final passengerLastName = passenger['last_name'] ?? '';
-        final passengerID = passenger['ID'] ?? 1;
+    final passengerID = passenger['ID'] ?? 1;
 
     final passengerName = '$passengerFirstName $passengerLastName'.trim();
     final passengerImage =
@@ -4876,7 +4960,7 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
     final waitFee = widget.acceptedData['wait_fee'] ?? 0;
     final passengerName =
         '${passenger['first_name'] ?? 'Unknown'} ${passenger['last_name'] ?? 'Passenger'}';
-    final passengerID = passenger['ID'] ?? '1';
+    final String passengerID = (passenger['ID'] ?? 1).toString();
 
     return Container(
       padding: EdgeInsets.all(20.w),
@@ -4899,7 +4983,13 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
           if (_rideStatus == 'completed')
             _buildCompletedContent(passengerName)
           else
-            _buildActiveRideContent(passenger, tip, waitFee,passengerID, passengerName),
+            _buildActiveRideContent(
+              passenger,
+              tip,
+              waitFee,
+              passengerID,
+              passengerName,
+            ),
           if (_rideStatus == 'started')
             Column(
               children: [
@@ -5009,7 +5099,7 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
                               if (_rideStatus == 'arrived') {
                                 _startRide();
                               } else {
-                                _markAsArrived();
+                                _markAsArrived(int.parse(passengerID));
                               }
                             } else {
                               setState(() {
@@ -5091,7 +5181,7 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
     );
   }
 
-  Future<void> _markAsArrived() async {
+  Future<void> _markAsArrived(int ID) async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
 
@@ -5105,6 +5195,19 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
           _showGreenSlider = true;
           _sliderValue = 1.0;
         });
+
+        // Send notification to passenger about driver arrival
+        try {
+          await UnifiedNotificationService.sendRideNotification(
+            receiverId: ID.toString(),
+            senderName: "Driver",
+            messageText: "Your Driver Has Arrived at Pickup Location",
+            chatRoomId: widget.ride['ID'].toString(),
+          );
+          AppLogger.log('✅ Driver arrived notification sent to passenger $ID');
+        } catch (e) {
+          AppLogger.log('❌ Failed to send driver arrived notification: $e');
+        }
 
         await Future.delayed(Duration(milliseconds: 800));
 
@@ -5174,6 +5277,24 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
           _sliderValue = 1.0;
         });
 
+        // Send notification to passenger about ride start
+        final passengerId = widget.ride['Passenger']?['ID']?.toString();
+        if (passengerId != null) {
+          try {
+            await UnifiedNotificationService.sendRideNotification(
+              receiverId: passengerId,
+              senderName: "Driver",
+              messageText: "Your Ride Has Started",
+              chatRoomId: widget.ride['ID'].toString(),
+            );
+            AppLogger.log(
+              '✅ Ride started notification sent to passenger $passengerId',
+            );
+          } catch (e) {
+            AppLogger.log('❌ Failed to send ride started notification: $e');
+          }
+        }
+
         await Future.delayed(Duration(milliseconds: 800));
 
         if (mounted) {
@@ -5215,6 +5336,24 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
         setState(() {
           _sliderValue = 1.0;
         });
+
+        // Send notification to passenger about ride completion
+        final passengerId = widget.ride['Passenger']?['ID']?.toString();
+        if (passengerId != null) {
+          try {
+            await UnifiedNotificationService.sendRideNotification(
+              receiverId: passengerId,
+              senderName: "Driver",
+              messageText: "Your Ride Has Been Completed",
+              chatRoomId: widget.ride['ID'].toString(),
+            );
+            AppLogger.log(
+              '✅ Ride completed notification sent to passenger $passengerId',
+            );
+          } catch (e) {
+            AppLogger.log('❌ Failed to send ride completed notification: $e');
+          }
+        }
 
         await Future.delayed(Duration(milliseconds: 500));
 

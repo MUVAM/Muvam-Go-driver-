@@ -7,9 +7,6 @@ import 'package:googleapis_auth/auth_io.dart' as auth;
 import 'package:http/http.dart' as http;
 import 'package:muvam_rider/core/services/fcmTokenService.dart';
 import 'package:muvam_rider/core/services/firebase_config_service.dart';
-// import 'package:muvam/core/services/fcmTokenService.dart';
-// import 'package:muvam/core/services/firebase_config_service.dart';
-// import 'package:muvam_rider/core/services/fcmTokenService.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vibration/vibration.dart';
 // import 'package:workpal/services/fcmTokenService.dart';
@@ -85,7 +82,7 @@ class EnhancedNotificationService {
       print('✅ FCM DEBUG: Access token obtained successfully');
 
       String endpointFirebasecloudMessaging =
-          'https://fcm.googleapis.com/v1/projects/nriigbo-a9e30/messages:send';
+          'https://fcm.googleapis.com/v1/projects/muvam-go/messages:send';
       print('🎯 FCM DEBUG: FCM endpoint: $endpointFirebasecloudMessaging');
 
       final Map<String, dynamic> message = {
@@ -853,7 +850,7 @@ class EnhancedNotificationService {
       // Check if this user is currently authenticated
       // final currentUser = FirebaseAuth.instance.currentUser;
 
-      final prefs = await SharedPreferences.getInstance();
+       final prefs = await SharedPreferences.getInstance();
       final currentUser = prefs.getString('user_id');
       print(
         '👤 TOKEN_REFRESH DEBUG: Current authenticated user: ${currentUser}',

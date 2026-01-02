@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:http/http.dart' as http;
+import 'package:muvam_rider/core/services/unifiedNotifiationService.dart';
 import 'package:muvam_rider/core/services/websocket_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -430,9 +431,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 //   }
 // }
 
-
-
-
 // import 'dart:async';
 // import 'dart:convert';
 
@@ -743,6 +741,27 @@ class CallService {
 
         playRingtone();
 
+        // Send push notification to passenger about incoming call
+        try {
+          final recipientIdStr =
+              _recipientId?.toString() ?? data['recipient_id']?.toString();
+          if (recipientIdStr != null) {
+            await UnifiedNotificationService.sendCallNotification(
+              receiverId: recipientIdStr,
+              callerName: "Driver",
+              rideId: rideId,
+              sessionId: _currentSessionId!,
+              callerImage: null,
+            );
+            AppLogger.log(
+              '✅ Call notification sent to passenger $recipientIdStr',
+              tag: 'CALL',
+            );
+          }
+        } catch (e) {
+          AppLogger.log('❌ Failed to send call notification: $e', tag: 'CALL');
+        }
+
         // Join Agora Immediately after success API?
         // Usually, initiator waits for ANSWER to join? Or joins immediately?
         // Standard flow: Both join.
@@ -884,4 +903,3 @@ class CallService {
     _webSocketService?.removeIncomingCallListener(_handleWebSocketMessage);
   }
 }
-

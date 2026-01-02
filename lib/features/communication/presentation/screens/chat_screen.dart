@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:googleapis_auth/auth_io.dart' as auth;
+import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
@@ -17,8 +19,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../widgets/chat_bubble.dart';
 import 'call_screen.dart';
-import 'package:googleapis_auth/auth_io.dart' as auth;
-import 'package:http/http.dart' as http;
+
 // //FOR DRIVER
 // ChatScreen using Pure Native WebSocket (No packages)
 class ChatScreen extends StatefulWidget {
@@ -31,7 +32,7 @@ class ChatScreen extends StatefulWidget {
     required this.rideId,
     required this.driverName,
     this.driverImage,
-    required this.driverId
+    required this.driverId,
   });
 
   @override
@@ -75,6 +76,7 @@ class _ChatScreenState extends State<ChatScreen> {
       final userId = prefs.getString('user_id');
 
       print('🔑 User ID: $userId');
+      print('🔑 Passenger ID: ${widget.driverId}');
 
       if (mounted) {
         setState(() {
@@ -275,7 +277,7 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-Future<String> getAccessToken() async {
+  Future<String> getAccessToken() async {
     final serviceAccountJson =
         await FirebaseConfigService.getServiceAccountConfig();
     List<String> scopes = [
@@ -298,6 +300,7 @@ Future<String> getAccessToken() async {
     client.close();
     return credentials.accessToken.data;
   }
+
   void _sendMessage() async {
     print('');
     print('🚀 ═══════════════════════════════════════');
@@ -366,13 +369,12 @@ Future<String> getAccessToken() async {
         //   message: text,
         //   rideId: widget.rideId.toString(),
         // );
-await UnifiedNotificationService.sendChatNotification(
-            receiverId: widget.driverId!,
-            senderName: userName,
-            messageText: text,
-            chatRoomId: widget.rideId.toString(),
-          );
-
+        await UnifiedNotificationService.sendChatNotification(
+          receiverId: widget.driverId!,
+          senderName: userName,
+          messageText: text,
+          chatRoomId: widget.rideId.toString(),
+        );
 
         print('   ⚠️ FCM: Driver ID needed to send notification');
       } catch (e) {
