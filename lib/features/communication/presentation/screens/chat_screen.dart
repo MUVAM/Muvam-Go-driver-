@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/services/firebase_config_service.dart';
-import 'package:muvam_rider/core/services/unifiedNotifiationService.dart';
+import 'package:muvam_rider/core/services/unified_notifiation_service.dart';
 import 'package:muvam_rider/core/services/websocket_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';

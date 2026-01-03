@@ -8,7 +8,7 @@ import 'package:muvam_rider/core/constants/theme_manager.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:provider/provider.dart';
-import 'otp_screen.dart';
+import '../../../features/auth/presentation/screens/otp_screen.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final String? serviceType;

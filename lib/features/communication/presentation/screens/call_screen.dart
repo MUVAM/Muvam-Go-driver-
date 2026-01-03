@@ -4,7 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/services/call_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
-import 'package:muvam_rider/core/services/global_incoming_call.dart';
+import 'package:muvam_rider/core/services/global_call_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import '../widgets/call_button.dart';

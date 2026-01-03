@@ -4,7 +4,7 @@ import 'package:agora_rtc_engine/agora_rtc_engine.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
-import 'package:muvam_rider/core/services/unifiedNotifiationService.dart';
+import 'package:muvam_rider/core/services/unified_notifiation_service.dart';
 import 'package:muvam_rider/core/services/websocket_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
