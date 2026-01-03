@@ -292,20 +292,20 @@ class _ReferralScreenState extends State<ReferralScreen> {
                     ),
                   ),
                   Spacer(),
-                  Container(
-                    width: 353.w,
-                    height: 47.h,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    child: GestureDetector(
-                      onTap: () {
-                        if (!referralProvider.isLoading &&
-                            referralProvider.referralData != null) {
-                          referralProvider.shareReferralCode();
-                        }
-                      },
+                  GestureDetector(
+                    onTap: () {
+                      if (!referralProvider.isLoading &&
+                          referralProvider.referralData != null) {
+                        referralProvider.shareReferralCode();
+                      }
+                    },
+                    child: Container(
+                      width: 353.w,
+                      height: 47.h,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
                       child: Center(
                         child: Text(
                           'Share link',

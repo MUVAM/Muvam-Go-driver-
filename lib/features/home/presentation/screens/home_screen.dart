@@ -890,6 +890,15 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  int get _activeRequestsCount {
+    final requestProvider = context.watch<RequestProvider>();
+
+    final activeCount = requestProvider.activeRides.length;
+    final prebookedCount = requestProvider.prebookedRides.length;
+
+    return activeCount + prebookedCount;
+  }
+
   void _centerMapOnActiveRide() {
     if (_activeRide == null || _mapController == null) {
       AppLogger.log(
@@ -979,34 +988,49 @@ class _HomeScreenState extends State<HomeScreen> {
           items: [
             BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
             BottomNavigationBarItem(
-              icon: Stack(
-                children: [
-                  Image.asset(
-                    ConstImages.requests,
-                    width: 24.w,
-                    height: 24.h,
-                    color: _currentIndex == 1
-                        ? Color(ConstColors.mainColor)
-                        : Colors.grey,
-                  ),
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Container(
-                      padding: EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(10),
+              icon: Consumer<RequestProvider>(
+                builder: (context, requestProvider, child) {
+                  final count =
+                      requestProvider.activeRides.length +
+                      requestProvider.prebookedRides.length;
+
+                  return Stack(
+                    children: [
+                      Image.asset(
+                        ConstImages.requests,
+                        width: 24.w,
+                        height: 24.h,
+                        color: _currentIndex == 1
+                            ? Color(ConstColors.mainColor)
+                            : Colors.grey,
                       ),
-                      constraints: BoxConstraints(minWidth: 16, minHeight: 16),
-                      child: Text(
-                        '3',
-                        style: TextStyle(color: Colors.white, fontSize: 10),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                ],
+                      if (count > 0)
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: Container(
+                            padding: EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            constraints: BoxConstraints(
+                              minWidth: 16,
+                              minHeight: 16,
+                            ),
+                            child: Text(
+                              '$count',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
               ),
               label: 'Requests',
             ),

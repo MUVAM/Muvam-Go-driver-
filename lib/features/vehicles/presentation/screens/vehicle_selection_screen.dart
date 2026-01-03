@@ -28,7 +28,7 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
   Future<void> _loadVehicles() async {
     final prefs = await SharedPreferences.getInstance();
 
-          final token = prefs.getString('auth_token');
+    final token = prefs.getString('auth_token');
     // final token = await TokenManager.getToken();
     if (token == null) return;
 
@@ -39,7 +39,8 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
         vehicles = vehicleResponse.vehicles;
         selectedVehicle = vehicles.firstWhere(
           (v) => v.isDefault,
-          orElse: () => vehicles.isNotEmpty ? vehicles.first : null as VehicleDetail,
+          orElse: () =>
+              vehicles.isNotEmpty ? vehicles.first : null as VehicleDetail,
         );
         isLoading = false;
       });
@@ -64,8 +65,9 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                     onTap: () => Navigator.pop(context),
                     child: Image.asset(
                       ConstImages.back,
-                      width: 24.w,
-                      height: 24.h,
+                      width: 30.w,
+                      height: 30.h,
+                      fit: BoxFit.cover,
                     ),
                   ),
                   Expanded(
@@ -99,10 +101,8 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                 child: ListView.separated(
                   padding: EdgeInsets.symmetric(horizontal: 20.w),
                   itemCount: vehicles.length,
-                  separatorBuilder: (context, index) => Divider(
-                    thickness: 1,
-                    color: Colors.grey.shade300,
-                  ),
+                  separatorBuilder: (context, index) =>
+                      Divider(thickness: 1, color: Colors.grey.shade300),
                   itemBuilder: (context, index) {
                     final vehicle = vehicles[index];
                     final isSelected = selectedVehicle?.id == vehicle.id;
@@ -124,11 +124,11 @@ class _VehicleSelectionScreenState extends State<VehicleSelectionScreen> {
                                       fit: BoxFit.cover,
                                       errorBuilder: (context, error, stack) =>
                                           Container(
-                                        width: 60.w,
-                                        height: 60.h,
-                                        color: Colors.grey.shade300,
-                                        child: Icon(Icons.directions_car),
-                                      ),
+                                            width: 60.w,
+                                            height: 60.h,
+                                            color: Colors.grey.shade300,
+                                            child: Icon(Icons.directions_car),
+                                          ),
                                     )
                                   : Container(
                                       width: 60.w,

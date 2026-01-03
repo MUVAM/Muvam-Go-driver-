@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
-import 'package:muvam_rider/core/constants/text_styles.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
 import 'package:muvam_rider/features/earnings/presentation/screens/wallet_screen.dart';
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
@@ -13,6 +12,7 @@ import 'package:muvam_rider/features/support/presentation/screens/faq_screen.dar
 import 'package:muvam_rider/features/support/presentation/screens/about_us_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'drawer_item_widget.dart';
 
 class DriverAppDrawer extends StatefulWidget {
   final VoidCallback onContactUsTap;
@@ -51,37 +51,6 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
     });
   }
 
-  Widget _buildDrawerItem(
-    String title,
-    String iconPath, {
-    VoidCallback? onTap,
-  }) {
-    final themeManager = Provider.of<ThemeManager>(context);
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-        child: Row(
-          children: [
-            Image.asset(
-              iconPath,
-              width: 24.w,
-              height: 24.h,
-              color: themeManager.getTextColor(context),
-            ),
-            SizedBox(width: 20.w),
-            Text(
-              title,
-              style: ConstTextStyles.drawerItem.copyWith(
-                color: themeManager.getTextColor(context),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final themeManager = Provider.of<ThemeManager>(context);
@@ -93,11 +62,10 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
         color: themeManager.getCardColor(context),
         child: Column(
           children: [
-            // Close button
             Align(
               alignment: Alignment.topRight,
               child: Padding(
-                padding: EdgeInsets.only(top: 40.h, right: 0.w),
+                padding: EdgeInsets.only(top: 30.h, right: 0.w),
                 child: IconButton(
                   icon: Icon(
                     Icons.close,
@@ -108,7 +76,6 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
                 ),
               ),
             ),
-
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 10.w),
               child: Row(
@@ -146,13 +113,14 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
                           Text(
                             profileProvider.userShortName.isNotEmpty
                                 ? profileProvider.userShortName
-                                : 'John Doe',
+                                : '',
                             style: TextStyle(
                               fontFamily: 'Inter',
                               fontSize: 20.sp,
                               fontWeight: FontWeight.w600,
                               color: themeManager.getTextColor(context),
                             ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                           SizedBox(height: 4.h),
                           Row(
@@ -195,11 +163,9 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
               height: 1,
             ),
             SizedBox(height: 8.h),
-
-            // Menu Items
-            _buildDrawerItem(
-              'Wallet',
-              ConstImages.wallet,
+            DrawerItemWidget(
+              title: 'Wallet',
+              iconPath: ConstImages.wallet,
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -208,9 +174,9 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
                 );
               },
             ),
-            _buildDrawerItem(
-              'Referral',
-              ConstImages.referral,
+            DrawerItemWidget(
+              title: 'Referral',
+              iconPath: ConstImages.referral,
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -219,9 +185,9 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
                 );
               },
             ),
-            _buildDrawerItem(
-              'Analytics',
-              ConstImages.activities,
+            DrawerItemWidget(
+              title: 'Analytics',
+              iconPath: ConstImages.activities,
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -230,14 +196,14 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
                 );
               },
             ),
-            _buildDrawerItem(
-              'Contact us',
-              ConstImages.phoneCall,
+            DrawerItemWidget(
+              title: 'Contact us',
+              iconPath: ConstImages.phoneCall,
               onTap: widget.onContactUsTap,
             ),
-            _buildDrawerItem(
-              'FAQ',
-              ConstImages.faq,
+            DrawerItemWidget(
+              title: 'FAQ',
+              iconPath: ConstImages.faq,
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -246,9 +212,9 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
                 );
               },
             ),
-            _buildDrawerItem(
-              'About',
-              ConstImages.about,
+            DrawerItemWidget(
+              title: 'About',
+              iconPath: ConstImages.about,
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -257,9 +223,7 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
                 );
               },
             ),
-
-            Spacer(),
-
+            const Spacer(),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
               child: Row(
