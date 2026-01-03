@@ -2,14 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:muvam_rider/core/utils/app_logger.dart';
 
-/// Service to show chat message notifications at the top of the screen
 class ChatNotificationService {
   static OverlayEntry? _currentOverlay;
   static bool _isShowing = false;
   static final AudioPlayer _audioPlayer = AudioPlayer();
 
-  /// Show a chat message notification
   static void showChatNotification(
     BuildContext context, {
     required String senderName,
@@ -19,14 +18,12 @@ class ChatNotificationService {
     Duration duration = const Duration(seconds: 4),
     bool playSound = true,
   }) {
-    // Don't show if already showing
     if (_isShowing) {
       hide();
     }
 
     _isShowing = true;
 
-    // Play notification sound
     if (playSound) {
       _playNotificationSound();
     }
@@ -47,23 +44,20 @@ class ChatNotificationService {
 
     overlay.insert(_currentOverlay!);
 
-    // Auto-dismiss after duration
     Future.delayed(duration, () {
       hide();
     });
   }
 
-  /// Play notification sound
   static Future<void> _playNotificationSound() async {
     try {
-      await _audioPlayer.stop(); // Stop any playing sound
+      await _audioPlayer.stop();
       await _audioPlayer.play(AssetSource('sounds/messageAlert.mp3'));
     } catch (e) {
-      print('❌ Error playing notification sound: $e');
+      AppLogger.log('Error playing notification sound: $e');
     }
   }
 
-  /// Hide the current notification
   static void hide() {
     if (_currentOverlay != null) {
       _currentOverlay?.remove();
@@ -73,12 +67,8 @@ class ChatNotificationService {
   }
 }
 
-/// Extension to add message to ChatProvider from notification
 extension ChatNotificationHelper on BuildContext {
-  void addMessageFromNotification(Map<String, dynamic> messageData) {
-    // This will be called when notification arrives to ensure message is in provider
-    // Implementation will be in the HomeScreen
-  }
+  void addMessageFromNotification(Map<String, dynamic> messageData) {}
 }
 
 class _ChatNotificationWidget extends StatefulWidget {
@@ -175,12 +165,10 @@ class __ChatNotificationWidgetState extends State<_ChatNotificationWidget>
                     ),
                     child: Stack(
                       children: [
-                        // Main content
                         Padding(
                           padding: EdgeInsets.all(12.w),
                           child: Row(
                             children: [
-                              // Avatar
                               CircleAvatar(
                                 radius: 20.r,
                                 backgroundColor: Color(ConstColors.mainColor),
@@ -196,7 +184,6 @@ class __ChatNotificationWidgetState extends State<_ChatNotificationWidget>
                                     : null,
                               ),
                               SizedBox(width: 12.w),
-                              // Message content
                               Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,7 +244,6 @@ class __ChatNotificationWidgetState extends State<_ChatNotificationWidget>
                                 ),
                               ),
                               SizedBox(width: 8.w),
-                              // Chat icon
                               Icon(
                                 Icons.chat_bubble,
                                 color: Color(ConstColors.mainColor),
@@ -266,7 +252,6 @@ class __ChatNotificationWidgetState extends State<_ChatNotificationWidget>
                             ],
                           ),
                         ),
-                        // Close button
                         Positioned(
                           top: 4.h,
                           right: 4.w,

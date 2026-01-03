@@ -26,51 +26,57 @@ class RideTrackingService {
       return null;
     }
 
-    AppLogger.log('🔍 Parsing WKB: $wkbHex (length: ${wkbHex.length})');
+    AppLogger.log('Parsing WKB: $wkbHex (length: ${wkbHex.length})');
 
     try {
       final coordinates = WKBDecoder.decodePoint(wkbHex);
-      AppLogger.log('🔍 WKB decoder result: $coordinates');
-      
+      AppLogger.log('WKB decoder result: $coordinates');
+
       if (coordinates != null) {
         final rawLat = coordinates['latitude']!;
         final rawLng = coordinates['longitude']!;
-        AppLogger.log('🔍 WKB raw decoded: lat=$rawLat, lng=$rawLng');
-        
+        AppLogger.log('WKB raw decoded: lat=$rawLat, lng=$rawLng');
+
         // For Nigeria (Enugu/Nsukka area):
         // Latitude should be around 6.8-7.4 (North)
         // Longitude should be around 7.0-7.5 (East)
-        
+
         double finalLat, finalLng;
-        
+
         // If rawLat is around 7+ and rawLng is around 6-7, they're swapped
         if (rawLat > 7.0 && rawLng >= 6.0 && rawLng <= 7.5) {
-          AppLogger.log('🔄 Coordinates swapped detected (Nigeria region), correcting');
-          finalLat = rawLng;  // Use longitude as latitude
-          finalLng = rawLat;  // Use latitude as longitude
+          AppLogger.log(
+            'Coordinates swapped detected (Nigeria region), correcting',
+          );
+          finalLat = rawLng; // Use longitude as latitude
+          finalLng = rawLat; // Use latitude as longitude
         } else {
           finalLat = rawLat;
           finalLng = rawLng;
         }
-        
-        AppLogger.log('✅ Final coordinates: lat=$finalLat, lng=$finalLng');
-        AppLogger.log('🌍 Location check: ${_getLocationDescription(finalLat, finalLng)}');
-        
+
+        AppLogger.log('Final coordinates: lat=$finalLat, lng=$finalLng');
+        AppLogger.log(
+          'Location check: ${_getLocationDescription(finalLat, finalLng)}',
+        );
+
         return LatLng(finalLat, finalLng);
       } else {
-        AppLogger.log('❌ Failed to decode WKB coordinates - decoder returned null');
+        AppLogger.log(
+          'Failed to decode WKB coordinates - decoder returned null',
+        );
         return null;
       }
     } catch (e) {
-      AppLogger.log('❌ Error parsing WKB: $e');
+      AppLogger.log('Error parsing WKB: $e');
       return null;
     }
   }
-  
+
   // Helper to describe location for debugging
   static String _getLocationDescription(double lat, double lng) {
     if (lat >= 6.0 && lat <= 8.0 && lng >= 6.5 && lng <= 8.0) {
-      return 'Nigeria (Enugu/Nsukka region) ✅';
+      return 'Nigeria (Enugu/Nsukka region)';
     } else if (lat >= 6.0 && lat <= 7.0 && lng >= 3.0 && lng <= 4.0) {
       return 'Nigeria (Lagos region)';
     } else {
@@ -79,7 +85,11 @@ class RideTrackingService {
   }
 
   // Parse lat/lng from separate fields with validation
-  static LatLng _parseLatLngFromFields(Map<String, dynamic> data, String latKey, String lngKey) {
+  static LatLng _parseLatLngFromFields(
+    Map<String, dynamic> data,
+    String latKey,
+    String lngKey,
+  ) {
     final lat = double.tryParse(data[latKey]?.toString() ?? '0') ?? 0.0;
     final lng = double.tryParse(data[lngKey]?.toString() ?? '0') ?? 0.0;
     return LatLng(lat, lng);
@@ -87,9 +97,9 @@ class RideTrackingService {
 
   // Extract location from different data formats
   static LatLng _extractLocation(Map<String, dynamic> data, String type) {
-    AppLogger.log('🔍 EXTRACTING LOCATION: type=$type');
+    AppLogger.log('EXTRACTING LOCATION: type=$type');
     AppLogger.log('   Available keys: ${data.keys.toList()}');
-    
+
     if (type == 'pickup') {
       final pickupWKB = data['PickupLocation'];
       AppLogger.log('   PickupLocation WKB: $pickupWKB');
@@ -123,7 +133,7 @@ class RideTrackingService {
     if (data['PassengerName'] != null) {
       return data['PassengerName'].toString();
     }
-    
+
     // Nearby/Active rides: Passenger.first_name + Passenger.last_name
     if (data['Passenger'] != null) {
       final passenger = data['Passenger'] as Map<String, dynamic>;
@@ -131,7 +141,7 @@ class RideTrackingService {
       final lastName = passenger['last_name']?.toString() ?? '';
       return '$firstName$lastName'.trim();
     }
-    
+
     return 'Unknown Passenger';
   }
 
@@ -148,34 +158,34 @@ class RideTrackingService {
 
   // Validate if coordinates are reasonable
   static bool _isValidLocation(LatLng location) {
-    return location.latitude != 0.0 && 
-           location.longitude != 0.0 &&
-           location.latitude.abs() <= 90 &&
-           location.longitude.abs() <= 180;
+    return location.latitude != 0.0 &&
+        location.longitude != 0.0 &&
+        location.latitude.abs() <= 90 &&
+        location.longitude.abs() <= 180;
   }
 
   static void setMapController(GoogleMapController controller) {
     _mapController = controller;
-    AppLogger.log('🗺️ Map controller set in RideTrackingService');
-    
+    AppLogger.log('Map controller set in RideTrackingService');
+
     // If there's an active ride, prioritize centering on it
     if (_currentRide != null && _markers.isNotEmpty) {
-      AppLogger.log('🎯 Active ride detected, centering on ride location');
+      AppLogger.log('Active ride detected, centering on ride location');
       // Small delay to ensure map is ready
       Future.delayed(Duration(milliseconds: 500), () {
         _centerMapOnRide();
       });
     } else {
-      AppLogger.log('📍 No active ride, centering on current location');
+      AppLogger.log('No active ride, centering on current location');
       // Center map on current location when controller is set
       _centerMapOnCurrentLocation();
     }
   }
-  
+
   // Helper method to center map on active ride
   static void _centerMapOnRide() {
     if (_mapController == null || _currentRide == null) return;
-    
+
     try {
       // Find pickup marker to center on
       Marker? pickupMarker;
@@ -186,39 +196,43 @@ class RideTrackingService {
       } catch (e) {
         pickupMarker = _markers.isNotEmpty ? _markers.first : null;
       }
-      
+
       if (pickupMarker != null) {
         _mapController!.animateCamera(
           CameraUpdate.newLatLngZoom(pickupMarker.position, 14),
         );
-        AppLogger.log('✅ Map centered on active ride pickup location');
+        AppLogger.log('Map centered on active ride pickup location');
       }
     } catch (e) {
-      AppLogger.log('❌ Error centering map on ride: $e');
+      AppLogger.log('Error centering map on ride: $e');
     }
   }
 
   // Center map on current location
   static Future<void> _centerMapOnCurrentLocation() async {
     if (_mapController == null) return;
-    
+
     try {
-      AppLogger.log('📍 Getting current location to center map');
+      AppLogger.log('Getting current location to center map');
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
-      
+
       final currentLocation = LatLng(position.latitude, position.longitude);
-      AppLogger.log('📍 Current location: ${currentLocation.latitude}, ${currentLocation.longitude}');
-      AppLogger.log('🌍 Location: ${_getLocationDescription(currentLocation.latitude, currentLocation.longitude)}');
-      
+      AppLogger.log(
+        'Current location: ${currentLocation.latitude}, ${currentLocation.longitude}',
+      );
+      AppLogger.log(
+        'Location: ${_getLocationDescription(currentLocation.latitude, currentLocation.longitude)}',
+      );
+
       await _mapController!.animateCamera(
         CameraUpdate.newLatLngZoom(currentLocation, 15),
       );
-      
-      AppLogger.log('✅ Map centered on current location');
+
+      AppLogger.log('Map centered on current location');
     } catch (e) {
-      AppLogger.log('❌ Failed to get current location: $e');
+      AppLogger.log('Failed to get current location: $e');
       // Fallback to Nigeria default if location fails
       await _mapController!.animateCamera(
         CameraUpdate.newLatLngZoom(LatLng(6.8724, 7.4077), 12),
@@ -252,26 +266,26 @@ class RideTrackingService {
     _currentRide = ride;
 
     // COMPREHENSIVE DATA LOGGING FOR ALL THREE SOURCES
-    AppLogger.log('🚨🚨🚨 COMPLETE DATA STRUCTURE ANALYSIS 🚨🚨🚨');
-    AppLogger.log('📊 FULL RIDE OBJECT: ${ride.toString()}');
-    AppLogger.log('🔑 TOP LEVEL KEYS: ${ride.keys.toList()}');
-    
+    AppLogger.log('COMPLETE DATA STRUCTURE ANALYSIS');
+    AppLogger.log('FULL RIDE OBJECT: ${ride.toString()}');
+    AppLogger.log('TOP LEVEL KEYS: ${ride.keys.toList()}');
+
     // Check if this is WebSocket/Nearby format (has 'data' field)
     if (ride['data'] != null) {
-      AppLogger.log('📡 DATA SOURCE: WebSocket/Nearby Rides (has nested data)');
+      AppLogger.log('DATA SOURCE: WebSocket/Nearby Rides (has nested data)');
       final data = ride['data'] as Map<String, dynamic>;
-      AppLogger.log('🔑 NESTED DATA KEYS: ${data.keys.toList()}');
-      AppLogger.log('📊 NESTED DATA CONTENT: ${data.toString()}');
-      
+      AppLogger.log('NESTED DATA KEYS: ${data.keys.toList()}');
+      AppLogger.log('NESTED DATA CONTENT: ${data.toString()}');
+
       // Log all possible passenger name fields
-      AppLogger.log('👤 PASSENGER FIELDS:');
+      AppLogger.log('PASSENGER FIELDS:');
       AppLogger.log('   PassengerName: ${data['PassengerName']}');
       AppLogger.log('   passenger_name: ${data['passenger_name']}');
       AppLogger.log('   name: ${data['name']}');
       AppLogger.log('   user_name: ${data['user_name']}');
-      
+
       // Log all possible location fields
-      AppLogger.log('📍 LOCATION FIELDS:');
+      AppLogger.log('LOCATION FIELDS:');
       AppLogger.log('   PickupLocation: ${data['PickupLocation']}');
       AppLogger.log('   pickup_location: ${data['pickup_location']}');
       AppLogger.log('   DestLocation: ${data['DestLocation']}');
@@ -284,27 +298,27 @@ class RideTrackingService {
       AppLogger.log('   DestLng: ${data['DestLng']}');
       AppLogger.log('   dest_lat: ${data['dest_lat']}');
       AppLogger.log('   dest_lng: ${data['dest_lng']}');
-      
+
       // Log address fields
-      AppLogger.log('🏠 ADDRESS FIELDS:');
+      AppLogger.log('ADDRESS FIELDS:');
       AppLogger.log('   PickupAddress: ${data['PickupAddress']}');
       AppLogger.log('   pickup_address: ${data['pickup_address']}');
       AppLogger.log('   DestAddress: ${data['DestAddress']}');
       AppLogger.log('   dest_address: ${data['dest_address']}');
     } else {
-      AppLogger.log('🗂️ DATA SOURCE: Active Rides API (direct structure)');
-      
+      AppLogger.log('DATA SOURCE: Active Rides API (direct structure)');
+
       // Log all possible passenger name fields
-      AppLogger.log('👤 PASSENGER FIELDS:');
+      AppLogger.log('PASSENGER FIELDS:');
       AppLogger.log('   PassengerName: ${ride['PassengerName']}');
       AppLogger.log('   passenger_name: ${ride['passenger_name']}');
       AppLogger.log('   name: ${ride['name']}');
       AppLogger.log('   user_name: ${ride['user_name']}');
       AppLogger.log('   User: ${ride['User']}');
       AppLogger.log('   user: ${ride['user']}');
-      
+
       // Log all possible location fields
-      AppLogger.log('📍 LOCATION FIELDS:');
+      AppLogger.log('LOCATION FIELDS:');
       AppLogger.log('   PickupLocation: ${ride['PickupLocation']}');
       AppLogger.log('   pickup_location: ${ride['pickup_location']}');
       AppLogger.log('   DestLocation: ${ride['DestLocation']}');
@@ -317,24 +331,24 @@ class RideTrackingService {
       AppLogger.log('   DestLng: ${ride['DestLng']}');
       AppLogger.log('   dest_lat: ${ride['dest_lat']}');
       AppLogger.log('   dest_lng: ${ride['dest_lng']}');
-      
+
       // Log address fields
-      AppLogger.log('🏠 ADDRESS FIELDS:');
+      AppLogger.log('ADDRESS FIELDS:');
       AppLogger.log('   PickupAddress: ${ride['PickupAddress']}');
       AppLogger.log('   pickup_address: ${ride['pickup_address']}');
       AppLogger.log('   DestAddress: ${ride['DestAddress']}');
       AppLogger.log('   dest_address: ${ride['dest_address']}');
-      
+
       // Check for nested user object
       if (ride['User'] != null) {
-        AppLogger.log('👤 NESTED USER OBJECT: ${ride['User']}');
+        AppLogger.log('NESTED USER OBJECT: ${ride['User']}');
       }
       if (ride['user'] != null) {
-        AppLogger.log('👤 NESTED user OBJECT: ${ride['user']}');
+        AppLogger.log('NESTED user OBJECT: ${ride['user']}');
       }
     }
-    AppLogger.log('🚨🚨🚨 END DATA STRUCTURE ANALYSIS 🚨🚨🚨');
-    
+    AppLogger.log('END DATA STRUCTURE ANALYSIS');
+
     // Extract data from nested structure if it exists (WebSocket/Nearby format)
     final rideData = ride['data'] ?? ride;
 
@@ -344,22 +358,30 @@ class RideTrackingService {
 
     // Validate locations
     if (!_isValidLocation(pickupLocation)) {
-      AppLogger.log('❌ Invalid pickup location: ${pickupLocation.latitude}, ${pickupLocation.longitude}');
+      AppLogger.log(
+        'Invalid pickup location: ${pickupLocation.latitude}, ${pickupLocation.longitude}',
+      );
       return;
     }
     if (!_isValidLocation(destLocation)) {
-      AppLogger.log('❌ Invalid destination location: ${destLocation.latitude}, ${destLocation.longitude}');
+      AppLogger.log(
+        'Invalid destination location: ${destLocation.latitude}, ${destLocation.longitude}',
+      );
       return;
     }
 
     AppLogger.log(
       'Pickup: ${pickupLocation.latitude}, ${pickupLocation.longitude}',
     );
-    AppLogger.log('🌍 Pickup location: ${_getLocationDescription(pickupLocation.latitude, pickupLocation.longitude)}');
+    AppLogger.log(
+      'Pickup location: ${_getLocationDescription(pickupLocation.latitude, pickupLocation.longitude)}',
+    );
     AppLogger.log(
       'Destination: ${destLocation.latitude}, ${destLocation.longitude}',
     );
-    AppLogger.log('🌍 Destination location: ${_getLocationDescription(destLocation.latitude, destLocation.longitude)}');
+    AppLogger.log(
+      'Destination location: ${_getLocationDescription(destLocation.latitude, destLocation.longitude)}',
+    );
 
     // Add pickup marker
     _markers.add(
@@ -369,7 +391,8 @@ class RideTrackingService {
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
         infoWindow: InfoWindow(
           title: 'Pickup Location',
-          snippet: '${_extractPassengerName(rideData)} - ${_extractAddress(rideData, 'pickup')}',
+          snippet:
+              '${_extractPassengerName(rideData)} - ${_extractAddress(rideData, 'pickup')}',
         ),
       ),
     );
@@ -382,7 +405,8 @@ class RideTrackingService {
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
         infoWindow: InfoWindow(
           title: 'Destination',
-          snippet: '${_extractPassengerName(rideData)} - ${_extractAddress(rideData, 'destination')}',
+          snippet:
+              '${_extractPassengerName(rideData)} - ${_extractAddress(rideData, 'destination')}',
         ),
       ),
     );
@@ -392,9 +416,9 @@ class RideTrackingService {
       _mapController!.animateCamera(
         CameraUpdate.newLatLngZoom(pickupLocation, 14),
       );
-      AppLogger.log('✅ Map centered on pickup location during tracking start');
+      AppLogger.log('Map centered on pickup location during tracking start');
     } else {
-      AppLogger.log('⚠️ Map controller not available during tracking start');
+      AppLogger.log('Map controller not available during tracking start');
     }
 
     // Get initial driver location and draw route immediately
@@ -490,13 +514,15 @@ class RideTrackingService {
     AppLogger.log(
       'Updating driver location: ${driverLocation.latitude}, ${driverLocation.longitude}',
     );
-    AppLogger.log('🌍 Driver location check: ${_getLocationDescription(driverLocation.latitude, driverLocation.longitude)}');
-    
+    AppLogger.log(
+      'Driver location check: ${_getLocationDescription(driverLocation.latitude, driverLocation.longitude)}',
+    );
+
     // Log the ride data structure being used for updates
-    AppLogger.log('🚨🚨🚨 UPDATE DRIVER LOCATION - RIDE DATA STRUCTURE 🚨🚨🚨');
-    AppLogger.log('📊 RIDE OBJECT FOR UPDATE: ${ride.toString()}');
-    AppLogger.log('🔑 RIDE KEYS FOR UPDATE: ${ride.keys.toList()}');
-    AppLogger.log('🚨🚨🚨 END UPDATE RIDE DATA STRUCTURE 🚨🚨🚨');
+    AppLogger.log('UPDATE DRIVER LOCATION - RIDE DATA STRUCTURE');
+    AppLogger.log('RIDE OBJECT FOR UPDATE: ${ride.toString()}');
+    AppLogger.log('RIDE KEYS FOR UPDATE: ${ride.keys.toList()}');
+    AppLogger.log('END UPDATE RIDE DATA STRUCTURE');
 
     // Send location update to backend
     await _sendLocationUpdate(
@@ -533,8 +559,10 @@ class RideTrackingService {
 
     // Extract data from nested structure if it exists
     final rideData = ride['data'] ?? ride;
-    AppLogger.log('🔍 UPDATE: Using ${ride['data'] != null ? 'nested data' : 'direct ride'} structure');
-    
+    AppLogger.log(
+      'UPDATE: Using ${ride['data'] != null ? 'nested data' : 'direct ride'} structure',
+    );
+
     if (rideStatus == 'accepted' || rideStatus == 'arrived') {
       // Going to pickup location
       targetLocation = _extractLocation(rideData, 'pickup');
@@ -553,7 +581,7 @@ class RideTrackingService {
 
     // Validate target location before drawing route
     if (!_isValidLocation(targetLocation)) {
-      AppLogger.log('❌ Invalid target location, skipping route drawing');
+      AppLogger.log('Invalid target location, skipping route drawing');
       onUpdate(_markers, _polylines);
       return;
     }
@@ -562,7 +590,7 @@ class RideTrackingService {
     if (_isValidLocation(driverLocation) && _isValidLocation(targetLocation)) {
       await _drawRoute(driverLocation, targetLocation, onUpdate, routeType);
     } else {
-      AppLogger.log('❌ Skipping route drawing due to invalid coordinates');
+      AppLogger.log('Skipping route drawing due to invalid coordinates');
       onUpdate(_markers, _polylines);
     }
 
@@ -591,7 +619,7 @@ class RideTrackingService {
   ) async {
     // Validate coordinates before attempting to draw route
     if (!_isValidLocation(start) || !_isValidLocation(end)) {
-      AppLogger.log('❌ Invalid coordinates for route drawing');
+      AppLogger.log('Invalid coordinates for route drawing');
       AppLogger.log('Start: ${start.latitude}, ${start.longitude}');
       AppLogger.log('End: ${end.latitude}, ${end.longitude}');
       return;
@@ -599,7 +627,7 @@ class RideTrackingService {
 
     try {
       AppLogger.log(
-        '🗺️ Drawing route from ${start.latitude},${start.longitude} to ${end.latitude},${end.longitude}',
+        'Drawing route from ${start.latitude},${start.longitude} to ${end.latitude},${end.longitude}',
       );
 
       List<LatLng> polylineCoordinates = [];
@@ -618,13 +646,13 @@ class RideTrackingService {
           .timeout(Duration(seconds: 10));
 
       if (result.points.isNotEmpty) {
-        AppLogger.log('✅ Route API returned ${result.points.length} points');
+        AppLogger.log('Route API returned ${result.points.length} points');
         for (var point in result.points) {
           polylineCoordinates.add(LatLng(point.latitude, point.longitude));
         }
       } else {
         AppLogger.log(
-          '⚠️ Route API returned no points, error: ${result.errorMessage}',
+          'Route API returned no points, error: ${result.errorMessage}',
         );
         // Fallback to straight line if API fails
         polylineCoordinates.add(start);
@@ -634,15 +662,14 @@ class RideTrackingService {
       // Clear existing polylines
       _polylines.clear();
 
-      // Use main app color for all polylines (solid)
-      const Color mainColor = Color(0xff2A8359); // Main app color
+      const Color mainColor = Color(0xff2A8359);
 
       _polylines.add(
         Polyline(
           polylineId: PolylineId('route_$routeType'),
           points: polylineCoordinates,
           color: mainColor,
-          width: 6, // Good visibility
+          width: 6,
           patterns: [], // Solid line (no patterns)
           startCap: Cap.roundCap,
           endCap: Cap.roundCap,
@@ -651,19 +678,22 @@ class RideTrackingService {
       );
 
       AppLogger.log(
-        '✅ Polyline created with ${polylineCoordinates.length} points (${routeType})',
+        'Polyline created with ${polylineCoordinates.length} points (${routeType})',
       );
-      AppLogger.log('🔍 Polyline details: ID=${_polylines.first.polylineId.value}, Points=${_polylines.first.points.length}, Color=${_polylines.first.color}');
-      AppLogger.log('🔍 Total markers: ${_markers.length}, Total polylines: ${_polylines.length}');
+      AppLogger.log(
+        'Polyline details: ID=${_polylines.first.polylineId.value}, Points=${_polylines.first.points.length}, Color=${_polylines.first.color}',
+      );
+      AppLogger.log(
+        'Total markers: ${_markers.length}, Total polylines: ${_polylines.length}',
+      );
       onUpdate(_markers, _polylines);
     } catch (e) {
-      AppLogger.log('❌ Error drawing route: $e');
-        // Only create fallback if coordinates are valid
+      AppLogger.log('Error drawing route: $e');
       if (_isValidLocation(start) && _isValidLocation(end)) {
         List<LatLng> fallbackCoordinates = [start, end];
         _polylines.clear();
 
-        const Color mainColor = Color(0xff2A8359); // Main app color
+        const Color mainColor = Color(0xff2A8359);
 
         _polylines.add(
           Polyline(
@@ -676,8 +706,10 @@ class RideTrackingService {
             endCap: Cap.roundCap,
           ),
         );
-        AppLogger.log('⚠️ Fallback straight-line polyline created');
-        AppLogger.log('🔍 Fallback polyline: Points=${_polylines.first.points.length}, Color=${_polylines.first.color}');
+        AppLogger.log('Fallback straight-line polyline created');
+        AppLogger.log(
+          'Fallback polyline: Points=${_polylines.first.points.length}, Color=${_polylines.first.color}',
+        );
         onUpdate(_markers, _polylines);
       }
     }
@@ -768,31 +800,31 @@ class RideTrackingService {
       if (token != null) {
         // Format location as POINT(longitude latitude) for PostGIS
         final pointLocation = 'POINT($lng $lat)';
-        
+
         AppLogger.log('=== SENDING LOCATION UPDATE ===');
-        AppLogger.log('📍 Raw coordinates: lat=$lat, lng=$lng');
-        AppLogger.log('📍 POINT format: $pointLocation');
-        AppLogger.log('📍 Ride ID: $rideId');
-        AppLogger.log('📍 Token: ${token.substring(0, 20)}...');
-        
+        AppLogger.log('Raw coordinates: lat=$lat, lng=$lng');
+        AppLogger.log('POINT format: $pointLocation');
+        AppLogger.log('Ride ID: $rideId');
+        AppLogger.log('Token: ${token.substring(0, 20)}...');
+
         final result = await ApiService.updateDriverLocationWithPoint(
           token,
           rideId,
           pointLocation,
         );
-        
-        AppLogger.log('📱 API Response: $result');
-        
+
+        AppLogger.log('API Response: $result');
+
         if (result['success'] == true) {
-          AppLogger.log('✅ Location update sent successfully in POINT format');
+          AppLogger.log('Location update sent successfully in POINT format');
         } else {
-          AppLogger.log('❌ Location update failed: ${result['message']}');
+          AppLogger.log('Location update failed: ${result['message']}');
         }
       } else {
-        AppLogger.log('❌ No auth token found for location update');
+        AppLogger.log('No auth token found for location update');
       }
     } catch (e) {
-      AppLogger.log('❌ Failed to send location update: $e');
+      AppLogger.log('Failed to send location update: $e');
     }
     AppLogger.log('=== END LOCATION UPDATE ===\n');
   }
@@ -811,8 +843,8 @@ class RideTrackingService {
     _markers.clear();
     _polylines.clear();
 
-    AppLogger.log('🛑 Location tracking stopped');
-    AppLogger.log('🧹 Markers and polylines cleared');
+    AppLogger.log('Location tracking stopped');
+    AppLogger.log('Markers and polylines cleared');
     AppLogger.log('=== RIDE TRACKING STOPPED ===\n');
   }
 
@@ -841,19 +873,22 @@ class RideTrackingService {
     }
 
     AppLogger.log('=== WEBSOCKET LOCATION UPDATE ===');
-    AppLogger.log('🚨🚨🚨 WEBSOCKET LOCATION DATA STRUCTURE 🚨🚨🚨');
-    AppLogger.log('📊 FULL LOCATION OBJECT: ${locationData.toString()}');
-    AppLogger.log('🔑 LOCATION DATA KEYS: ${locationData.keys.toList()}');
-    AppLogger.log('🚨🚨🚨 END WEBSOCKET LOCATION DATA STRUCTURE 🚨🚨🚨');
+    AppLogger.log('WEBSOCKET LOCATION DATA STRUCTURE');
+    AppLogger.log('FULL LOCATION OBJECT: ${locationData.toString()}');
+    AppLogger.log('LOCATION DATA KEYS: ${locationData.keys.toList()}');
+    AppLogger.log('END WEBSOCKET LOCATION DATA STRUCTURE');
 
     try {
       // Extract WKB location data from WebSocket message
-      final wkbLocation = locationData['location'] ?? locationData['driver_location'];
+      final wkbLocation =
+          locationData['location'] ?? locationData['driver_location'];
       if (wkbLocation != null) {
         final coordinates = _parseWKBLocation(wkbLocation);
         if (coordinates != null) {
-          AppLogger.log('Decoded WebSocket location: ${coordinates.latitude}, ${coordinates.longitude}');
-          
+          AppLogger.log(
+            'Decoded WebSocket location: ${coordinates.latitude}, ${coordinates.longitude}',
+          );
+
           // Create a Position object from the decoded coordinates
           final position = Position(
             latitude: coordinates.latitude,
@@ -867,9 +902,14 @@ class RideTrackingService {
             altitudeAccuracy: 0.0,
             headingAccuracy: 0.0,
           );
-          
+
           // Update driver location using existing logic
-          _updateDriverLocation(position, _currentRide!, onUpdate, onTimeUpdate);
+          _updateDriverLocation(
+            position,
+            _currentRide!,
+            onUpdate,
+            onTimeUpdate,
+          );
         } else {
           AppLogger.log('Failed to decode WKB location from WebSocket');
         }
@@ -879,7 +919,7 @@ class RideTrackingService {
     } catch (e) {
       AppLogger.log('Error handling WebSocket location update: $e');
     }
-    
+
     AppLogger.log('=== END WEBSOCKET LOCATION UPDATE ===\n');
   }
 }

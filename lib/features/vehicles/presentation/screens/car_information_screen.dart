@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -378,13 +379,13 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
   }
 
   Future<void> _registerVehicle() async {
-    print('=== REGISTER VEHICLE DEBUG START ===');
-    print('Make: ${makeController.text}');
-    print('Model Type: ${modelTypeController.text}');
-    print('Seats: ${seatsController.text}');
-    print('Year: ${yearController.text}');
-    print('License Number: ${licenseNumberController.text}');
-    print('Vehicle Photo: ${vehiclePhoto?.path}');
+    AppLogger.log('=== REGISTER VEHICLE DEBUG START ===');
+    AppLogger.log('Make: ${makeController.text}');
+    AppLogger.log('Model Type: ${modelTypeController.text}');
+    AppLogger.log('Seats: ${seatsController.text}');
+    AppLogger.log('Year: ${yearController.text}');
+    AppLogger.log('License Number: ${licenseNumberController.text}');
+    AppLogger.log('Vehicle Photo: ${vehiclePhoto?.path}');
 
     if (makeController.text.isEmpty ||
         modelTypeController.text.isEmpty ||
@@ -396,7 +397,7 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
         registrationDoc == null ||
         insuranceDoc == null ||
         vehiclePhotos.length < 3) {
-      print('❌ Validation failed - missing fields');
+      AppLogger.log('Validation failed - missing fields');
       String message = vehiclePhotos.length < 3
           ? 'Please upload at least 3 vehicle photos'
           : 'Please fill all fields and upload all documents';
@@ -405,23 +406,23 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
       return;
     }
 
-    print('✅ All fields validated successfully');
+    AppLogger.log('All fields validated successfully');
     setState(() {
       isLoading = true;
     });
 
     try {
-      print('🔍 Getting auth token from SharedPreferences...');
+      AppLogger.log('Getting auth token from SharedPreferences...');
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
 
-      print('Token found: ${token != null}');
+      AppLogger.log('Token found: ${token != null}');
       if (token != null) {
-        print('Token preview: ${token.substring(0, 20)}...');
+        AppLogger.log('Token preview: ${token.substring(0, 20)}...');
       }
 
       if (token != null) {
-        print('📤 Calling ApiService.registerVehicle...');
+        AppLogger.log('Calling ApiService.registerVehicle...');
         final result = await ApiService.registerVehicle(
           make: makeController.text,
           modelType: modelTypeController.text,
@@ -436,28 +437,27 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
           token: token,
         );
 
-        print('📥 API Response received:');
-        print('Success: ${result['success']}');
-        print('Message: ${result['message']}');
-        print('Full result: $result');
+        AppLogger.log('API Response received:');
+        AppLogger.log('Success: ${result['success']}');
+        AppLogger.log('Message: ${result['message']}');
+        AppLogger.log('Full result: $result');
 
         if (result['success'] == true) {
-          print('✅ Vehicle registration successful - navigating to HomeScreen');
+          AppLogger.log(
+            'Vehicle registration successful - navigating to HomeScreen',
+          );
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const HomeScreen()),
           );
         } else {
-          print('❌ Vehicle registration failed: ${result['message']}');
+          AppLogger.log('Vehicle registration failed: ${result['message']}');
           String errorMessage = result['message'] ?? 'Registration failed';
 
-          // Handle authentication errors
           if (errorMessage.contains('user not found') ||
               errorMessage.contains('unauthorized')) {
             errorMessage = 'Your session has expired. Please login again.';
-            // Clear the invalid token
             await prefs.remove('auth_token');
-            // Navigate back to login screen
             Navigator.pushNamedAndRemoveUntil(
               context,
               '/login',
@@ -468,22 +468,22 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
           CustomFlushbar.showError(context: context, message: errorMessage);
         }
       } else {
-        print('❌ No auth token found');
+        AppLogger.log('No auth token found');
         CustomFlushbar.showError(
           context: context,
           message: 'Authentication token not found. Please login again.',
         );
       }
     } catch (e, stackTrace) {
-      print('❌ EXCEPTION in _registerVehicle: $e');
-      print('Stack trace: $stackTrace');
+      AppLogger.log('EXCEPTION in _registerVehicle: $e');
+      AppLogger.log('Stack trace: $stackTrace');
       CustomFlushbar.showError(context: context, message: 'Error: $e');
     } finally {
-      print('🔄 Setting isLoading to false');
+      AppLogger.log('Setting isLoading to false');
       setState(() {
         isLoading = false;
       });
-      print('=== REGISTER VEHICLE DEBUG END ===\n');
+      AppLogger.log('=== REGISTER VEHICLE DEBUG END ===\n');
     }
   }
 }

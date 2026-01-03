@@ -1,10 +1,11 @@
-class UrlConstants {
-  static const String baseUrl = "http://44.222.121.219/api/v1";
-  static const String webSocketUrl = "ws://44.222.121.219/api/v1/ws";
-  static const String wsUrl = "ws://44.222.121.219/api/v1/ws";
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-  static const String googleMapsApiKey =
-      "AIzaSyBcA7Yq13sDyx-8nrLn0y0XMjY6xVcYVlE";
+class UrlConstants {
+  static final String baseUrl = dotenv.env['API_BASE_URL'] ?? "";
+  static final String webSocketUrl = dotenv.env['WEBSOCKET_URL'] ?? "";
+  static final String wsUrl = dotenv.env['WEBSOCKET_URL'] ?? "";
+  static final String googleMapsApiKey =
+      dotenv.env['GOOGLE_MAPS_API_KEY'] ?? "";
 
   // Authentication endpoints
   static const String sendOtp = "/otp/send";

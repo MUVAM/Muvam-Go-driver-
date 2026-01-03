@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/features/analytics/data/providers/earnings_provider.dart';
+import 'package:muvam_rider/features/analytics/presentation/widgets/breakdown_item.dart';
+import 'package:muvam_rider/features/analytics/presentation/widgets/ride_item.dart';
+import 'package:muvam_rider/features/analytics/presentation/widgets/stat_card.dart';
 import 'package:muvam_rider/features/analytics/presentation/widgets/weekly_earnings_chart.dart';
 import 'package:provider/provider.dart';
 
@@ -46,7 +49,6 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
           return SafeArea(
             child: Column(
               children: [
-                // Header
                 Padding(
                   padding: EdgeInsets.symmetric(
                     horizontal: 20.w,
@@ -88,10 +90,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                     ],
                   ),
                 ),
-
                 SizedBox(height: 20.h),
-
-                // Period Tabs
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20.w),
                   child: Container(
@@ -121,10 +120,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                     ),
                   ),
                 ),
-
                 SizedBox(height: 20.h),
-
-                // Stats Grid
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20.w),
                   child: earningsProvider.isLoading
@@ -144,33 +140,34 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                           crossAxisSpacing: 15.w,
                           childAspectRatio: 170.w / 95.h,
                           children: [
-                            _buildStatCard(
-                              earningsProvider.earningsSummary?.totalRides
+                            StatCard(
+                              value:
+                                  earningsProvider.earningsSummary?.totalRides
                                       .toString() ??
                                   '0',
-                              _getPeriodLabel(),
-                              Color(0xFFF0FDF4),
-                              Color(0xFF2A8359),
+                              label: _getPeriodLabel(),
+                              bgColor: Color(0xFFF0FDF4),
+                              valueColor: Color(0xFF2A8359),
                             ),
-                            _buildStatCard(
-                              earningsProvider.formatPrice(
+                            StatCard(
+                              value: earningsProvider.formatPrice(
                                 earningsProvider
                                         .earningsSummary
                                         ?.totalEarnings ??
                                     0,
                               ),
-                              'Earnings',
-                              Color(0xFFE2EBFF),
-                              Color(0xFF2664EB),
+                              label: 'Earnings',
+                              bgColor: Color(0xFFE2EBFF),
+                              valueColor: Color(0xFF2664EB),
                             ),
-                            _buildStatCard(
-                              '4.8',
-                              'Ratings',
-                              Color(0xFFFEFBE8),
-                              Color(0xFFCA8A00),
+                            StatCard(
+                              value: '4.8',
+                              label: 'Ratings',
+                              bgColor: Color(0xFFFEFBE8),
+                              valueColor: Color(0xFFCA8A00),
                             ),
-                            _buildStatCard(
-                              earningsProvider.formatHours(
+                            StatCard(
+                              value: earningsProvider.formatHours(
                                 earningsProvider.earningsSummary?.onlineHours ??
                                     0,
                                 earningsProvider
@@ -178,17 +175,14 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                                         ?.onlineMinutes ??
                                     0,
                               ),
-                              'Hours online',
-                              Color(0xFFF1F0F2),
-                              Color(0xFF9334EA),
+                              label: 'Hours online',
+                              bgColor: Color(0xFFF1F0F2),
+                              valueColor: Color(0xFF9334EA),
                             ),
                           ],
                         ),
                 ),
-
                 SizedBox(height: 20.h),
-
-                // Main Tabs
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20.w),
                   child: Container(
@@ -212,10 +206,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                     ),
                   ),
                 ),
-
                 SizedBox(height: 20.h),
-
-                // Content Area
                 Expanded(
                   child: SingleChildScrollView(
                     padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -316,50 +307,6 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
     );
   }
 
-  Widget _buildStatCard(
-    String value,
-    String label,
-    Color bgColor,
-    Color valueColor,
-  ) {
-    return Container(
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(20.r),
-      ),
-      padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 10.h),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w600,
-              fontSize: 20.sp,
-              height: 1.0,
-              letterSpacing: -0.41,
-              color: valueColor,
-            ),
-          ),
-          SizedBox(height: 5.h),
-          Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w500,
-              fontSize: 12.sp,
-              height: 1.0,
-              letterSpacing: -0.41,
-              color: Color(0xFF5B5B5B),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildOverviewTab(EarningsProvider earningsProvider) {
     if (earningsProvider.isLoadingOverview) {
       return Container(
@@ -432,7 +379,6 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
             ],
           ),
         ),
-
         if (recentRides != null && recentRides.rides.isNotEmpty) ...[
           SizedBox(height: 20.h),
           Container(
@@ -460,10 +406,10 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                 ...recentRides.rides.take(3).map((ride) {
                   return Padding(
                     padding: EdgeInsets.only(bottom: 10.h),
-                    child: _buildRideItem(
-                      ride.destinationAddress,
-                      earningsProvider.formatDateTime(ride.createdAt),
-                      earningsProvider.formatPrice(ride.amount),
+                    child: RideItem(
+                      location: ride.destinationAddress,
+                      time: earningsProvider.formatDateTime(ride.createdAt),
+                      amount: earningsProvider.formatPrice(ride.amount),
                     ),
                   );
                 }).toList(),
@@ -471,7 +417,6 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
             ),
           ),
         ],
-
         SizedBox(height: 20.h),
       ],
     );
@@ -501,68 +446,6 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
       default:
         return 'total this week';
     }
-  }
-
-  Widget _buildRideItem(String location, String time, String amount) {
-    return Container(
-      width: double.infinity,
-      height: 60.h,
-      decoration: BoxDecoration(
-        color: Color(0xFFF7F9F8),
-        borderRadius: BorderRadius.circular(8.r),
-      ),
-      padding: EdgeInsets.symmetric(horizontal: 15.w),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  location,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
-                    fontSize: 16.sp,
-                    height: 20 / 16,
-                    letterSpacing: -0.08,
-                    color: Colors.black,
-                  ),
-                ),
-                SizedBox(height: 2.h),
-                Text(
-                  time,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
-                    fontSize: 14.sp,
-                    height: 20 / 14,
-                    letterSpacing: -0.08,
-                    color: Colors.black54,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(width: 10.w),
-          Text(
-            amount,
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w600,
-              fontSize: 16.sp,
-              height: 20 / 16,
-              letterSpacing: -0.08,
-              color: Color(0xFF2A8359),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildEarningsTab(EarningsProvider earningsProvider) {
@@ -692,63 +575,41 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                 ),
               ),
               SizedBox(height: 24.h),
-              _buildBreakdownItem(
-                'Gross earning',
-                earningsProvider.formatPrice(breakdown?.grossEarning ?? 0),
-                false,
+              BreakdownItem(
+                label: 'Gross earning',
+                amount: earningsProvider.formatPrice(
+                  breakdown?.grossEarning ?? 0,
+                ),
+                isTotal: false,
               ),
               SizedBox(height: 18.h),
-              _buildBreakdownItem(
-                'Tips received',
-                earningsProvider.formatPrice(breakdown?.tipsReceived ?? 0),
-                false,
+              BreakdownItem(
+                label: 'Tips received',
+                amount: earningsProvider.formatPrice(
+                  breakdown?.tipsReceived ?? 0,
+                ),
+                isTotal: false,
               ),
               SizedBox(height: 18.h),
-              _buildBreakdownItem(
-                'Platform fee',
-                earningsProvider.formatPrice(breakdown?.platformFee ?? 0),
-                false,
+              BreakdownItem(
+                label: 'Platform fee',
+                amount: earningsProvider.formatPrice(
+                  breakdown?.platformFee ?? 0,
+                ),
+                isTotal: false,
               ),
               SizedBox(height: 18.h),
               Divider(color: Color(0xFFE5E5E5), thickness: 1),
               SizedBox(height: 18.h),
-              _buildBreakdownItem(
-                'Net earning',
-                earningsProvider.formatPrice(breakdown?.netPayout ?? 0),
-                true,
+              BreakdownItem(
+                label: 'Net earning',
+                amount: earningsProvider.formatPrice(breakdown?.netPayout ?? 0),
+                isTotal: true,
               ),
             ],
           ),
         ),
         SizedBox(height: 20.h),
-      ],
-    );
-  }
-
-  Widget _buildBreakdownItem(String label, String amount, bool isTotal) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontWeight: isTotal ? FontWeight.w700 : FontWeight.w400,
-            fontSize: isTotal ? 18.sp : 16.sp,
-            color: isTotal ? Colors.black : Color(0xFF666666),
-            letterSpacing: -0.3,
-          ),
-        ),
-        Text(
-          amount,
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontWeight: isTotal ? FontWeight.w700 : FontWeight.w600,
-            fontSize: isTotal ? 18.sp : 16.sp,
-            color: isTotal ? Color(0xFF2A8359) : Colors.black,
-            letterSpacing: -0.3,
-          ),
-        ),
       ],
     );
   }

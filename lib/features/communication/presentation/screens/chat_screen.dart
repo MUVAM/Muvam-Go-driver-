@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:googleapis_auth/auth_io.dart' as auth;
@@ -9,7 +8,8 @@ import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/services/firebase_config_service.dart';
 import 'package:muvam_rider/core/services/unifiedNotifiationService.dart';
-import 'package:muvam_rider/core/services/websocket_service.dart'; // CHANGED
+import 'package:muvam_rider/core/services/websocket_service.dart';
+import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/communication/data/models/chat_model.dart';
 import 'package:muvam_rider/features/communication/data/providers/chat_provider.dart';
@@ -20,14 +20,12 @@ import 'package:url_launcher/url_launcher.dart';
 import '../widgets/chat_bubble.dart';
 import 'call_screen.dart';
 
-// //FOR DRIVER
-// ChatScreen using Pure Native WebSocket (No packages)
 class ChatScreen extends StatefulWidget {
   final int rideId;
   final String driverName;
   final String? driverImage;
   final String driverId;
-  final String? driverPhone; // Add phone number parameter
+  final String? driverPhone;
 
   const ChatScreen({
     super.key,
@@ -35,7 +33,7 @@ class ChatScreen extends StatefulWidget {
     required this.driverName,
     this.driverImage,
     required this.driverId,
-    this.driverPhone, // Add phone parameter
+    this.driverPhone,
   });
 
   @override
@@ -48,39 +46,30 @@ class _ChatScreenState extends State<ChatScreen> {
   bool isConnected = false;
   String? currentUserId;
   bool _userIdLoaded = false;
-  bool _isSending = false; // Flag to prevent multiple sends
+  bool _isSending = false;
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _messageController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    print('🎬 ChatScreen initState - Ride ID: ${widget.rideId}');
+    AppLogger.log('ChatScreen initState - Ride ID: ${widget.rideId}');
     _initializeScreen();
   }
 
-  // @override
-  // void dispose() {
-  //   print('🛑 ChatScreen dispose');
-  //   // Don't set to null - just let the global handler continue
-  //   // The global handler in HomeScreen will continue to work
-  //   _messageController.dispose();
-  //   _scrollController.dispose();
-  //   super.dispose();
-  // }
   Future<void> _initializeScreen() async {
     await _loadUserId();
     await _initializeWebSocket();
   }
 
   Future<void> _loadUserId() async {
-    print('🔑 Loading user ID...');
+    AppLogger.log('Loading user ID...');
     try {
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString('user_id');
 
-      print('🔑 User ID: $userId');
-      print('🔑 Passenger ID: ${widget.driverId}');
+      AppLogger.log('User ID: $userId');
+      AppLogger.log('Passenger ID: ${widget.driverId}');
 
       if (mounted) {
         setState(() {
@@ -89,7 +78,7 @@ class _ChatScreenState extends State<ChatScreen> {
         });
       }
     } catch (e) {
-      print('❌ Error loading user ID: $e');
+      AppLogger.log('Error loading user ID: $e');
       if (mounted) {
         setState(() {
           _userIdLoaded = true;
@@ -98,99 +87,17 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  // Future<void> _initializeWebSocket() async {
-  //   try {
-  //     print('🔧 Initializing WebSocket');
-
-  //     _webSocketService = WebSocketService.instance;
-
-  //     if (!_webSocketService.isConnected) {
-  //       print('📡 Connecting...');
-  //       await _webSocketService.connect();
-  //     } else {
-  //       print('✅ Already connected');
-  //     }
-
-  //     if (mounted) {
-  //       setState(() {
-  //         isConnected = _webSocketService.isConnected;
-  //         isLoading = false;
-  //       });
-  //     }
-
-  //     // Register chat message handler
-  //     _webSocketService.onChatMessage = _handleIncomingMessage;
-  //     print('✅ Chat handler registered');
-
-  //   } catch (e) {
-  //     print('❌ WebSocket initialization error: $e');
-  //     if (mounted) {
-  //       setState(() {
-  //         isLoading = false;
-  //         isConnected = false;
-  //       });
-  //     }
-  //   }
-  // }
-
-  // Future<void> _initializeWebSocket() async {
-  //   try {
-  //     print('🔧 Initializing ChatScreen WebSocket');
-
-  //     _webSocketService = WebSocketService.instance;
-
-  //     if (!_webSocketService.isConnected) {
-  //       print('📡 Connecting...');
-  //       await _webSocketService.connect();
-  //     } else {
-  //       print('✅ Already connected');
-  //     }
-
-  //     if (mounted) {
-  //       setState(() {
-  //         isConnected = _webSocketService.isConnected;
-  //         isLoading = false;
-  //       });
-  //     }
-
-  //     // Register ADDITIONAL chat message handler for this screen
-  //     // This won't replace the global one, it will work alongside it
-  //     final globalHandler = _webSocketService.onChatMessage;
-
-  //     _webSocketService.onChatMessage = (data) {
-  //       // Call global handler first
-  //       if (globalHandler != null) {
-  //         globalHandler(data);
-  //       }
-
-  //       // Then call local handler for real-time updates in this screen
-  //       _handleIncomingMessage(data);
-  //     };
-
-  //     print('✅ Chat handler registered for this screen');
-
-  //   } catch (e) {
-  //     print('❌ WebSocket initialization error: $e');
-  //     if (mounted) {
-  //       setState(() {
-  //         isLoading = false;
-  //         isConnected = false;
-  //       });
-  //     }
-  //   }
-  // }
-
   Future<void> _initializeWebSocket() async {
     try {
-      print('🔧 Initializing ChatScreen WebSocket');
+      AppLogger.log('Initializing ChatScreen WebSocket');
 
       _webSocketService = WebSocketService.instance;
 
       if (!_webSocketService.isConnected) {
-        print('📡 Connecting...');
+        AppLogger.log('Connecting...');
         await _webSocketService.connect();
       } else {
-        print('✅ Already connected');
+        AppLogger.log('Already connected');
       }
 
       if (mounted) {
@@ -200,13 +107,12 @@ class _ChatScreenState extends State<ChatScreen> {
         });
       }
 
-      // Set this chat as active when screen opens
       context.read<ChatProvider>().setActiveRide(widget.rideId);
-      print('✅ Chat screen marked as active for ride ${widget.rideId}');
+      AppLogger.log('Chat screen marked as active for ride ${widget.rideId}');
 
-      print('✅ WebSocket initialized for ChatScreen');
+      AppLogger.log('WebSocket initialized for ChatScreen');
     } catch (e) {
-      print('❌ WebSocket initialization error: $e');
+      AppLogger.log('WebSocket initialization error: $e');
       if (mounted) {
         setState(() {
           isLoading = false;
@@ -218,8 +124,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
-    print('🛑 ChatScreen dispose');
-    // Mark chat as inactive when screen closes
+    AppLogger.log('ChatScreen dispose');
     context.read<ChatProvider>().setActiveRide(null);
     _messageController.dispose();
     _scrollController.dispose();
@@ -228,20 +133,22 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _handleIncomingMessage(Map<String, dynamic> data) {
     try {
-      print('📨 Chat message handler called');
-      print('   Data: $data');
+      AppLogger.log('Chat message handler called');
+      AppLogger.log('   Data: $data');
 
       final messageData = data['data'] as Map<String, dynamic>?;
       if (messageData == null) {
-        print('⚠️ No data field');
+        AppLogger.log('No data field');
         return;
       }
 
       final messageRideId = messageData['ride_id'] ?? data['ride_id'];
-      print('   Message ride: $messageRideId, Current ride: ${widget.rideId}');
+      AppLogger.log(
+        '   Message ride: $messageRideId, Current ride: ${widget.rideId}',
+      );
 
       if (messageRideId != widget.rideId) {
-        print('⚠️ Different ride, ignoring');
+        AppLogger.log('Different ride, ignoring');
         return;
       }
 
@@ -252,8 +159,8 @@ class _ChatScreenState extends State<ChatScreen> {
           '';
       final timestamp = data['timestamp'] ?? DateTime.now().toIso8601String();
 
-      print('✅ Adding message: "$messageText"');
-      print('   From: $senderId (Current user: $currentUserId)');
+      AppLogger.log('Adding message: "$messageText"');
+      AppLogger.log('   From: $senderId (Current user: $currentUserId)');
 
       if (mounted) {
         final message = ChatMessageModel(
@@ -265,7 +172,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
         context.read<ChatProvider>().addMessage(widget.rideId, message);
 
-        // Auto-scroll
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (_scrollController.hasClients) {
             _scrollController.animateTo(
@@ -277,7 +183,7 @@ class _ChatScreenState extends State<ChatScreen> {
         });
       }
     } catch (e) {
-      print('❌ Error handling message: $e');
+      AppLogger.log('Error handling message: $e');
     }
   }
 
@@ -293,40 +199,35 @@ class _ChatScreenState extends State<ChatScreen> {
       auth.ServiceAccountCredentials.fromJson(serviceAccountJson),
       scopes,
     );
-    // get access token using this client
     auth.AccessCredentials credentials = await auth
         .obtainAccessCredentialsViaServiceAccount(
           auth.ServiceAccountCredentials.fromJson(serviceAccountJson),
           scopes,
           client,
         );
-    // close the client
     client.close();
     return credentials.accessToken.data;
   }
 
   void _sendMessage() async {
-    print('');
-    print('🚀 ═══════════════════════════════════════');
-    print('   SEND MESSAGE INITIATED');
-    print('   ═══════════════════════════════════════');
+    AppLogger.log('');
+    AppLogger.log('SEND MESSAGE INITIATED');
 
-    // Prevent multiple sends
     if (_isSending) {
-      print('   ⏸️ Already sending a message, ignoring');
-      print('');
+      AppLogger.log('Already sending a message, ignoring');
+      AppLogger.log('');
       return;
     }
 
     if (!_userIdLoaded) {
-      print('   ❌ User ID not loaded');
-      print('');
+      AppLogger.log('User ID not loaded');
+      AppLogger.log('');
       return;
     }
 
     if (!isConnected) {
-      print('   ❌ Not connected');
-      print('');
+      AppLogger.log('Not connected');
+      AppLogger.log('');
       CustomFlushbar.showError(
         context: context,
         message: 'Not connected to chat',
@@ -336,36 +237,32 @@ class _ChatScreenState extends State<ChatScreen> {
 
     final text = _messageController.text.trim();
     if (text.isEmpty) {
-      print('   ❌ Empty message');
-      print('');
+      AppLogger.log('Empty message');
+      AppLogger.log('');
       return;
     }
 
-    // Set sending flag and clear text field immediately for better UX
     setState(() {
       _isSending = true;
     });
 
-    // Clear the text field immediately after capturing the message
     _messageController.clear();
-    print('   🔄 Input field cleared');
+    AppLogger.log('Input field cleared');
 
     try {
-      print('   📝 Message: "$text"');
-      print('   🎯 Ride ID: ${widget.rideId}');
-      print('   👤 User ID: $currentUserId');
-      print('   ⏰ Time: ${DateTime.now().toIso8601String()}');
+      AppLogger.log('Message: "$text"');
+      AppLogger.log('Ride ID: ${widget.rideId}');
+      AppLogger.log('User ID: $currentUserId');
+      AppLogger.log('Time: ${DateTime.now().toIso8601String()}');
 
-      // Get user name from SharedPreferences
       final prefs = await SharedPreferences.getInstance();
       final userName =
           prefs.getString('user_name') ??
           prefs.getString('name') ??
           'Unknown User';
 
-      print('   👤 User Name: $userName');
+      AppLogger.log('User Name: $userName');
 
-      // Send with sender_id and sender_name in data object
       _webSocketService.sendMessage({
         "type": 'chat',
         'data': {
@@ -376,19 +273,10 @@ class _ChatScreenState extends State<ChatScreen> {
         },
       });
 
-      print('   ✅ Passed to WebSocket service');
+      AppLogger.log('Passed to WebSocket service');
 
-      // Send FCM notification to driver
-      print('   📤 Sending FCM notification to driver...');
+      AppLogger.log('Sending FCM notification to driver...');
       try {
-        // TODO: Get driver's user ID from ride data
-        // For now, you need to pass driver ID or get it from your ride data
-        // Example: await FCMSenderService.sendMessageNotification(
-        //   recipientUserId: driverUserId,
-        //   senderName: userName,
-        //   message: text,
-        //   rideId: widget.rideId.toString(),
-        // );
         await UnifiedNotificationService.sendChatNotification(
           receiverId: widget.driverId,
           senderName: userName,
@@ -396,31 +284,28 @@ class _ChatScreenState extends State<ChatScreen> {
           chatRoomId: widget.rideId.toString(),
         );
 
-        print('   ✅ FCM notification sent');
+        AppLogger.log('FCM notification sent');
       } catch (e) {
-        print('   ❌ FCM notification error: $e');
+        AppLogger.log('FCM notification error: $e');
       }
 
-      print('   ⏳ Waiting for server response...');
-      print('   ═══════════════════════════════════════');
-      print('');
+      AppLogger.log('Waiting for server response...');
+      AppLogger.log('');
     } catch (e, stack) {
-      print('   ❌ Exception: $e');
-      print('   Stack: $stack');
-      print('   ═══════════════════════════════════════');
-      print('');
+      AppLogger.log('Exception: $e');
+      AppLogger.log('Stack: $stack');
+      AppLogger.log('');
       CustomFlushbar.showError(
         context: context,
         message: 'Failed to send message',
       );
     } finally {
-      // Reset sending flag
       if (mounted) {
         setState(() {
           _isSending = false;
         });
       }
-      print('   ✅ Send operation completed');
+      AppLogger.log('Send operation completed');
     }
   }
 
@@ -541,7 +426,7 @@ class _ChatScreenState extends State<ChatScreen> {
         );
       }
     } catch (e) {
-      print('❌ Call error: $e');
+      AppLogger.log('Call error: $e');
     }
   }
 
@@ -687,7 +572,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     child: Container(
                       constraints: BoxConstraints(
                         minHeight: 50.h,
-                        maxHeight: 120.h, // Approximately 5 lines
+                        maxHeight: 120.h,
                       ),
                       padding: EdgeInsets.symmetric(
                         horizontal: 15.w,
@@ -699,8 +584,8 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                       child: TextField(
                         controller: _messageController,
-                        maxLines: null, // Allow unlimited lines
-                        minLines: 1, // Start with 1 line
+                        maxLines: null,
+                        minLines: 1,
                         keyboardType: TextInputType.multiline,
                         textInputAction: TextInputAction.newline,
                         decoration: InputDecoration(
@@ -738,9 +623,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       child: Container(
                         width: 21.w,
                         height: 21.h,
-                        margin: EdgeInsets.only(
-                          bottom: 15.h,
-                        ), // Align with text baseline
+                        margin: EdgeInsets.only(bottom: 15.h),
                         child: _isSending
                             ? SizedBox(
                                 width: 21.sp,

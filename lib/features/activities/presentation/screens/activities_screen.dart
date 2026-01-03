@@ -36,29 +36,8 @@ class ActivitiesScreenState extends State<ActivitiesScreen> {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
-          // Positioned(
-          //   top: 35.h,
-          //   left: 20.w,
-          //   child: Container(
-          //     width: 45.w,
-          //     height: 45.h,
-          //     decoration: BoxDecoration(
-          //       color: Colors.white,
-          //       borderRadius: BorderRadius.circular(100.r),
-          //     ),
-          //     padding: EdgeInsets.all(10.w),
-          //     child: GestureDetector(
-          //       onTap: () => Navigator.pop(context),
-          //       child: Icon(
-          //         Icons.arrow_back,
-          //         color: Theme.of(context).iconTheme.color,
-          //         size: 20.sp,
-          //       ),
-          //     ),
-          //   ),
-          // ),
           Positioned(
-            top: 100.h,
+            top: 90.h,
             left: 20.w,
             child: Container(
               width: 353.w,
@@ -88,7 +67,7 @@ class ActivitiesScreenState extends State<ActivitiesScreen> {
             ),
           ),
           Positioned(
-            top: 150.h,
+            top: 140.h,
             left: 20.w,
             right: 20.w,
             bottom: 20.h,

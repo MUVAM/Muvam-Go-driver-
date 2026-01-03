@@ -168,7 +168,7 @@ To handle the notification tap and navigate to `IncomingCallScreen`, you need to
 ```dart
 // Handle notification tap when app is in background/terminated
 FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-  print('📱 Notification tapped: ${message.data}');
+  AppLogger.log('📱 Notification tapped: ${message.data}');
   
   if (message.data['type'] == 'incoming_call') {
     final callerName = message.data['caller_name'] ?? 'Unknown';
@@ -199,7 +199,7 @@ FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
 
 // Handle notification when app is in foreground
 FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-  print('📨 Foreground message: ${message.data}');
+  AppLogger.log('📨 Foreground message: ${message.data}');
   
   if (message.data['type'] == 'incoming_call') {
     // Show IncomingCallScreen immediately

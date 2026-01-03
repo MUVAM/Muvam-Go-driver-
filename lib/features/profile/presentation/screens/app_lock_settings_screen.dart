@@ -3,7 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
+import 'package:muvam_rider/features/profile/presentation/widgets/lock_radio_option.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AppLockSettingsScreen extends StatefulWidget {
@@ -17,7 +19,7 @@ class _AppLockSettingsScreenState extends State<AppLockSettingsScreen> {
   final LocalAuthentication auth = LocalAuthentication();
   late SharedPreferences _prefs;
   bool _isBiometricEnabled = false;
-  String _lockTiming = 'immediately'; // 'immediately', '1_minute', '30_minutes'
+  String _lockTiming = 'immediately';
   bool _isLoading = true;
   bool _canCheckBiometrics = false;
   List<BiometricType> _availableBiometrics = [];
@@ -34,7 +36,7 @@ class _AppLockSettingsScreenState extends State<AppLockSettingsScreen> {
       _canCheckBiometrics = await auth.canCheckBiometrics;
       _availableBiometrics = await auth.getAvailableBiometrics();
     } on PlatformException catch (e) {
-      print('Error checking biometric support: $e');
+      AppLogger.log('Error checking biometric support: $e');
     }
   }
 
@@ -58,12 +60,12 @@ class _AppLockSettingsScreenState extends State<AppLockSettingsScreen> {
         localizedReason: 'Authenticate to enable app lock',
         options: const AuthenticationOptions(
           stickyAuth: true,
-          biometricOnly: false, // Allow PIN/Pattern as fallback
+          biometricOnly: false,
         ),
       );
       return authenticated;
     } on PlatformException catch (e) {
-      print('Authentication error: $e');
+      AppLogger.log('Authentication error: $e');
       return false;
     }
   }
@@ -78,7 +80,6 @@ class _AppLockSettingsScreenState extends State<AppLockSettingsScreen> {
     }
 
     if (value) {
-      // Enabling biometric - authenticate first
       bool authenticated = await _authenticate();
       if (authenticated) {
         setState(() {
@@ -100,7 +101,6 @@ class _AppLockSettingsScreenState extends State<AppLockSettingsScreen> {
         }
       }
     } else {
-      // Disabling biometric
       setState(() {
         _isBiometricEnabled = false;
       });
@@ -166,7 +166,6 @@ class _AppLockSettingsScreenState extends State<AppLockSettingsScreen> {
       body: ListView(
         padding: EdgeInsets.all(20.w),
         children: [
-          // Biometric Unlock Card
           Container(
             padding: EdgeInsets.all(16.w),
             decoration: BoxDecoration(
@@ -225,10 +224,7 @@ class _AppLockSettingsScreenState extends State<AppLockSettingsScreen> {
               ],
             ),
           ),
-
           SizedBox(height: 20.h),
-
-          // Lock Timing Options (only show if biometric is enabled)
           if (_isBiometricEnabled) ...[
             Container(
               padding: EdgeInsets.all(16.w),
@@ -257,22 +253,31 @@ class _AppLockSettingsScreenState extends State<AppLockSettingsScreen> {
                     ),
                   ),
                   SizedBox(height: 16.h),
-                  _buildRadioOption(
-                    'Immediately when leaving the app',
-                    'immediately',
+                  LockRadioOption(
+                    title: 'Immediately when leaving the app',
+                    value: 'immediately',
+                    selectedValue: _lockTiming,
+                    onTap: _setLockTiming,
                   ),
                   Divider(color: Colors.grey.shade200, height: 1),
-                  _buildRadioOption('After 1 minute', '1_minute'),
+                  LockRadioOption(
+                    title: 'After 1 minute',
+                    value: '1_minute',
+                    selectedValue: _lockTiming,
+                    onTap: _setLockTiming,
+                  ),
                   Divider(color: Colors.grey.shade200, height: 1),
-                  _buildRadioOption('After 30 minutes', '30_minutes'),
+                  LockRadioOption(
+                    title: 'After 30 minutes',
+                    value: '30_minutes',
+                    selectedValue: _lockTiming,
+                    onTap: _setLockTiming,
+                  ),
                 ],
               ),
             ),
           ],
-
           SizedBox(height: 20.h),
-
-          // Info card
           if (!_canCheckBiometrics || _availableBiometrics.isEmpty)
             Container(
               padding: EdgeInsets.all(16.w),
@@ -304,58 +309,6 @@ class _AppLockSettingsScreenState extends State<AppLockSettingsScreen> {
               ),
             ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildRadioOption(String title, String value) {
-    final isSelected = _lockTiming == value;
-    return GestureDetector(
-      onTap: () => _setLockTiming(value),
-      child: Container(
-        padding: EdgeInsets.symmetric(vertical: 12.h),
-        color: Colors.transparent,
-        child: Row(
-          children: [
-            Container(
-              width: 20.w,
-              height: 20.h,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isSelected
-                      ? Color(ConstColors.mainColor)
-                      : Colors.grey.shade400,
-                  width: 2,
-                ),
-              ),
-              child: isSelected
-                  ? Center(
-                      child: Container(
-                        width: 10.w,
-                        height: 10.h,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: Color(ConstColors.mainColor),
-                        ),
-                      ),
-                    )
-                  : null,
-            ),
-            SizedBox(width: 12.w),
-            Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w400,
-                  color: Colors.black,
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

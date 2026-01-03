@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
+import 'package:muvam_rider/features/auth/presentation/widgets/location_field.dart';
 import 'package:provider/provider.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
@@ -96,7 +97,13 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                   backgroundColor: ConstColors.formFieldColor,
                 ),
                 SizedBox(height: 20.h),
-                _buildLocationField(),
+                LocationField(
+                  controller: locationController,
+                  onSearch: _searchLocations,
+                  onSelect: _selectLocation,
+                  suggestions: _locationSuggestions,
+                  showSuggestions: _showLocationSuggestions,
+                ),
                 SizedBox(height: 20.h),
                 AccountTextField(
                   label: 'City',
@@ -139,78 +146,6 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildLocationField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Location', style: ConstTextStyles.fieldLabel),
-        SizedBox(height: 8.h),
-        Container(
-          width: 353.w,
-          height: 50.h,
-          decoration: BoxDecoration(
-            color: Color(ConstColors.locationFieldColor),
-            borderRadius: BorderRadius.circular(8.r),
-          ),
-          child: TextField(
-            controller: locationController,
-            style: ConstTextStyles.inputText,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 16.w,
-                vertical: 15.h,
-              ),
-            ),
-            onChanged: _searchLocations,
-          ),
-        ),
-        if (_showLocationSuggestions && _locationSuggestions.isNotEmpty)
-          Container(
-            margin: EdgeInsets.only(top: 5.h),
-            constraints: BoxConstraints(maxHeight: 200.h),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8.r),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.3),
-                  spreadRadius: 1,
-                  blurRadius: 5,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: ListView.separated(
-              shrinkWrap: true,
-              itemCount: _locationSuggestions.length,
-              separatorBuilder: (context, index) =>
-                  Divider(height: 1, color: Colors.grey.shade200),
-              itemBuilder: (context, index) {
-                final suggestion = _locationSuggestions[index];
-                return ListTile(
-                  dense: true,
-                  leading: Icon(
-                    Icons.location_on,
-                    size: 20.sp,
-                    color: Color(ConstColors.mainColor),
-                  ),
-                  title: Text(
-                    suggestion,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                  onTap: () => _selectLocation(suggestion),
-                );
-              },
-            ),
-          ),
-      ],
     );
   }
 
@@ -327,9 +262,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
             }
           }
         }
-      } catch (e) {
-        // Geocoding failed, continue with filtered suggestions
-      }
+      } catch (e) {}
 
       setState(() {
         _locationSuggestions = suggestions.take(8).toList();

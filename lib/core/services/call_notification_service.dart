@@ -1,11 +1,10 @@
 import 'dart:convert';
-
 import 'package:googleapis_auth/auth_io.dart' as auth;
 import 'package:http/http.dart' as http;
 import 'package:muvam_rider/core/services/firebase_config_service.dart';
+import 'package:muvam_rider/core/utils/app_logger.dart';
 
 class CallNotificationService {
-  /// Send call notification with action buttons (Accept/Reject)
   static Future<void> sendCallNotificationWithActions({
     required String deviceToken,
     required String title,
@@ -13,15 +12,15 @@ class CallNotificationService {
     required String type,
     Map<String, String>? additionalData,
   }) async {
-    print('📤 FCM CALL DEBUG: Starting sendCallNotificationWithActions');
-    print(
-      '📤 FCM CALL DEBUG: Token: ${deviceToken.substring(0, 20)}..., Title: $title, Body: $body',
+    AppLogger.log('FCM CALL DEBUG: Starting sendCallNotificationWithActions');
+    AppLogger.log(
+      'FCM CALL DEBUG: Token: ${deviceToken.substring(0, 20)}..., Title: $title, Body: $body',
     );
 
     try {
-      print('🔑 FCM CALL DEBUG: Getting access token');
+      AppLogger.log('FCM CALL DEBUG: Getting access token');
       final String serverAccessToken = await _getAccessToken();
-      print('✅ FCM CALL DEBUG: Access token obtained successfully');
+      AppLogger.log('FCM CALL DEBUG: Access token obtained successfully');
 
       String endpointFirebasecloudMessaging =
           'https://fcm.googleapis.com/v1/projects/muvam-go/messages:send';
@@ -60,8 +59,8 @@ class CallNotificationService {
         },
       };
 
-      print('📦 FCM CALL DEBUG: Message payload prepared');
-      print('📤 FCM CALL DEBUG: Sending HTTP POST request to FCM');
+      AppLogger.log('FCM CALL DEBUG: Message payload prepared');
+      AppLogger.log('FCM CALL DEBUG: Sending HTTP POST request to FCM');
 
       final response = await http.post(
         Uri.parse(endpointFirebasecloudMessaging),
@@ -72,26 +71,26 @@ class CallNotificationService {
         body: jsonEncode(message),
       );
 
-      print(
-        '📝 FCM CALL DEBUG: FCM Response - Status Code: ${response.statusCode}',
+      AppLogger.log(
+        'FCM CALL DEBUG: FCM Response - Status Code: ${response.statusCode}',
       );
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
-        print(
-          '✅ FCM CALL DEBUG: Call notification sent successfully! Response: $responseData',
+        AppLogger.log(
+          'FCM CALL DEBUG: Call notification sent successfully! Response: $responseData',
         );
       } else {
-        print(
-          '❌ FCM CALL DEBUG: FCM request failed with status: ${response.statusCode}',
+        AppLogger.log(
+          'FCM CALL DEBUG: FCM request failed with status: ${response.statusCode}',
         );
-        print('❌ FCM CALL DEBUG: Response body: ${response.body}');
+        AppLogger.log('FCM CALL DEBUG: Response body: ${response.body}');
       }
     } catch (e, stackTrace) {
-      print(
-        '💥 FCM CALL DEBUG: Exception in sendCallNotificationWithActions: $e',
+      AppLogger.log(
+        'FCM CALL DEBUG: Exception in sendCallNotificationWithActions: $e',
       );
-      print('💥 FCM CALL DEBUG: Stack trace: $stackTrace');
+      AppLogger.log('FCM CALL DEBUG: Stack trace: $stackTrace');
       rethrow;
     }
   }

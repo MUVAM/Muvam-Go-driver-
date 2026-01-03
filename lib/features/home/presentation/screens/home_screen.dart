@@ -641,7 +641,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (token != null) {
       final result = await ApiService.acceptRide(token, rideId);
 
-      print('ACCEPT RIDE RESPONSE: $result');
+      AppLogger.log('ACCEPT RIDE RESPONSE: $result');
 
       AppLogger.log('ACCEPT RIDE RESPONSE: $result');
       if (result['success'] == true) {
@@ -704,7 +704,7 @@ class _HomeScreenState extends State<HomeScreen> {
           }
         }
 
-        print("PASSENGER ID ${transformedRide['Passenger']['ID']}");
+        AppLogger.log("PASSENGER ID ${transformedRide['Passenger']['ID']}");
         AppLogger.log('🔄 TRANSFORMED RIDE DATA:');
         AppLogger.log('   Transformed keys: ${transformedRide.keys.toList()}');
         AppLogger.log(
@@ -4966,8 +4966,7 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
     final waitFee = widget.acceptedData['wait_fee'] ?? 0;
     final passengerName =
         '${passenger['first_name'] ?? 'Unknown'} ${passenger['last_name'] ?? 'Passenger'}';
-          final passengerPhone =
-        passenger['phone'] ?? '';
+    final passengerPhone = passenger['phone'] ?? '';
     final String passengerID = (passenger['ID'] ?? 1).toString();
 
     return Container(
@@ -4997,8 +4996,7 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
               waitFee,
               passengerID,
               passengerName,
-              passengerPhone
-
+              passengerPhone,
             ),
           if (_rideStatus == 'started')
             Column(
@@ -5550,7 +5548,7 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
     final passengerFirstName = passenger['first_name'] ?? 'Unknown';
     final passengerLastName = passenger['last_name'] ?? '';
     final passengerName = '$passengerFirstName $passengerLastName'.trim();
-        final passengerPhone = passenger["phone"]??'';
+    final passengerPhone = passenger["phone"] ?? '';
 
     final note = ride['Note'] ?? '';
     final stopAddress = ride['StopAddress'];
