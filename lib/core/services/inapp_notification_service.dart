@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/core/utils/app_logger.dart';
+
 class InAppNotificationService {
   static OverlayEntry? _currentOverlay;
   static bool _isShowing = false;
 
-  /// Show an in-app notification for incoming messages
   static void showMessageNotification({
     required BuildContext context,
     required String senderName,
@@ -13,22 +14,23 @@ class InAppNotificationService {
     String? senderImage,
     VoidCallback? onTap,
   }) {
-    print('🔔 InAppNotificationService: showMessageNotification called');
-    print('   Sender: $senderName');
-    print('   Message: "$message"');
-    print('   Ride ID: $rideId');
-    
-    // Don't show if already showing a notification
+    AppLogger.log('InAppNotificationService: showMessageNotification called');
+    AppLogger.log('   Sender: $senderName');
+    AppLogger.log('   Message: "$message"');
+    AppLogger.log('   Ride ID: $rideId');
+
     if (_isShowing) {
-      print('⚠️ InAppNotificationService: Already showing, hiding first');
+      AppLogger.log('InAppNotificationService: Already showing, hiding first');
       hide();
     }
 
     _isShowing = true;
-    print('✅ InAppNotificationService: Starting notification display');
+    AppLogger.log('InAppNotificationService: Starting notification display');
 
     final overlay = context.findRenderObject() as RenderObject?;
-    print('🎨 InAppNotificationService: Overlay context found: ${overlay != null}');
+    AppLogger.log(
+      'InAppNotificationService: Overlay context found: ${overlay != null}',
+    );
 
     _currentOverlay = OverlayEntry(
       builder: (context) => Positioned(
@@ -42,7 +44,7 @@ class InAppNotificationService {
             message: message,
             senderImage: senderImage,
             onTap: () {
-              print('🖱️ InAppNotificationService: Notification tapped');
+              AppLogger.log('InAppNotificationService: Notification tapped');
               hide();
               onTap?.call();
             },
@@ -54,18 +56,18 @@ class InAppNotificationService {
 
     final overlayManager = Overlay.of(context);
     overlayManager.insert(_currentOverlay!);
-    print('✅ InAppNotificationService: Overlay inserted');
+    AppLogger.log('InAppNotificationService: Overlay inserted');
 
-    // Auto-dismiss after 5 seconds
     Future.delayed(Duration(seconds: 5), () {
       if (_isShowing) {
-        print('⏰ InAppNotificationService: Auto-dismissing after 5 seconds');
+        AppLogger.log(
+          'InAppNotificationService: Auto-dismissing after 5 seconds',
+        );
         hide();
       }
     });
   }
 
-  /// Hide the current notification
   static void hide() {
     _currentOverlay?.remove();
     _currentOverlay = null;
@@ -159,7 +161,6 @@ class _MessageNotificationCardState extends State<_MessageNotificationCard>
             ),
             child: Row(
               children: [
-                // Sender avatar
                 CircleAvatar(
                   radius: 24.r,
                   backgroundColor: Color(0xFF2196F3).withOpacity(0.1),
@@ -178,7 +179,6 @@ class _MessageNotificationCardState extends State<_MessageNotificationCard>
                       : null,
                 ),
                 SizedBox(width: 12.w),
-                // Message content
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -222,7 +222,6 @@ class _MessageNotificationCardState extends State<_MessageNotificationCard>
                   ),
                 ),
                 SizedBox(width: 8.w),
-                // Dismiss button
                 GestureDetector(
                   onTap: _handleDismiss,
                   child: Icon(

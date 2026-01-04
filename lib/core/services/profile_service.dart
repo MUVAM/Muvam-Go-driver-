@@ -12,12 +12,12 @@ class ProfileService {
       final token = prefs.getString('auth_token');
 
       if (token == null) {
-        AppLogger.log('❌ No auth token found');
+        AppLogger.log('No auth token found');
         return null;
       }
 
       final url = '${UrlConstants.baseUrl}${UrlConstants.userProfile}';
-      AppLogger.log('🔄 Fetching user profile from: $url');
+      AppLogger.log('Fetching user profile from: $url');
 
       final response = await http.get(
         Uri.parse(url),
@@ -37,18 +37,18 @@ class ProfileService {
         // Cache user data locally
         await _cacheUserData(profileResponse.user);
 
-        AppLogger.log('✅ Profile fetched successfully');
+        AppLogger.log('Profile fetched successfully');
         AppLogger.log('User: ${profileResponse.user.fullName}');
         AppLogger.log('Email: ${profileResponse.user.email}');
         AppLogger.log('Role: ${profileResponse.user.role}');
 
         return profileResponse;
       } else {
-        AppLogger.log('❌ Failed to fetch profile: ${response.body}');
+        AppLogger.log('Failed to fetch profile: ${response.body}');
         return null;
       }
     } catch (e) {
-      AppLogger.log('❌ Error fetching profile: $e');
+      AppLogger.log('Error fetching profile: $e');
       return null;
     }
   }
@@ -72,7 +72,7 @@ class ProfileService {
     await prefs.setDouble('user_average_rating', user.averageRating);
     await prefs.setInt('user_rating_count', user.ratingCount);
 
-    AppLogger.log('✅ User data cached locally');
+    AppLogger.log('User data cached locally');
   }
 
   Future<Map<String, String?>> getCachedUserData() async {
@@ -111,6 +111,6 @@ class ProfileService {
     await prefs.remove('user_average_rating');
     await prefs.remove('user_rating_count');
 
-    AppLogger.log('✅ User data cleared from cache');
+    AppLogger.log('User data cleared from cache');
   }
 }

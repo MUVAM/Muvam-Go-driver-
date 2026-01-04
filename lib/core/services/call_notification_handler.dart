@@ -1,14 +1,14 @@
 import 'dart:convert';
 import 'dart:typed_data';
-
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:muvam_rider/core/utils/app_logger.dart';
 
 class CallNotificationHandler {
   static final FlutterLocalNotificationsPlugin _notificationsPlugin =
       FlutterLocalNotificationsPlugin();
 
   static Future<void> initialize() async {
-    print('📞 CALL_HANDLER: Initializing call notification handler');
+    AppLogger.log('CALL_HANDLER: Initializing call notification handler');
 
     // Create a high-priority notification channel for incoming calls
     final AndroidNotificationChannel callChannel = AndroidNotificationChannel(
@@ -47,15 +47,15 @@ class CallNotificationHandler {
       onDidReceiveNotificationResponse: _onNotificationResponse,
     );
 
-    print('✅ CALL_HANDLER: Call notification handler initialized');
+    AppLogger.log('CALL_HANDLER: Call notification handler initialized');
   }
 
   static Future<void> _onNotificationResponse(
     NotificationResponse response,
   ) async {
-    print('📞 CALL_HANDLER: Notification response received');
-    print('📞 CALL_HANDLER: Action ID: ${response.actionId}');
-    print('📞 CALL_HANDLER: Payload: ${response.payload}');
+    AppLogger.log('CALL_HANDLER: Notification response received');
+    AppLogger.log('CALL_HANDLER: Action ID: ${response.actionId}');
+    AppLogger.log('CALL_HANDLER: Payload: ${response.payload}');
 
     if (response.payload == null) return;
 
@@ -64,23 +64,23 @@ class CallNotificationHandler {
       final String? actionId = response.actionId;
 
       if (actionId == 'accept_call') {
-        print('✅ CALL_HANDLER: User accepted the call');
+        AppLogger.log('CALL_HANDLER: User accepted the call');
         await _handleAcceptCall(data);
       } else if (actionId == 'reject_call') {
-        print('❌ CALL_HANDLER: User rejected the call');
+        AppLogger.log('CALL_HANDLER: User rejected the call');
         await _handleRejectCall(data);
       } else {
         // Default tap - open the app to call screen
-        print('📱 CALL_HANDLER: User tapped notification');
+        AppLogger.log('CALL_HANDLER: User tapped notification');
         await _handleAcceptCall(data);
       }
     } catch (e) {
-      print('❌ CALL_HANDLER: Error handling notification response: $e');
+      AppLogger.log('CALL_HANDLER: Error handling notification response: $e');
     }
   }
 
   static Future<void> _handleAcceptCall(Map<String, dynamic> data) async {
-    print('📞 CALL_HANDLER: Handling accept call');
+    AppLogger.log('CALL_HANDLER: Handling accept call');
 
     // Store the call data for navigation
     final callData = {
@@ -94,17 +94,17 @@ class CallNotificationHandler {
     // Store in a global variable or shared preferences for the app to pick up
     _pendingCallAction = callData;
 
-    print('✅ CALL_HANDLER: Call acceptance data stored');
+    AppLogger.log('CALL_HANDLER: Call acceptance data stored');
   }
 
   static Future<void> _handleRejectCall(Map<String, dynamic> data) async {
-    print('📞 CALL_HANDLER: Handling reject call');
+    AppLogger.log('CALL_HANDLER: Handling reject call');
 
     // You can send a rejection message to the server here
     // For now, just dismiss the notification
     await _notificationsPlugin.cancel(999); // Call notification ID
 
-    print('✅ CALL_HANDLER: Call rejected and notification dismissed');
+    AppLogger.log('CALL_HANDLER: Call rejected and notification dismissed');
   }
 
   static Map<String, dynamic>? _pendingCallAction;
@@ -122,8 +122,8 @@ class CallNotificationHandler {
     required String rideId,
     required String sessionId,
   }) async {
-    print('📞 CALL_HANDLER: Showing incoming call notification');
-    print('📞 CALL_HANDLER: Caller: $callerName, Ride: $rideId');
+    AppLogger.log('CALL_HANDLER: Showing incoming call notification');
+    AppLogger.log('CALL_HANDLER: Caller: $callerName, Ride: $rideId');
 
     final payload = jsonEncode({
       'caller_name': callerName,
@@ -175,7 +175,7 @@ class CallNotificationHandler {
       categoryIdentifier: 'CALL_CATEGORY',
     );
 
-     NotificationDetails notificationDetails = NotificationDetails(
+    NotificationDetails notificationDetails = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );
@@ -188,12 +188,12 @@ class CallNotificationHandler {
       payload: payload,
     );
 
-    print('✅ CALL_HANDLER: Incoming call notification shown');
+    AppLogger.log('CALL_HANDLER: Incoming call notification shown');
   }
 
   /// Cancel the incoming call notification
   static Future<void> cancelCallNotification() async {
     await _notificationsPlugin.cancel(999);
-    print('✅ CALL_HANDLER: Call notification cancelled');
+    AppLogger.log('CALL_HANDLER: Call notification cancelled');
   }
 }

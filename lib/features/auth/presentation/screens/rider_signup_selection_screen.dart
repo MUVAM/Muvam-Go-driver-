@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/fonts.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
-import 'package:muvam_rider/features/auth/presentation/screens/onboarding_screen.dart';
+import 'package:muvam_rider/shared/presentation/screens/onboarding_screen.dart';
 
 class RiderSignupSelectionScreen extends StatefulWidget {
   const RiderSignupSelectionScreen({super.key});

@@ -23,7 +23,6 @@ class WalletProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  // Fetch wallet summary from the API
   Future<bool> fetchWalletSummary() async {
     _setLoading(true);
     _setError(null);

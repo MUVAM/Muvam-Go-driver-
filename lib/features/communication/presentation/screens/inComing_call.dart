@@ -1,5 +1,4 @@
 import 'dart:async';
-
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -40,7 +39,6 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
   void initState() {
     super.initState();
 
-    // Setup pulse animation for accept button
     _pulseController = AnimationController(
       duration: Duration(milliseconds: 1500),
       vsync: this,
@@ -50,7 +48,6 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
 
-    // Play system ringtone or custom ringtone
     _playRingtone();
   }
 
@@ -59,12 +56,11 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
       _isPlaying = true;
       await _ringtonePlayer.setReleaseMode(ReleaseMode.loop);
       await _ringtonePlayer.setVolume(1.0);
-      // Use custom ringtone or system default
       await _ringtonePlayer.play(AssetSource('sounds/calling.mp3'));
-      AppLogger.log('🔔 Ringtone started playing', tag: 'INCOMING_CALL');
+      AppLogger.log('Ringtone started playing', tag: 'INCOMING_CALL');
     } catch (e) {
       AppLogger.error(
-        '❌ Failed to play ringtone',
+        'Failed to play ringtone',
         error: e,
         tag: 'INCOMING_CALL',
       );
@@ -75,7 +71,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
     if (_isPlaying) {
       await _ringtonePlayer.stop();
       _isPlaying = false;
-      AppLogger.log('🔕 Ringtone stopped', tag: 'INCOMING_CALL');
+      AppLogger.log('Ringtone stopped', tag: 'INCOMING_CALL');
     }
   }
 
@@ -115,8 +111,6 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
           child: Column(
             children: [
               SizedBox(height: 80.h),
-
-              // Caller name
               Text(
                 widget.callerName,
                 style: TextStyle(
@@ -128,10 +122,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                 ),
                 textAlign: TextAlign.center,
               ),
-
               SizedBox(height: 10.h),
-
-              // Call status
               Text(
                 'Incoming call...',
                 style: TextStyle(
@@ -141,14 +132,10 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                   color: Colors.white70,
                 ),
               ),
-
               SizedBox(height: 60.h),
-
-              // Caller image with pulsing ring
               Stack(
                 alignment: Alignment.center,
                 children: [
-                  // Pulsing rings
                   AnimatedBuilder(
                     animation: _pulseAnimation,
                     builder: (context, child) {
@@ -165,8 +152,6 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                       );
                     },
                   ),
-
-                  // Second pulse ring
                   AnimatedBuilder(
                     animation: _pulseAnimation,
                     builder: (context, child) {
@@ -183,8 +168,6 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                       );
                     },
                   ),
-
-                  // Caller image
                   Container(
                     width: 160.w,
                     height: 160.h,
@@ -218,16 +201,12 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                   ),
                 ],
               ),
-
               Spacer(),
-
-              // Call action buttons
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 40.w),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    // Reject button
                     Column(
                       children: [
                         GestureDetector(
@@ -265,8 +244,6 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                         ),
                       ],
                     ),
-
-                    // Accept button with pulse animation
                     Column(
                       children: [
                         AnimatedBuilder(
@@ -317,7 +294,6 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                   ],
                 ),
               ),
-
               SizedBox(height: 80.h),
             ],
           ),

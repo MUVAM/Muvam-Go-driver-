@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
+import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class DriverProvider extends ChangeNotifier {
@@ -26,7 +27,7 @@ class DriverProvider extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
-      
+
       if (token != null) {
         final result = await ApiService.getDriverStatus(token);
         if (result['success'] == true) {
@@ -38,7 +39,7 @@ class DriverProvider extends ChangeNotifier {
         }
       }
     } catch (e) {
-      print('Error getting driver status: $e');
+      AppLogger.log('Error getting driver status: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -52,37 +53,37 @@ class DriverProvider extends ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
-      
+
       if (token != null) {
-        final result = _isOnline 
+        final result = _isOnline
             ? await ApiService.setDriverOfflineStatus(token)
             : await ApiService.setDriverOnlineStatus(token);
-            
+
         if (result['success'] == true) {
           await getDriverStatus(); // Refresh status
           return true;
         }
       }
     } catch (e) {
-      print('Error toggling driver status: $e');
+      AppLogger.log('Error toggling driver status: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
-    
+
     return false;
   }
 
   Future<bool> setOnline() async {
     if (_isOnline) return true;
-    
+
     _isLoading = true;
     notifyListeners();
 
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
-      
+
       if (token != null) {
         final result = await ApiService.setDriverOnlineStatus(token);
         if (result['success'] == true) {
@@ -91,25 +92,25 @@ class DriverProvider extends ChangeNotifier {
         }
       }
     } catch (e) {
-      print('Error setting driver online: $e');
+      AppLogger.log('Error setting driver online: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
-    
+
     return false;
   }
 
   Future<bool> setOffline() async {
     if (!_isOnline) return true;
-    
+
     _isLoading = true;
     notifyListeners();
 
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
-      
+
       if (token != null) {
         final result = await ApiService.setDriverOfflineStatus(token);
         if (result['success'] == true) {
@@ -118,12 +119,12 @@ class DriverProvider extends ChangeNotifier {
         }
       }
     } catch (e) {
-      print('Error setting driver offline: $e');
+      AppLogger.log('Error setting driver offline: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
-    
+
     return false;
   }
 }

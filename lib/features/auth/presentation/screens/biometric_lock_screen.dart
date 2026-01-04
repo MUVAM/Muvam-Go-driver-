@@ -27,7 +27,6 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
   void initState() {
     super.initState();
     _loadBiometricType();
-    // Auto-trigger authentication when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _authenticate();
     });
@@ -88,7 +87,6 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // App Logo or Icon
                 Container(
                   width: 120.w,
                   height: 120.h,
@@ -124,7 +122,6 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
                   textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 60.h),
-                // Biometric Icon
                 GestureDetector(
                   onTap: _isAuthenticating ? null : _authenticate,
                   child: Container(

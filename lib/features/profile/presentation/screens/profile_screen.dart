@@ -5,6 +5,7 @@ import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
 import 'package:muvam_rider/core/services/ride_tracking_service.dart';
 import 'package:muvam_rider/core/services/websocket_service.dart';
+import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/delete_account_screen.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/edit_full_name_screen.dart';
@@ -513,10 +514,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 Expanded(
                   child: GestureDetector(
                     onTap: () async {
-                      // Close the bottom sheet first
                       Navigator.pop(context);
-
-                      // Perform logout
                       await _performLogout(context);
                     },
                     child: Container(
@@ -573,39 +571,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _performLogout(BuildContext context) async {
     try {
-      // Stop ride tracking first
       RideTrackingService.stopTracking();
 
-      // Disconnect WebSocket
       WebSocketService.instance.disconnect();
 
-      // Clear all provider states
       if (context.mounted) {
-        // Clear auth and profile
         await context.read<AuthProvider>().logout();
         await context.read<ProfileProvider>().clearProfile();
-
-        // Reset all other providers to initial state
-        // Note: Some providers might not have explicit clear methods,
-        // but clearing SharedPreferences and navigating away will reset them
       }
 
-      // Clear SharedPreferences (this will clear all stored data)
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
 
-      // Navigate to rider selection screen and clear navigation stack
       if (context.mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
             builder: (context) => const RiderSignupSelectionScreen(),
           ),
-          (route) => false, // Remove all previous routes
+          (route) => false,
         );
       }
     } catch (e) {
-      print('Error during logout: $e');
-      // Even if there's an error, try to navigate to login screen
+      AppLogger.log('Error during logout: $e');
       if (context.mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(

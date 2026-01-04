@@ -22,7 +22,7 @@ class UpdateLocationScreen extends StatefulWidget {
 
 class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
   GoogleMapController? _mapController;
-  LatLng _selectedLocation = LatLng(6.5244, 3.3792); // Lagos default
+  LatLng _selectedLocation = LatLng(6.5244, 3.3792);
   LatLng _currentLocation = LatLng(6.5244, 3.3792);
   final TextEditingController _searchController = TextEditingController();
   bool _isLoading = false;
@@ -69,8 +69,10 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
   }
 
   void _onMapTap(LatLng position) {
-    print('=== MAP TAPPED ===');
-    print('Tapped position: ${position.latitude}, ${position.longitude}');
+    AppLogger.log('=== MAP TAPPED ===');
+    AppLogger.log(
+      'Tapped position: ${position.latitude}, ${position.longitude}',
+    );
     setState(() {
       _selectedLocation = position;
       _markers = {
@@ -84,8 +86,8 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
   }
 
   Future<void> _updateLocation() async {
-    print('=== UPDATING LOCATION ===');
-    print(
+    AppLogger.log('=== UPDATING LOCATION ===');
+    AppLogger.log(
       'Selected location: ${_selectedLocation.latitude}, ${_selectedLocation.longitude}',
     );
 
@@ -105,7 +107,7 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
         );
 
         if (result['success'] == true) {
-          print('Location updated successfully');
+          AppLogger.log('Location updated successfully');
           Navigator.pop(context);
           CustomFlushbar.showSuccess(
             context: context,
@@ -143,7 +145,6 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
           GoogleMap(
             onMapCreated: (GoogleMapController controller) {
               _mapController = controller;
-              // Center on current location after map is ready
               Future.delayed(Duration(milliseconds: 500), () {
                 _getCurrentLocation();
               });
@@ -258,9 +259,8 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
   }
 
   void _filterLocations(String query) {
-    print('Filtering locations for: $query');
+    AppLogger.log('Filtering locations for: $query');
 
-    // Cancel previous timer
     _debounceTimer?.cancel();
 
     if (query.isEmpty) {
@@ -271,7 +271,6 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
       return;
     }
 
-    // Debounce the API call
     _debounceTimer = Timer(Duration(milliseconds: 500), () {
       _searchPlaces(query);
     });
@@ -283,7 +282,7 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
           'https://maps.googleapis.com/maps/api/place/autocomplete/json'
           '?input=${Uri.encodeComponent(query)}'
           '&key=${UrlConstants.googleMapsApiKey}'
-          '&components=country:ng'; // Restrict to Nigeria
+          '&components=country:ng';
 
       final response = await http.get(Uri.parse(url));
 
@@ -303,13 +302,11 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
           _showSuggestions = _locationSuggestions.isNotEmpty;
         });
       } else {
-        print('Places API error: ${response.statusCode}');
-        // Fallback to recent locations
+        AppLogger.log('Places API error: ${response.statusCode}');
         _filterRecentLocations(query);
       }
     } catch (e) {
-      print('Error searching places: $e');
-      // Fallback to recent locations
+      AppLogger.log('Error searching places: $e');
       _filterRecentLocations(query);
     }
   }
@@ -329,13 +326,12 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
   }
 
   void _selectLocation(Map<String, dynamic> location) {
-    print('Selected location: ${location['description']}');
+    AppLogger.log('Selected location: ${location['description']}');
     setState(() {
       _searchController.text = location['description'];
       _showSuggestions = false;
     });
 
-    // If it's a Google Places result, get the coordinates
     if (location['place_id'].isNotEmpty) {
       _getPlaceDetails(location['place_id']);
     }
@@ -379,7 +375,7 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
         );
       }
     } catch (e) {
-      print('Error getting place details: $e');
+      AppLogger.log('Error getting place details: $e');
     }
   }
 

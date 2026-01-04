@@ -51,7 +51,6 @@ class _SplashScreenState extends State<SplashScreen>
     AppLogger.log('HAS TOKEN+++$hasToken');
 
     if (!hasToken) {
-      // No token, go to service selection
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -64,23 +63,19 @@ class _SplashScreenState extends State<SplashScreen>
     final isExpired = await authProvider.isSessionExpired();
 
     if (isExpired) {
-      // Session expired, go to service selection
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => RiderSignupSelectionScreen()),
       );
     } else {
-      print('fetch the user bank....');
-      // Valid session, fetch banks in background
+      AppLogger.log('fetch the user bank....');
       withdrawalProvider.fetchBanks();
       await authProvider.updateLastLoginTime();
 
-      // Check if biometric authentication is enabled
       final biometricService = BiometricAuthService();
       final isBiometricEnabled = await biometricService.isBiometricEnabled();
 
       if (isBiometricEnabled && mounted) {
-        // Show biometric lock screen
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -96,7 +91,6 @@ class _SplashScreenState extends State<SplashScreen>
           ),
         );
       } else {
-        // Go directly to home
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => HomeScreen()),

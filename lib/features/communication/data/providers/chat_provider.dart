@@ -1,11 +1,8 @@
-
-
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/chat_model.dart';
 
-//FOR DRIVER
 class ChatProvider with ChangeNotifier {
   final Map<int, List<ChatMessageModel>> _messagesByRide = {};
   final Map<int, ChatModel> _chats = {};
@@ -64,11 +61,11 @@ class ChatProvider with ChangeNotifier {
   Future<void> loadMessages() async {
     final prefs = await SharedPreferences.getInstance();
     final String? messagesJson = prefs.getString(_storageKey);
-    
+
     if (messagesJson != null) {
       final Map<String, dynamic> decoded = json.decode(messagesJson);
       _messagesByRide.clear();
-      
+
       decoded.forEach((key, value) {
         final rideId = int.parse(key);
         final List<dynamic> messagesList = value;
@@ -76,7 +73,7 @@ class ChatProvider with ChangeNotifier {
             .map((m) => ChatMessageModel.fromJson(m))
             .toList();
       });
-      
+
       notifyListeners();
     }
   }
@@ -84,11 +81,11 @@ class ChatProvider with ChangeNotifier {
   Future<void> _saveMessages() async {
     final prefs = await SharedPreferences.getInstance();
     final Map<String, dynamic> toSave = {};
-    
+
     _messagesByRide.forEach((rideId, messages) {
       toSave[rideId.toString()] = messages.map((m) => m.toJson()).toList();
     });
-    
+
     await prefs.setString(_storageKey, json.encode(toSave));
   }
 }

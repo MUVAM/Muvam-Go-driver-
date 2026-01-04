@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geolocator/geolocator.dart';
@@ -15,35 +14,30 @@ import 'package:muvam_rider/core/services/api_service.dart';
 import 'package:muvam_rider/core/services/call_service.dart';
 import 'package:muvam_rider/core/services/location_service.dart';
 import 'package:muvam_rider/core/services/ride_tracking_service.dart';
-import 'package:muvam_rider/core/services/unifiedNotifiationService.dart';
+import 'package:muvam_rider/core/services/unified_notifiation_service.dart';
 import 'package:muvam_rider/core/services/websocket_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/activities/data/providers/request_provider.dart';
 import 'package:muvam_rider/features/activities/presentation/screens/activities_screen.dart';
-import 'package:muvam_rider/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_selection_screen.dart';
 import 'package:muvam_rider/features/communication/data/models/chat_model.dart';
 import 'package:muvam_rider/features/communication/data/providers/chat_provider.dart';
 import 'package:muvam_rider/features/communication/presentation/screens/call_screen.dart';
 import 'package:muvam_rider/features/communication/presentation/screens/chat_screen.dart';
-import 'package:muvam_rider/features/communication/presentation/widgets/notificationchat.dart';
+import 'package:muvam_rider/features/communication/presentation/widgets/chat_notification_service.dart';
 import 'package:muvam_rider/features/earnings/data/provider/wallet_provider.dart';
 import 'package:muvam_rider/features/earnings/presentation/screens/wallet_screen.dart';
 import 'package:muvam_rider/features/home/data/provider/driver_provider.dart';
+import 'package:muvam_rider/features/home/presentation/widgets/driver_app_drawer.dart';
 import 'package:muvam_rider/features/home/presentation/widgets/ride_info_widget.dart';
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
-import 'package:muvam_rider/features/profile/presentation/screens/profile_screen.dart';
-import 'package:muvam_rider/features/referral/presentation/screens/referral_screen.dart';
-import 'package:muvam_rider/features/support/presentation/screens/about_us_screen.dart';
-import 'package:muvam_rider/features/support/presentation/screens/faq_screen.dart';
 import 'package:muvam_rider/features/trips/presentation/screen/history_completed_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-//FOR DRIVER
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -641,7 +635,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (token != null) {
       final result = await ApiService.acceptRide(token, rideId);
 
-      print('ACCEPT RIDE RESPONSE: $result');
+      AppLogger.log('ACCEPT RIDE RESPONSE: $result');
 
       AppLogger.log('ACCEPT RIDE RESPONSE: $result');
       if (result['success'] == true) {
@@ -704,7 +698,7 @@ class _HomeScreenState extends State<HomeScreen> {
           }
         }
 
-        print("PASSENGER ID ${transformedRide['Passenger']['ID']}");
+        AppLogger.log("PASSENGER ID ${transformedRide['Passenger']['ID']}");
         AppLogger.log('🔄 TRANSFORMED RIDE DATA:');
         AppLogger.log('   Transformed keys: ${transformedRide.keys.toList()}');
         AppLogger.log(
@@ -896,6 +890,15 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  int get _activeRequestsCount {
+    final requestProvider = context.watch<RequestProvider>();
+
+    final activeCount = requestProvider.activeRides.length;
+    final prebookedCount = requestProvider.prebookedRides.length;
+
+    return activeCount + prebookedCount;
+  }
+
   void _centerMapOnActiveRide() {
     if (_activeRide == null || _mapController == null) {
       AppLogger.log(
@@ -971,7 +974,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Scaffold(
         key: _scaffoldKey,
         backgroundColor: themeManager.getBackgroundColor(context),
-        drawer: _buildDrawer(),
+        drawer: DriverAppDrawer(onContactUsTap: _showContactBottomSheet),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _currentIndex,
           backgroundColor: themeManager.getCardColor(context),
@@ -985,34 +988,49 @@ class _HomeScreenState extends State<HomeScreen> {
           items: [
             BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
             BottomNavigationBarItem(
-              icon: Stack(
-                children: [
-                  Image.asset(
-                    ConstImages.requests,
-                    width: 24.w,
-                    height: 24.h,
-                    color: _currentIndex == 1
-                        ? Color(ConstColors.mainColor)
-                        : Colors.grey,
-                  ),
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Container(
-                      padding: EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(10),
+              icon: Consumer<RequestProvider>(
+                builder: (context, requestProvider, child) {
+                  final count =
+                      requestProvider.activeRides.length +
+                      requestProvider.prebookedRides.length;
+
+                  return Stack(
+                    children: [
+                      Image.asset(
+                        ConstImages.requests,
+                        width: 24.w,
+                        height: 24.h,
+                        color: _currentIndex == 1
+                            ? Color(ConstColors.mainColor)
+                            : Colors.grey,
                       ),
-                      constraints: BoxConstraints(minWidth: 16, minHeight: 16),
-                      child: Text(
-                        '3',
-                        style: TextStyle(color: Colors.white, fontSize: 10),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-                ],
+                      if (count > 0)
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: Container(
+                            padding: EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            constraints: BoxConstraints(
+                              minWidth: 16,
+                              minHeight: 16,
+                            ),
+                            child: Text(
+                              '$count',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                    ],
+                  );
+                },
               ),
               label: 'Requests',
             ),
@@ -2023,155 +2041,6 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildDrawer() {
-    final themeManager = Provider.of<ThemeManager>(context);
-    final profileProvider = Provider.of<ProfileProvider>(context);
-
-    return Drawer(
-      backgroundColor: themeManager.getCardColor(context),
-      child: Column(
-        children: [
-          SizedBox(height: 60.h),
-          Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20.w),
-            child: Row(
-              children: [
-                profileProvider.userProfilePhoto.isNotEmpty
-                    ? CircleAvatar(
-                        radius: 30.r,
-                        backgroundImage: NetworkImage(
-                          profileProvider.userProfilePhoto,
-                        ),
-                      )
-                    : Image.asset(
-                        ConstImages.avatar,
-                        width: 60.w,
-                        height: 60.h,
-                      ),
-                SizedBox(width: 15.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        profileProvider.userShortName,
-                        style: ConstTextStyles.drawerName.copyWith(
-                          color: themeManager.getTextColor(context),
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ProfileScreen(),
-                            ),
-                          );
-                        },
-                        child: Text(
-                          'My Account',
-                          style: ConstTextStyles.drawerAccount.copyWith(
-                            color: themeManager.getSecondaryTextColor(context),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-          SizedBox(height: 20.h),
-          Divider(thickness: 1, color: Colors.grey.shade300),
-          _buildDrawerItem(
-            'Wallet',
-            ConstImages.wallet,
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => WalletScreen()),
-              );
-            },
-          ),
-          _buildDrawerItem(
-            'Referral',
-            ConstImages.referral,
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ReferralScreen()),
-              );
-            },
-          ),
-          _buildDrawerItem(
-            'Analytics',
-            ConstImages.activities,
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => AnalyticsScreen()),
-              );
-            },
-          ),
-          _buildDrawerItem(
-            'Contact Us',
-            ConstImages.phoneCall,
-            onTap: _showContactBottomSheet,
-          ),
-          _buildDrawerItem(
-            'FAQ',
-            ConstImages.faq,
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => FaqScreen()),
-              );
-            },
-          ),
-          _buildDrawerItem(
-            'About',
-            ConstImages.about,
-            onTap: () {
-              Navigator.pop(context);
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => AboutUsScreen()),
-              );
-            },
-          ),
-          Consumer<ThemeManager>(
-            builder: (context, themeManager, child) {
-              return SwitchListTile(
-                title: Text(
-                  themeManager.isDarkMode ? 'Light Mode' : 'Dark Mode',
-                  style: ConstTextStyles.drawerItem.copyWith(
-                    color: themeManager.getTextColor(context),
-                  ),
-                ),
-                value: themeManager.isDarkMode,
-                activeThumbColor: Color(ConstColors.mainColor),
-                onChanged: (value) {
-                  themeManager.toggleTheme();
-                },
-                secondary: Icon(
-                  themeManager.isDarkMode ? Icons.light_mode : Icons.dark_mode,
-                  size: 24.sp,
-                  color: themeManager.getTextColor(context),
-                ),
-              );
-            },
-          ),
-        ],
       ),
     );
   }
@@ -3887,29 +3756,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildDrawerItem(
-    String title,
-    String iconPath, {
-    VoidCallback? onTap,
-  }) {
-    final themeManager = Provider.of<ThemeManager>(context);
-    return ListTile(
-      leading: Image.asset(
-        iconPath,
-        width: 24.w,
-        height: 24.h,
-        color: themeManager.getTextColor(context),
-      ),
-      title: Text(
-        title,
-        style: ConstTextStyles.drawerItem.copyWith(
-          color: themeManager.getTextColor(context),
-        ),
-      ),
-      onTap: onTap,
-    );
-  }
-
   // Widget for stop marker
   Widget _buildStopMarkerWidget() {
     String stopText = _activeRide?['StopAddress']?.toString() ?? 'Stop';
@@ -4966,8 +4812,7 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
     final waitFee = widget.acceptedData['wait_fee'] ?? 0;
     final passengerName =
         '${passenger['first_name'] ?? 'Unknown'} ${passenger['last_name'] ?? 'Passenger'}';
-          final passengerPhone =
-        passenger['phone'] ?? '';
+    final passengerPhone = passenger['phone'] ?? '';
     final String passengerID = (passenger['ID'] ?? 1).toString();
 
     return Container(
@@ -4997,8 +4842,7 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
               waitFee,
               passengerID,
               passengerName,
-              passengerPhone
-
+              passengerPhone,
             ),
           if (_rideStatus == 'started')
             Column(
@@ -5550,7 +5394,7 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
     final passengerFirstName = passenger['first_name'] ?? 'Unknown';
     final passengerLastName = passenger['last_name'] ?? '';
     final passengerName = '$passengerFirstName $passengerLastName'.trim();
-        final passengerPhone = passenger["phone"]??'';
+    final passengerPhone = passenger["phone"] ?? '';
 
     final note = ride['Note'] ?? '';
     final stopAddress = ride['StopAddress'];

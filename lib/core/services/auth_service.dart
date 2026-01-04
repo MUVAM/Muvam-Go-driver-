@@ -1,9 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../constants/url_constants.dart';
 
 class AuthService {

@@ -22,9 +22,7 @@ class EarningsService {
 
     final url = '${UrlConstants.baseUrl}/earnings/summary?period=$period';
 
-    AppLogger.log('==================================');
     AppLogger.log('FETCHING EARNINGS SUMMARY');
-    AppLogger.log('==================================');
     AppLogger.log('URL: $url');
     AppLogger.log('Period: $period');
 
@@ -71,9 +69,7 @@ class EarningsService {
 
     final url = '${UrlConstants.baseUrl}/earnings/overview?period=$period';
 
-    AppLogger.log('==================================');
     AppLogger.log('FETCHING EARNINGS OVERVIEW');
-    AppLogger.log('==================================');
     AppLogger.log('URL: $url');
     AppLogger.log('Period: $period');
 
@@ -131,9 +127,7 @@ class EarningsService {
     final url =
         '${UrlConstants.baseUrl}/earnings/breakdown?start_date=$startDate&end_date=$endDate';
 
-    AppLogger.log('==================================');
     AppLogger.log('FETCHING EARNINGS BREAKDOWN');
-    AppLogger.log('==================================');
     AppLogger.log('URL: $url');
 
     try {

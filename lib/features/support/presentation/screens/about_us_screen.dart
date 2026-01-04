@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
+import 'package:muvam_rider/features/support/presentation/widgets/contact_item.dart';
+import 'package:muvam_rider/features/support/presentation/widgets/feature_item.dart';
+import 'package:muvam_rider/features/support/presentation/widgets/social_button.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class AboutUsScreen extends StatelessWidget {
@@ -15,7 +18,6 @@ class AboutUsScreen extends StatelessWidget {
         child: Column(
           children: [
             SizedBox(height: 20.h),
-            // Header
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: Row(
@@ -47,15 +49,12 @@ class AboutUsScreen extends StatelessWidget {
               ),
             ),
             SizedBox(height: 30.h),
-
-            // Content
             Expanded(
               child: SingleChildScrollView(
                 padding: EdgeInsets.symmetric(horizontal: 20.w),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Logo/Brand Section
                     Center(
                       child: Container(
                         width: 120.w,
@@ -74,8 +73,6 @@ class AboutUsScreen extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 20.h),
-
-                    // App Name
                     Center(
                       child: Text(
                         'Muvam',
@@ -88,8 +85,6 @@ class AboutUsScreen extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 8.h),
-
-                    // Tagline
                     Center(
                       child: Text(
                         'Your Ride, Your Way',
@@ -102,90 +97,82 @@ class AboutUsScreen extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 30.h),
-
-                    // About Section
                     _buildSectionTitle('Our Story'),
                     SizedBox(height: 12.h),
                     _buildParagraph(
                       'Muvam is a leading ride-hailing service committed to providing safe, reliable, and affordable transportation solutions. Founded with a vision to revolutionize urban mobility, we connect riders with professional drivers at the tap of a button.',
                     ),
                     SizedBox(height: 20.h),
-
                     _buildSectionTitle('Our Mission'),
                     SizedBox(height: 12.h),
                     _buildParagraph(
                       'To make transportation accessible, convenient, and sustainable for everyone. We strive to create a seamless experience that empowers both riders and drivers while contributing to smarter, cleaner cities.',
                     ),
                     SizedBox(height: 20.h),
-
                     _buildSectionTitle('Why Choose Muvam?'),
                     SizedBox(height: 12.h),
-                    _buildFeatureItem(
-                      Icons.verified_user,
-                      'Safety First',
-                      'All drivers are thoroughly vetted and rides are insured',
+                    FeatureItem(
+                      icon: Icons.verified_user,
+                      title: 'Safety First',
+                      description:
+                          'All drivers are thoroughly vetted and rides are insured',
                     ),
                     SizedBox(height: 12.h),
-                    _buildFeatureItem(
-                      Icons.attach_money,
-                      'Transparent Pricing',
-                      'No hidden fees, see your fare before you ride',
+                    FeatureItem(
+                      icon: Icons.attach_money,
+                      title: 'Transparent Pricing',
+                      description:
+                          'No hidden fees, see your fare before you ride',
                     ),
                     SizedBox(height: 12.h),
-                    _buildFeatureItem(
-                      Icons.support_agent,
-                      '24/7 Support',
-                      'Our team is always here to help you',
+                    FeatureItem(
+                      icon: Icons.support_agent,
+                      title: '24/7 Support',
+                      description: 'Our team is always here to help you',
                     ),
                     SizedBox(height: 12.h),
-                    _buildFeatureItem(
-                      Icons.eco,
-                      'Eco-Friendly',
-                      'Committed to reducing carbon emissions',
+                    FeatureItem(
+                      icon: Icons.eco,
+                      title: 'Eco-Friendly',
+                      description: 'Committed to reducing carbon emissions',
                     ),
                     SizedBox(height: 30.h),
-
-                    // Contact Section
                     _buildSectionTitle('Get in Touch'),
                     SizedBox(height: 12.h),
-                    _buildContactItem(
-                      Icons.email,
-                      'Email',
-                      'support@muvam.com',
-                      () => _launchEmail('support@muvam.com'),
+                    ContactItem(
+                      icon: Icons.email,
+                      label: 'Email',
+                      value: 'support@muvam.com',
+                      onTap: () => _launchEmail('support@muvam.com'),
                     ),
                     SizedBox(height: 12.h),
-                    _buildContactItem(
-                      Icons.phone,
-                      'Phone',
-                      '+1 (555) 123-4567',
-                      () => _launchPhone('+15551234567'),
+                    ContactItem(
+                      icon: Icons.phone,
+                      label: 'Phone',
+                      value: '+1 (555) 123-4567',
+                      onTap: () => _launchPhone('+15551234567'),
                     ),
                     SizedBox(height: 12.h),
-                    _buildContactItem(
-                      Icons.language,
-                      'Website',
-                      'www.muvam.com',
-                      () => _launchWebsite('https://www.muvam.com'),
+                    ContactItem(
+                      icon: Icons.language,
+                      label: 'Website',
+                      value: 'www.muvam.com',
+                      onTap: () => _launchWebsite('https://www.muvam.com'),
                     ),
                     SizedBox(height: 30.h),
-
-                    // Social Media
                     _buildSectionTitle('Follow Us'),
                     SizedBox(height: 16.h),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildSocialButton(Icons.facebook, () {}),
+                        SocialButton(icon: Icons.facebook, onTap: () {}),
                         SizedBox(width: 16.w),
-                        _buildSocialButton(Icons.camera_alt, () {}),
+                        SocialButton(icon: Icons.camera_alt, onTap: () {}),
                         SizedBox(width: 16.w),
-                        _buildSocialButton(Icons.alternate_email, () {}),
+                        SocialButton(icon: Icons.alternate_email, onTap: () {}),
                       ],
                     ),
                     SizedBox(height: 30.h),
-
-                    // Version
                     Center(
                       child: Text(
                         'Version 1.0.0',
@@ -198,8 +185,6 @@ class AboutUsScreen extends StatelessWidget {
                       ),
                     ),
                     SizedBox(height: 10.h),
-
-                    // Copyright
                     Center(
                       child: Text(
                         '© 2025 Muvam. All rights reserved.',
@@ -245,131 +230,6 @@ class AboutUsScreen extends StatelessWidget {
         height: 1.6,
       ),
       textAlign: TextAlign.justify,
-    );
-  }
-
-  Widget _buildFeatureItem(IconData icon, String title, String description) {
-    return Container(
-      padding: EdgeInsets.all(16.w),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12.r),
-        border: Border.all(color: Colors.grey.shade200),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48.w,
-            height: 48.h,
-            decoration: BoxDecoration(
-              color: Color(ConstColors.mainColor).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12.r),
-            ),
-            child: Icon(icon, color: Color(ConstColors.mainColor), size: 24.sp),
-          ),
-          SizedBox(width: 16.w),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 15.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black,
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  description,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.grey[600],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildContactItem(
-    IconData icon,
-    String label,
-    String value,
-    VoidCallback onTap,
-  ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: EdgeInsets.all(16.w),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12.r),
-          border: Border.all(color: Colors.grey.shade200),
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: Color(ConstColors.mainColor), size: 24.sp),
-            SizedBox(width: 16.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    label,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  SizedBox(height: 2.h),
-                  Text(
-                    value,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios, color: Colors.grey[400], size: 16.sp),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSocialButton(IconData icon, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 50.w,
-        height: 50.h,
-        decoration: BoxDecoration(
-          color: Color(ConstColors.mainColor),
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Color(ConstColors.mainColor).withOpacity(0.3),
-              blurRadius: 8,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Icon(icon, color: Colors.white, size: 24.sp),
-      ),
     );
   }
 

@@ -81,18 +81,17 @@ class _OtpScreenState extends State<OtpScreen> {
     setState(() => _isLoading = false);
 
     if (success) {
-      // Check if user role is driver
       final userRole = authProvider.verifyOtpResponse?['user']?['Role'];
       if (userRole != null && userRole != 'driver') {
         CustomFlushbar.showError(
           context: context,
-          message: 'You cannot log in with a passenger account in the driver app',
+          message:
+              'You cannot log in with a passenger account in the driver app',
         );
         return;
       }
 
       if (authProvider.isNewUser) {
-        // New user - go to create account
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -103,7 +102,6 @@ class _OtpScreenState extends State<OtpScreen> {
           ),
         );
       } else {
-        // Existing user - go to home
         await authProvider.updateLastLoginTime();
         Navigator.pushAndRemoveUntil(
           context,
@@ -169,7 +167,6 @@ class _OtpScreenState extends State<OtpScreen> {
                   children: [
                     SizedBox(height: 60.h),
                     Image.asset(ConstImages.otp, width: 426.w, height: 426.h),
-                    // SizedBox(height: 30.h),
                     Text(
                       'Phone Verification',
                       style: ConstTextStyles.boldTitle,
