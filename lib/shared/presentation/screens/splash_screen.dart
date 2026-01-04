@@ -8,7 +8,9 @@ import 'package:muvam_rider/features/auth/presentation/screens/biometric_lock_sc
 import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_selection_screen.dart';
 import 'package:muvam_rider/features/earnings/data/provider/withdrawal_provider.dart';
 import 'package:muvam_rider/features/home/presentation/screens/home_screen.dart';
+import 'package:muvam_rider/shared/presentation/screens/onboarding_screen.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -51,21 +53,35 @@ class _SplashScreenState extends State<SplashScreen>
     AppLogger.log('HAS TOKEN+++$hasToken');
 
     if (!hasToken) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const RiderSignupSelectionScreen(),
-        ),
-      );
+      // Check if this is the first time the user is opening the app
+      final isFirstTime = await _isFirstTimeUser();
+
+      if (isFirstTime) {
+        // First-time user: show rider selection screen
+        await _markAppAsOpened();
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const RiderSignupSelectionScreen(),
+          ),
+        );
+      } else {
+        // Returning user without token: show phone number input screen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+        );
+      }
       return;
     }
 
     final isExpired = await authProvider.isSessionExpired();
 
     if (isExpired) {
+      // Session expired: show phone number input screen
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => RiderSignupSelectionScreen()),
+        MaterialPageRoute(builder: (context) => const OnboardingScreen()),
       );
     } else {
       AppLogger.log('fetch the user bank....');
@@ -97,6 +113,16 @@ class _SplashScreenState extends State<SplashScreen>
         );
       }
     }
+  }
+
+  Future<bool> _isFirstTimeUser() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool('has_opened_app') ?? true;
+  }
+
+  Future<void> _markAppAsOpened() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('has_opened_app', false);
   }
 
   @override
