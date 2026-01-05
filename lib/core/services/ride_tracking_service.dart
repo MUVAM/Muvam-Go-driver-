@@ -536,8 +536,8 @@ class RideTrackingService {
     _markers.removeWhere((marker) => marker.markerId.value == 'driver');
 
     // Create custom car icon
-    final carIcon = await BitmapDescriptor.fromAssetImage(
-      ImageConfiguration(size: Size(48, 24)),
+    final carIcon = await BitmapDescriptor.asset(
+      ImageConfiguration(size: Size(43, 20)),
       'assets/images/locationcar.png',
     );
 
