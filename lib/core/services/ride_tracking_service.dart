@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:math';
+
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:muvam_rider/core/constants/url_constants.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
@@ -14,8 +15,8 @@ class RideTrackingService {
   static GoogleMapController? _mapController;
   static StreamSubscription<Position>? _positionStream;
   static Timer? _locationUpdateTimer;
-  static Set<Marker> _markers = {};
-  static Set<Polyline> _polylines = {};
+  static final Set<Marker> _markers = {};
+  static final Set<Polyline> _polylines = {};
   static PolylinePoints polylinePoints = PolylinePoints();
   static Map<String, dynamic>? _currentRide;
 
@@ -536,7 +537,7 @@ class RideTrackingService {
 
     // Create custom car icon
     final carIcon = await BitmapDescriptor.fromAssetImage(
-      ImageConfiguration(size: Size(80, 38)),
+      ImageConfiguration(size: Size(48, 24)),
       'assets/images/locationcar.png',
     );
 
@@ -678,7 +679,7 @@ class RideTrackingService {
       );
 
       AppLogger.log(
-        'Polyline created with ${polylineCoordinates.length} points (${routeType})',
+        'Polyline created with ${polylineCoordinates.length} points ($routeType)',
       );
       AppLogger.log(
         'Polyline details: ID=${_polylines.first.polylineId.value}, Points=${_polylines.first.points.length}, Color=${_polylines.first.color}',

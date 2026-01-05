@@ -1417,6 +1417,74 @@ class _HomeScreenState extends State<HomeScreen> {
                   if (_hasActiveRequest && _nearbyRides.isNotEmpty)
                     _buildRideRequestSheet(),
 
+                  // Navigation widget positioned on top of the ride sheet
+                  if (_activeRide != null &&
+                      _activeRide!['Status'] != 'completed')
+                    Positioned(
+                      bottom: 450.h, // Position it above the bottom sheet
+                      right: 20.w,
+                      child: GestureDetector(
+                        onTap: _openGoogleMaps,
+                        child: Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 12.w,
+                            vertical: 8.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Color(
+                              ConstColors.mainColor,
+                            ).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8.r),
+                            border: Border.all(
+                              color: Color(ConstColors.mainColor),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.navigation,
+                                color: Color(ConstColors.mainColor),
+                                size: 20.sp,
+                              ),
+                              SizedBox(width: 8.w),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    'Navigation',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 12.sp,
+                                      color: Color(ConstColors.mainColor),
+                                    ),
+                                  ),
+                                  Text(
+                                    'Open in map',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontWeight: FontWeight.w400,
+                                      fontSize: 10.sp,
+                                      color: Colors.grey[600],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(width: 4.w),
+                              Icon(
+                                Icons.arrow_forward_ios,
+                                color: Color(ConstColors.mainColor),
+                                size: 12.sp,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+
                   // Full-screen incoming call overlay
                 ],
               ),
@@ -4780,6 +4848,57 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
   }
+
+  Future<void> _openGoogleMaps() async {
+    try {
+      if (_activeRide == null) {
+        CustomFlushbar.showError(context: context, message: 'No active ride');
+        return;
+      }
+
+      // Determine which location to navigate to based on ride status
+      String? destinationAddress;
+      final rideStatus = _activeRide!['Status'] ?? 'accepted';
+
+      if (rideStatus == 'started') {
+        // If ride has started, navigate to destination
+        destinationAddress = _activeRide!['DestAddress'];
+      } else {
+        // If ride not started (accepted or arrived), navigate to pickup
+        destinationAddress = _activeRide!['PickupAddress'];
+      }
+
+      if (destinationAddress == null || destinationAddress.isEmpty) {
+        CustomFlushbar.showError(
+          context: context,
+          message: 'Location address not available',
+        );
+        return;
+      }
+
+      // Create Google Maps URL with the destination address
+      final encodedAddress = Uri.encodeComponent(destinationAddress);
+      final url =
+          'https://www.google.com/maps/search/?api=1&query=$encodedAddress';
+
+      final uri = Uri.parse(url);
+
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        CustomFlushbar.showError(
+          context: context,
+          message: 'Could not open Google Maps',
+        );
+      }
+    } catch (e) {
+      AppLogger.log('Error opening Google Maps: $e');
+      CustomFlushbar.showError(
+        context: context,
+        message: 'Failed to open Google Maps',
+      );
+    }
+  }
 }
 
 class _RideAcceptedSheet extends StatefulWidget {
@@ -5038,70 +5157,6 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
               SizedBox(height: 20.h),
             ],
           ),
-          // Navigation widget positioned at top-right corner
-          if (_rideStatus != 'completed')
-            Positioned(
-              top: 0,
-              right: 0,
-              child: GestureDetector(
-                onTap: _openGoogleMaps,
-                child: Container(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 12.w,
-                    vertical: 8.h,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Color(ConstColors.mainColor).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8.r),
-                    border: Border.all(
-                      color: Color(ConstColors.mainColor),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.navigation,
-                        color: Color(ConstColors.mainColor),
-                        size: 20.sp,
-                      ),
-                      SizedBox(width: 8.w),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            'Navigation',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w700,
-                              fontSize: 12.sp,
-                              color: Color(ConstColors.mainColor),
-                            ),
-                          ),
-                          Text(
-                            'Open in map',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontWeight: FontWeight.w400,
-                              fontSize: 10.sp,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(width: 4.w),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        color: Color(ConstColors.mainColor),
-                        size: 12.sp,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );
@@ -6409,51 +6464,6 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
         ),
       ],
     );
-  }
-
-  Future<void> _openGoogleMaps() async {
-    try {
-      // Determine which location to navigate to based on ride status
-      String? destinationAddress;
-
-      if (_rideStatus == 'started') {
-        // If ride has started, navigate to destination
-        destinationAddress = widget.ride['DestAddress'];
-      } else {
-        // If ride not started (accepted or arrived), navigate to pickup
-        destinationAddress = widget.ride['PickupAddress'];
-      }
-
-      if (destinationAddress == null || destinationAddress.isEmpty) {
-        CustomFlushbar.showError(
-          context: context,
-          message: 'Location address not available',
-        );
-        return;
-      }
-
-      // Create Google Maps URL with the destination address
-      final encodedAddress = Uri.encodeComponent(destinationAddress);
-      final url =
-          'https://www.google.com/maps/search/?api=1&query=$encodedAddress';
-
-      final uri = Uri.parse(url);
-
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        CustomFlushbar.showError(
-          context: context,
-          message: 'Could not open Google Maps',
-        );
-      }
-    } catch (e) {
-      AppLogger.error('Error opening Google Maps', error: e);
-      CustomFlushbar.showError(
-        context: context,
-        message: 'Failed to open Google Maps',
-      );
-    }
   }
 
   String _formatPaymentMethod(String? method) {
