@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/features/earnings/presentation/widgets/bank_selector_widget.dart';
+import 'package:muvam_rider/features/earnings/presentation/widgets/text_field_widget.dart';
 import 'package:provider/provider.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
 import 'package:muvam_rider/features/earnings/data/provider/withdrawal_provider.dart';
-import 'bank_selection_screen.dart';
 import 'withdrawal_success_screen.dart';
 
 class WithdrawalScreen extends StatefulWidget {
@@ -161,20 +162,26 @@ class WithdrawalScreenState extends State<WithdrawalScreen> {
                     ),
                   ),
                   SizedBox(height: 40.h),
-                  _buildBankSelector(themeManager, withdrawalProvider),
+                  BankSelectorWidget(parentContext: context),
                   SizedBox(height: 20.h),
-                  _buildTextField(
-                    'Account Number',
-                    _accountNumberController,
+                  TextFieldWidget(
+                    label: 'Account Number',
+                    controller: _accountNumberController,
                     keyboardType: TextInputType.number,
+                    hintText: 'Enter account number',
                   ),
                   SizedBox(height: 20.h),
-                  _buildTextField('Account Name', _accountNameController),
+                  TextFieldWidget(
+                    label: 'Account Name',
+                    controller: _accountNameController,
+                    hintText: 'Enter account name',
+                  ),
                   SizedBox(height: 20.h),
-                  _buildTextField(
-                    'Amount',
-                    _amountController,
+                  TextFieldWidget(
+                    label: 'Amount',
+                    controller: _amountController,
                     keyboardType: TextInputType.number,
+                    hintText: 'Enter amount',
                   ),
                   SizedBox(height: 40.h),
                   GestureDetector(
@@ -187,7 +194,7 @@ class WithdrawalScreenState extends State<WithdrawalScreen> {
                       decoration: BoxDecoration(
                         color: withdrawalProvider.isWithdrawing
                             ? Colors.grey
-                            : Color(ConstColors.mainColor),
+                            : const Color(ConstColors.mainColor),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Center(
@@ -195,7 +202,7 @@ class WithdrawalScreenState extends State<WithdrawalScreen> {
                             ? SizedBox(
                                 width: 20.w,
                                 height: 20.h,
-                                child: CircularProgressIndicator(
+                                child: const CircularProgressIndicator(
                                   color: Colors.white,
                                   strokeWidth: 2,
                                 ),
@@ -219,135 +226,6 @@ class WithdrawalScreenState extends State<WithdrawalScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildBankSelector(
-    ThemeManager themeManager,
-    WithdrawalProvider provider,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Bank name',
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontWeight: FontWeight.w500,
-            fontSize: 14.sp,
-            color: themeManager.getTextColor(context),
-          ),
-        ),
-        SizedBox(height: 8.h),
-        GestureDetector(
-          onTap: provider.isLoading
-              ? null
-              : () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const BankSelectionScreen(),
-                    ),
-                  );
-                },
-          child: Container(
-            width: double.infinity,
-            height: 45.h,
-            padding: EdgeInsets.symmetric(horizontal: 15.w),
-            decoration: BoxDecoration(
-              color: Color(ConstColors.fieldColor).withOpacity(0.12),
-              borderRadius: BorderRadius.circular(3.r),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: provider.isLoading
-                      ? Align(
-                          alignment: Alignment.centerLeft,
-                          child: SizedBox(
-                            width: 20.w,
-                            height: 20.h,
-                            child: CircularProgressIndicator(
-                              color: themeManager.getTextColor(context),
-                              strokeWidth: 2,
-                            ),
-                          ),
-                        )
-                      : Text(
-                          provider.selectedBank?.name ?? 'Select your bank',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: provider.selectedBank != null
-                                ? 14.sp
-                                : 12.sp,
-                            color: provider.selectedBank != null
-                                ? themeManager.getTextColor(context)
-                                : Colors.grey,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                ),
-                Icon(
-                  Icons.keyboard_arrow_down,
-                  color: themeManager.getTextColor(context),
-                  size: 20.sp,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTextField(
-    String label,
-    TextEditingController controller, {
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    final themeManager = Provider.of<ThemeManager>(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontWeight: FontWeight.w500,
-            fontSize: 14.sp,
-            color: themeManager.getTextColor(context),
-          ),
-        ),
-        SizedBox(height: 8.h),
-        Container(
-          width: double.infinity,
-          height: 45.h,
-          decoration: BoxDecoration(
-            color: Color(ConstColors.fieldColor).withOpacity(0.12),
-            borderRadius: BorderRadius.circular(3.r),
-          ),
-          child: TextField(
-            controller: controller,
-            keyboardType: keyboardType,
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 14.sp,
-              color: themeManager.getTextColor(context),
-            ),
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.all(15.w),
-              hintText: 'Enter $label',
-              hintStyle: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 12.sp,
-                color: Colors.grey,
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

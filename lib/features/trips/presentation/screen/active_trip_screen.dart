@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:muvam_rider/core/utils/app_logger.dart';
+import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/activities/data/providers/request_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class ActiveTripScreen extends StatefulWidget {
   final int rideId;
@@ -20,6 +23,59 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<RequestProvider>().fetchRideDetails(widget.rideId);
     });
+  }
+
+  Future<void> _openGoogleMaps() async {
+    try {
+      final provider = context.read<RequestProvider>();
+      final ride = provider.selectedRide;
+
+      if (ride == null) {
+        CustomFlushbar.showError(
+          context: context,
+          message: 'Ride details not available',
+        );
+
+        return;
+      }
+
+      String? destinationAddress;
+
+      if (ride.status == 'started') {
+        destinationAddress = ride.destAddress;
+      } else {
+        destinationAddress = ride.pickupAddress;
+      }
+
+      if (destinationAddress.isEmpty) {
+        CustomFlushbar.showError(
+          context: context,
+          message: 'Location address not available',
+        );
+        return;
+      }
+
+      final encodedAddress = Uri.encodeComponent(destinationAddress);
+      final url =
+          'https://www.google.com/maps/search/?api=1&query=$encodedAddress';
+
+      final uri = Uri.parse(url);
+
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        CustomFlushbar.showError(
+          context: context,
+          message: 'Could not open Google Maps',
+        );
+      }
+    } catch (e) {
+      AppLogger.log('Error opening Google Maps: $e');
+      CustomFlushbar.showError(
+        context: context,
+        message: 'Failed to open Google Maps',
+      );
+    }
   }
 
   @override
@@ -327,17 +383,15 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
                     ),
                   ),
                   Spacer(),
-                  Container(
-                    width: 353.w,
-                    height: 48.h,
-                    decoration: BoxDecoration(
-                      color: Color(ConstColors.mainColor),
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    child: GestureDetector(
-                      onTap: () {
-                        Navigator.pop(context);
-                      },
+                  GestureDetector(
+                    onTap: _openGoogleMaps,
+                    child: Container(
+                      width: 353.w,
+                      height: 48.h,
+                      decoration: BoxDecoration(
+                        color: Color(ConstColors.mainColor),
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
                       child: Center(
                         child: Text(
                           'View in map',

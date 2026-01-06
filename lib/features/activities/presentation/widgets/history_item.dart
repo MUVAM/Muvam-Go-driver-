@@ -25,7 +25,6 @@ class HistoryItem extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: 353.w,
-        height: 120.h,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(5.r),
