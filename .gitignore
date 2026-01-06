@@ -44,8 +44,16 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Environment variables and secrets
-# .env (commented out - user needs to configure this file)
+# ========================================
+# SECURITY: Environment variables and secrets
+# ========================================
+.env
+.env.*
+!.env.example
 firebase-service-account.json
-# google-services.json (commented out - needed for build)
-# GoogleService-Info.plist (commented out - needed for iOS build)
+lib/core/config/firebase_service_account.dart
+lib/core/config/firebase_service_account_credentials.dart
+
+# Google Services files (keep these commented if needed for build)
+# google-services.json
+# GoogleService-Info.plist
