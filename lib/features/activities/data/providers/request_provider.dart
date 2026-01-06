@@ -45,6 +45,9 @@ class RequestProvider extends ChangeNotifier {
         _prebookedRides = _parseRides(prebookedResult['data']);
       } else {
         _prebookedRides = [];
+        if (prebookedResult['success'] == false) {
+          _errorMessage = prebookedResult['message'] ?? 'Failed to fetch rides';
+        }
       }
 
       final activeResult = await _requestService.getActiveRides();
@@ -52,6 +55,9 @@ class RequestProvider extends ChangeNotifier {
         _activeRides = _parseRides(activeResult['data']);
       } else {
         _activeRides = [];
+        if (activeResult['success'] == false && _errorMessage == null) {
+          _errorMessage = activeResult['message'] ?? 'Failed to fetch rides';
+        }
       }
 
       final historyResult = await _requestService.getHistoryRides();
@@ -59,14 +65,9 @@ class RequestProvider extends ChangeNotifier {
         _historyRides = _parseRides(historyResult['data']);
       } else {
         _historyRides = [];
-      }
-
-      if (_prebookedRides.isEmpty &&
-          _activeRides.isEmpty &&
-          _historyRides.isEmpty) {
-        _errorMessage = 'No rides available';
-      } else {
-        _errorMessage = null;
+        if (historyResult['success'] == false && _errorMessage == null) {
+          _errorMessage = historyResult['message'] ?? 'Failed to fetch rides';
+        }
       }
     } catch (e) {
       _errorMessage = 'Error fetching rides: $e';

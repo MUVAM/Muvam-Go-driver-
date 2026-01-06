@@ -6,6 +6,67 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:muvam_rider/core/constants/url_constants.dart';
 
 class ProfileService {
+  Future<Map<String, dynamic>> updateUserProfile({
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String dateOfBirth,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (token == null) {
+        return {'success': false, 'message': 'No authentication token found'};
+      }
+
+      final url = '${UrlConstants.baseUrl}/users/profile/update';
+      final requestBody = {
+        'first_name': firstName,
+        'last_name': lastName,
+        'email': email,
+        'date_of_birth': dateOfBirth,
+      };
+
+      AppLogger.log('=== UPDATE PROFILE REQUEST ===', tag: 'PROFILE');
+      AppLogger.log('URL: $url', tag: 'PROFILE');
+      AppLogger.log('Request Body: ${jsonEncode(requestBody)}', tag: 'PROFILE');
+
+      final response = await http.put(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(requestBody),
+      );
+
+      AppLogger.log('Response Status: ${response.statusCode}', tag: 'PROFILE');
+      AppLogger.log('Response Body: ${response.body}', tag: 'PROFILE');
+      AppLogger.log('=== END UPDATE PROFILE ===', tag: 'PROFILE');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+
+        // If the response includes updated user data, cache it
+        if (data['user'] != null) {
+          final updatedUser = UserProfile.fromJson(data['user']);
+          await _cacheUserData(updatedUser);
+        }
+
+        return {'success': true, 'data': data};
+      } else {
+        return {
+          'success': false,
+          'message': 'Failed to update profile: ${response.body}',
+        };
+      }
+    } catch (e) {
+      AppLogger.error('Error updating profile', error: e, tag: 'PROFILE');
+      return {'success': false, 'message': 'Error updating profile: $e'};
+    }
+  }
+
   Future<ProfileResponse?> getUserProfile() async {
     try {
       final prefs = await SharedPreferences.getInstance();
