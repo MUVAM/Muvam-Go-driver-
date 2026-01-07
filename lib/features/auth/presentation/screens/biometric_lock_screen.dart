@@ -21,6 +21,7 @@ class BiometricLockScreen extends StatefulWidget {
 class _BiometricLockScreenState extends State<BiometricLockScreen> {
   final BiometricAuthService _biometricService = BiometricAuthService();
   bool _isAuthenticating = false;
+  bool _authenticationSuccess = false;
   String _biometricType = 'Biometric';
 
   @override
@@ -46,17 +47,25 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
 
     setState(() {
       _isAuthenticating = true;
+      _authenticationSuccess = false;
     });
 
     try {
       final authenticated = await _biometricService.authenticate(
         reason: widget.isLoginScreen
-            ? 'Authenticate to login to MuvamGo'
-            : 'Authenticate to unlock MuvamGo',
+            ? 'Authenticate to login to MuvamGo Driver'
+            : 'Authenticate to unlock MuvamGo Driver',
         biometricOnly: false,
       );
 
       if (authenticated) {
+        setState(() {
+          _authenticationSuccess = true;
+        });
+
+        // Show success state briefly before navigating
+        await Future.delayed(Duration(milliseconds: 500));
+
         _biometricService.clearBackgroundTime();
         widget.onAuthenticated();
       } else {
@@ -78,6 +87,8 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isFaceID = _biometricType == 'Face ID';
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -87,22 +98,12 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Container(
-                  width: 120.w,
-                  height: 120.h,
-                  decoration: BoxDecoration(
-                    color: Color(ConstColors.mainColor).withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.lock_outline,
-                    size: 60.sp,
-                    color: Color(ConstColors.mainColor),
-                  ),
-                ),
-                SizedBox(height: 40.h),
                 Text(
-                  'MuvamGo is Locked',
+                  // 'MuvamGo Driver is Locked',
+
+                      isFaceID
+                      ? 'Place your Head'
+                      : 'Place your Finger',
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 24.sp,
@@ -110,53 +111,88 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
                     color: Colors.black,
                   ),
                 ),
-                SizedBox(height: 16.h),
-                Text(
-                  'Use $_biometricType to unlock',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.grey.shade600,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
+               
                 SizedBox(height: 60.h),
-                GestureDetector(
-                  onTap: _isAuthenticating ? null : _authenticate,
-                  child: Container(
-                    width: 80.w,
-                    height: 80.h,
-                    decoration: BoxDecoration(
-                      color: Color(ConstColors.mainColor),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Color(ConstColors.mainColor).withOpacity(0.3),
-                          blurRadius: 20,
-                          offset: Offset(0, 10),
-                        ),
-                      ],
+
+                // Instruction text
+                Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 30.w),
+                  child: Text(
+                    isFaceID
+                        ? 'Place your head in the middle of the circle to add your face.'
+                        : 'Place your finger on the sensor and lift after you feel a vibration',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.grey.shade700,
                     ),
-                    child: _isAuthenticating
-                        ? Padding(
-                            padding: EdgeInsets.all(20.w),
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 3,
-                            ),
-                          )
-                        : Icon(
-                            _biometricType == 'Face ID'
-                                ? Icons.face
-                                : Icons.fingerprint,
-                            size: 40.sp,
-                            color: Colors.white,
-                          ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
-                SizedBox(height: 20.h),
-                if (!_isAuthenticating)
+                SizedBox(height: 40.h),
+
+                // Biometric display
+                if (isFaceID)
+                  // Face ID - Oval frame
+                  GestureDetector(
+                    onTap: _isAuthenticating ? null : _authenticate,
+                    child: Container(
+                      width: 200.w,
+                      height: 260.h,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.rectangle,
+                        borderRadius: BorderRadius.circular(130.w),
+                        border: Border.all(
+                          color: _authenticationSuccess
+                              ? Colors.green
+                              : _isAuthenticating
+                              ? Color(ConstColors.mainColor)
+                              : Colors.grey.shade400,
+                          width: 4,
+                        ),
+                      ),
+                      child: Center(
+                        child: _isAuthenticating
+                            ? CircularProgressIndicator(
+                                color: Color(ConstColors.mainColor),
+                                strokeWidth: 3,
+                              )
+                            : Icon(
+                                Icons.face_outlined,
+                                size: 80.sp,
+                                color: _authenticationSuccess
+                                    ? Colors.green
+                                    : Colors.grey.shade400,
+                              ),
+                      ),
+                    ),
+                  )
+                else
+                  // Fingerprint - Image display
+                  GestureDetector(
+                    onTap: _isAuthenticating ? null : _authenticate,
+                    child: Container(
+                      width: 150.w,
+                      height: 150.h,
+                      child: _isAuthenticating
+                          ? CircularProgressIndicator(
+                              color: Color(ConstColors.mainColor),
+                              strokeWidth: 3,
+                            )
+                          : Image.asset(
+                              _authenticationSuccess
+                                  ? 'assets/images/fingerGreen.png'
+                                  : 'assets/images/fingerGrey.png',
+                              width: 150.w,
+                              height: 150.h,
+                              fit: BoxFit.contain,
+                            ),
+                    ),
+                  ),
+
+                SizedBox(height: 40.h),
+                if (!_isAuthenticating && !_authenticationSuccess)
                   TextButton(
                     onPressed: _authenticate,
                     child: Text(
