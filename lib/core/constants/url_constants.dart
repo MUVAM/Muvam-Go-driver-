@@ -1,0 +1,35 @@
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+class UrlConstants {
+  static final String baseUrl = dotenv.env['API_BASE_URL'] ?? "";
+  static final String webSocketUrl = dotenv.env['WEBSOCKET_URL'] ?? "";
+  static final String wsUrl = dotenv.env['WEBSOCKET_URL'] ?? "";
+  static final String googleMapsApiKey =
+      dotenv.env['GOOGLE_MAPS_API_KEY'] ?? "";
+
+  // Authentication endpoints
+  static const String sendOtp = "/otp/send";
+  static const String resendOtp = "/otp/resend";
+  static const String verifyOtp = "/otp/verify";
+  static const String registerUser = "/users/register";
+  static const String completeProfile = "/api/v1/users/profile/complete";
+  static const String favouriteLocation = "/api/v1/users/favouriteLocation";
+  static const String updateLocation = "/users/location";
+  static const String rideEstimate = "/rides/estimate";
+  static const String userProfile = "/users/profile";
+  static const String rideRequest = "/rides/request";
+  static const String walletSummary = "/wallet/summary";
+  static const String rides = "/rides";
+  static const String rideCancel = "/rides/cancel";
+  static const String rideArrive = "/rides/arrive";
+  static const String activeRides = "/rides";
+  static const String startRide = "/rides/start";
+  static const String completeRide = "/rides/complete";
+
+  // Driver endpoints
+  static const String driverOffline = "/driver/offline";
+  static const String driverStatus = "/driver/status";
+
+  // Vehicle endpoints
+  static const String registerVehicle = "/rides/vehicle";
+}

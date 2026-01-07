@@ -1,0 +1,136 @@
+import 'package:flutter/material.dart';
+import 'package:muvam_rider/core/services/auth_service.dart';
+
+class AuthProvider with ChangeNotifier {
+  final AuthService _authService = AuthService();
+
+  bool _isLoading = false;
+  String? _errorMessage;
+  Map<String, dynamic>? _verifyOtpResponse;
+  Map<String, dynamic>? _registerUserResponse;
+  Map<String, String?> _userData = {};
+
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
+  Map<String, dynamic>? get verifyOtpResponse => _verifyOtpResponse;
+  Map<String, dynamic>? get registerUserResponse => _registerUserResponse;
+  Map<String, String?> get userData => _userData;
+
+  void _setLoading(bool loading) {
+    _isLoading = loading;
+    notifyListeners();
+  }
+
+  void _setError(String? error) {
+    _errorMessage = error;
+    notifyListeners();
+  }
+
+  Future<bool> sendOtp(String phone) async {
+    _setLoading(true);
+    _setError(null);
+
+    try {
+      await _authService.sendOtp(phone);
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _setError(e.toString());
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  Future<bool> resendOtp(String phone) async {
+    _setLoading(true);
+    _setError(null);
+
+    try {
+      await _authService.resendOtp(phone);
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _setError(e.toString());
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  Future<bool> verifyOtp(String code, String phone) async {
+    _setLoading(true);
+    _setError(null);
+
+    try {
+      _verifyOtpResponse = await _authService.verifyOtp(code, phone);
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _setError(e.toString());
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  Future<bool> registerUser(Map<String, dynamic> request) async {
+    _setLoading(true);
+    _setError(null);
+
+    try {
+      _registerUserResponse = await _authService.registerUser(request);
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _setError(e.toString());
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  Future<bool> completeProfile(Map<String, dynamic> request) async {
+    _setLoading(true);
+    _setError(null);
+
+    try {
+      await _authService.completeProfile(request);
+      await _authService.saveUserData(
+        request['firstName'] ?? '',
+        request['lastName'] ?? '',
+        request['email'] ?? '',
+      );
+      _userData = await _authService.getUserData();
+      _setLoading(false);
+      return true;
+    } catch (e) {
+      _setError(e.toString());
+      _setLoading(false);
+      return false;
+    }
+  }
+
+  Future<void> loadUserData() async {
+    _userData = await _authService.getUserData();
+    notifyListeners();
+  }
+
+  Future<bool> checkTokenValidity() async {
+    return await _authService.isTokenValid();
+  }
+
+  Future<bool> isSessionExpired() async {
+    return await _authService.isSessionExpired();
+  }
+
+  Future<void> updateLastLoginTime() async {
+    await _authService.updateLastLoginTime();
+  }
+
+  bool get isNewUser => _verifyOtpResponse?['isNew'] ?? true;
+
+  Future<void> logout() async {
+    await _authService.clearToken();
+    _verifyOtpResponse = null;
+    _registerUserResponse = null;
+    _userData = {};
+    notifyListeners();
+  }
+}

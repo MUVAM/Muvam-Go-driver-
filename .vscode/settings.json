@@ -1,0 +1,29 @@
+{
+  "dart.analysisServerFolding": false,
+  "dart.previewFlutterUiGuides": false,
+  "dart.previewFlutterUiGuidesCustomTracking": false,
+  "files.watcherExclude": {
+    "**/.git/objects/**": true,
+    "**/.git/subtree-cache/**": true,
+    "**/node_modules/*/**": true,
+    "**/.hg/store/**": true,
+    "**/.dart_tool/**": true,
+    "**/build/**": true,
+    "**/ios/**": true,
+    "**/android/**": true,
+    "**/windows/**": true,
+    "**/linux/**": true,
+    "**/macos/**": true,
+    "**/web/**": true
+  },
+  "search.exclude": {
+    "**/.dart_tool": true,
+    "**/build": true,
+    "**/ios": true,
+    "**/android": true,
+    "**/windows": true,
+    "**/linux": true,
+    "**/macos": true,
+    "**/web": true
+  }
+}
