@@ -1,8 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
+import 'package:muvam_rider/core/constants/text_styles.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
+import 'package:muvam_rider/core/services/ride_tracking_service.dart';
+import 'package:muvam_rider/core/services/websocket_service.dart';
+import 'package:muvam_rider/core/utils/app_logger.dart';
+import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
+import 'package:muvam_rider/features/auth/presentation/screens/delete_account_screen.dart';
+import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_selection_screen.dart';
 import 'package:muvam_rider/features/earnings/presentation/screens/wallet_screen.dart';
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
 import 'package:muvam_rider/features/profile/presentation/screens/profile_screen.dart';
@@ -57,6 +65,7 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
     final profileProvider = Provider.of<ProfileProvider>(context);
 
     return Drawer(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
       backgroundColor: themeManager.getCardColor(context),
       child: Container(
         color: themeManager.getCardColor(context),
@@ -65,7 +74,7 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
             Align(
               alignment: Alignment.topRight,
               child: Padding(
-                padding: EdgeInsets.only(top: 30.h, right: 0.w),
+                padding: EdgeInsets.only(top: 20.h, right: 0.w),
                 child: IconButton(
                   icon: Icon(
                     Icons.close,
@@ -153,19 +162,17 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
                 ],
               ),
             ),
-
-            SizedBox(height: 20.h),
+            SizedBox(height: 24.h),
             Divider(
               thickness: 1,
               color: themeManager.isDarkMode
                   ? Colors.grey.shade700
-                  : Colors.grey.shade200,
+                  : Color(0xFFEEEEEE),
               height: 1,
             ),
-            SizedBox(height: 8.h),
             DrawerItemWidget(
               title: 'Wallet',
-              iconPath: ConstImages.wallet,
+              iconPath: ConstImages.walletSolid,
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -176,7 +183,7 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
             ),
             DrawerItemWidget(
               title: 'Referral',
-              iconPath: ConstImages.referral,
+              iconPath: ConstImages.settings,
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -187,7 +194,7 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
             ),
             DrawerItemWidget(
               title: 'Analytics',
-              iconPath: ConstImages.activities,
+              iconPath: ConstImages.settings,
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -198,12 +205,12 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
             ),
             DrawerItemWidget(
               title: 'Contact us',
-              iconPath: ConstImages.phoneCall,
+              iconPath: ConstImages.callIcon,
               onTap: widget.onContactUsTap,
             ),
             DrawerItemWidget(
               title: 'FAQ',
-              iconPath: ConstImages.faq,
+              iconPath: ConstImages.questionCircle,
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -214,7 +221,7 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
             ),
             DrawerItemWidget(
               title: 'About',
-              iconPath: ConstImages.about,
+              iconPath: ConstImages.book,
               onTap: () {
                 Navigator.pop(context);
                 Navigator.push(
@@ -223,14 +230,14 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
                 );
               },
             ),
-            const Spacer(),
+
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: Row(
                 children: [
                   Container(
-                    width: 48.w,
-                    height: 48.h,
+                    width: 40.w,
+                    height: 40.h,
                     decoration: BoxDecoration(
                       color: _isDarkMode
                           ? Colors.grey.shade700
@@ -240,17 +247,14 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
                     child: Icon(
                       _isDarkMode ? Icons.dark_mode : Icons.wb_sunny_outlined,
                       color: Colors.white,
-                      size: 24.sp,
+                      size: 20.sp,
                     ),
                   ),
-                  SizedBox(width: 16.w),
+                  SizedBox(width: 12.w),
                   Expanded(
                     child: Text(
                       'Light mode',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w500,
+                      style: ConstTextStyles.drawerItem.copyWith(
                         color: themeManager.getTextColor(context),
                       ),
                     ),
@@ -263,10 +267,204 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
                 ],
               ),
             ),
-            SizedBox(height: 20.h),
+            Spacer(),
+            GestureDetector(
+              onTap: () => _showLogoutSheet(context),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => _showLogoutSheet(context),
+                      child: SvgPicture.asset(
+                        ConstImages.logout,
+                        width: 24.w,
+                        height: 24.h,
+                        fit: BoxFit.contain,
+                        colorFilter: ColorFilter.mode(
+                          Color(0xFFEF5350),
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            GestureDetector(
+              onTap: () => _showLogoutSheet(context),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
+                child: Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => DeleteAccountScreen(),
+                          ),
+                        );
+                      },
+                      child: SvgPicture.asset(
+                        ConstImages.bin,
+                        width: 24.w,
+                        height: 24.h,
+                        fit: BoxFit.contain,
+                        colorFilter: ColorFilter.mode(
+                          Color(0xFFEF5350),
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: 40.h),
           ],
         ),
       ),
     );
+  }
+
+  void _showLogoutSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (context) => Container(
+        padding: EdgeInsets.all(20.w),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 69.w,
+              height: 5.h,
+              margin: EdgeInsets.only(bottom: 20.h),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(2.5.r),
+              ),
+            ),
+            Text(
+              'Log Out',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 18.sp,
+                fontWeight: FontWeight.w600,
+                color: Colors.black,
+              ),
+            ),
+            SizedBox(height: 20.h),
+            Text(
+              'Are you sure you want to log out of your account?',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 14.sp,
+                fontWeight: FontWeight.w400,
+                color: Colors.black,
+              ),
+            ),
+            SizedBox(height: 30.h),
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () async {
+                      Navigator.pop(context);
+                      await _performLogout(context);
+                    },
+                    child: Container(
+                      height: 47.h,
+                      decoration: BoxDecoration(
+                        color: Color(0xFFB1B1B1),
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      padding: EdgeInsets.all(10.w),
+                      child: Center(
+                        child: Text(
+                          'Log out',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 10.w),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      height: 47.h,
+                      decoration: BoxDecoration(
+                        color: Color(ConstColors.mainColor),
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      padding: EdgeInsets.all(10.w),
+                      child: Center(
+                        child: Text(
+                          'Go Back',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _performLogout(BuildContext context) async {
+    try {
+      RideTrackingService.stopTracking();
+
+      WebSocketService.instance.disconnect();
+
+      if (context.mounted) {
+        await context.read<AuthProvider>().logout();
+        await context.read<ProfileProvider>().clearProfile();
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+
+      if (context.mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => const RiderSignupSelectionScreen(),
+          ),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      AppLogger.log('Error during logout: $e');
+      if (context.mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => const RiderSignupSelectionScreen(),
+          ),
+          (route) => false,
+        );
+      }
+    }
   }
 }

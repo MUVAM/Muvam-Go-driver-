@@ -3,13 +3,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
-import 'package:muvam_rider/core/services/ride_tracking_service.dart';
-import 'package:muvam_rider/core/services/websocket_service.dart';
-import 'package:muvam_rider/core/utils/app_logger.dart';
-import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
-import 'package:muvam_rider/features/auth/presentation/screens/delete_account_screen.dart';
-import 'package:muvam_rider/features/auth/presentation/screens/edit_full_name_screen.dart';
-import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_selection_screen.dart';
+import 'package:muvam_rider/features/profile/presentation/screens/edit_profile_screen.dart';
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
 import 'package:muvam_rider/features/profile/presentation/screens/app_lock_settings_screen.dart';
 import 'package:muvam_rider/features/profile/presentation/screens/update_location_screen.dart';
@@ -40,10 +34,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _loadPrimaryVehicle() async {
     final prefs = await SharedPreferences.getInstance();
-
     final token = prefs.getString('auth_token');
 
-    // final token = await TokenManager.getToken();
     if (token == null) return;
 
     final response = await ApiService.getVehicles(token);
@@ -85,373 +77,452 @@ class _ProfileScreenState extends State<ProfileScreen> {
           body: SafeArea(
             child: Column(
               children: [
-                SizedBox(height: 20.h),
+                SizedBox(height: 16.h),
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20.w),
                   child: Row(
                     children: [
                       GestureDetector(
                         onTap: () => Navigator.pop(context),
-                        child: Image.asset(
-                          ConstImages.back,
-                          width: 30.w,
-                          height: 30.h,
-                          fit: BoxFit.cover,
+                        child: Container(
+                          width: 40.w,
+                          height: 40.h,
+                          decoration: BoxDecoration(
+                            color: Color(0xFFF5F5F5),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.arrow_back,
+                            size: 20.sp,
+                            color: Colors.black,
+                          ),
                         ),
                       ),
                       Expanded(
                         child: Center(
                           child: Text(
-                            'My Account',
+                            'My account',
                             style: TextStyle(
                               fontFamily: 'Inter',
-                              fontSize: 18.sp,
+                              fontSize: 20.sp,
                               fontWeight: FontWeight.w600,
                               color: Colors.black,
                             ),
                           ),
                         ),
                       ),
-                      SizedBox(width: 24.w),
+                      SizedBox(width: 40.w),
                     ],
                   ),
                 ),
-                SizedBox(height: 10.h),
-                Stack(
-                  children: [
-                    profileProvider.userProfilePhoto.isNotEmpty
-                        ? CircleAvatar(
-                            radius: 40.r,
-                            backgroundImage: NetworkImage(
-                              profileProvider.userProfilePhoto,
-                            ),
-                          )
-                        : Image.asset(
-                            ConstImages.avatar,
-                            width: 80.w,
-                            height: 80.h,
-                          ),
-                    Positioned(
-                      top: 2.h,
-                      left: 51.w,
-                      child: Container(
-                        width: 18.w,
-                        height: 18.h,
-                        decoration: BoxDecoration(
-                          color: Color(ConstColors.mainColor),
-                          borderRadius: BorderRadius.circular(100.r),
-                        ),
-                        child: Icon(
-                          Icons.add,
-                          color: Colors.white,
-                          size: 12.sp,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(
-                  width: 120.w,
-                  height: 20.h,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(
-                      5,
-                      (index) => Padding(
-                        padding: EdgeInsets.only(right: index < 4 ? 5.w : 0),
-                        child: Icon(
-                          Icons.star,
-                          size: 20.sp,
-                          color: index < profileProvider.userRating
-                              ? Colors.amber
-                              : Colors.grey.shade300,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => RatingsScreen()),
-                    );
-                  },
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'View ratings',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black,
-                        ),
-                      ),
-                      SizedBox(width: 5.w),
-                      Icon(
-                        Icons.arrow_forward_ios,
-                        size: 12.sp,
-                        color: Colors.black,
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 30.h),
+                SizedBox(height: 20.h),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(horizontal: 20.w),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        ProfileField(
-                          label: 'Full name',
-                          value: profileProvider.userName,
-                          hasEdit: true,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => EditFullNameScreen(),
-                              ),
-                            );
-                          },
-                        ),
-                        SizedBox(height: 15.h),
-                        ProfileField(
-                          label: 'Phone number',
-                          value: profileProvider.userPhone,
-                        ),
-                        SizedBox(height: 15.h),
-                        ProfileField(
-                          label: 'Date of birth',
-                          value: user?.dateOfBirth ?? 'Not set',
-                        ),
-                        SizedBox(height: 15.h),
-                        ProfileField(
-                          label: 'Email address',
-                          value: profileProvider.userEmail,
-                        ),
-                        SizedBox(height: 15.h),
-                        ProfileField(
-                          label: 'City',
-                          value: profileProvider.userCity,
-                        ),
-                        SizedBox(height: 15.h),
-                        ProfileField(
-                          label: 'Location',
-                          value: 'Update your location',
-                          hasEdit: true,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => UpdateLocationScreen(),
-                              ),
-                            );
-                          },
-                        ),
-                        SizedBox(height: 15.h),
-                        ProfileField(
-                          label: 'Biometric Authentication',
-                          value: 'Set up your biometrics',
-                          hasEdit: true,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => AppLockSettingsScreen(),
-                              ),
-                            );
-                          },
-                        ),
-                        SizedBox(height: 30.h),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        Stack(
                           children: [
-                            Text(
-                              'My Car',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 18.sp,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: -0.32,
-                                color: Colors.black,
+                            Container(
+                              width: 100.w,
+                              height: 100.h,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color(0xFFE0E0E0),
                               ),
+                              child: profileProvider.userProfilePhoto.isNotEmpty
+                                  ? ClipOval(
+                                      child: Image.network(
+                                        profileProvider.userProfilePhoto,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                              return Container(
+                                                color: Color(0xFFE0E0E0),
+                                              );
+                                            },
+                                      ),
+                                    )
+                                  : Container(),
                             ),
-                            GestureDetector(
-                              onTap: () async {
-                                await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        CarInformationScreen(),
-                                  ),
-                                );
-                                _loadPrimaryVehicle();
-                              },
-                              child: Text(
-                                '+ Add another vehicle',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 12.sp,
-                                  fontWeight: FontWeight.w500,
-                                  letterSpacing: -0.32,
+                            Positioned(
+                              bottom: 60,
+                              right: 0,
+                              child: Container(
+                                width: 24.w,
+                                height: 24.h,
+                                decoration: BoxDecoration(
                                   color: Color(ConstColors.mainColor),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.add,
+                                  color: Colors.white,
+                                  size: 20.sp,
                                 ),
                               ),
                             ),
                           ],
                         ),
-                        SizedBox(height: 15.h),
+                        SizedBox(
+                          width: 120.w,
+                          height: 20.h,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(
+                              5,
+                              (index) => Padding(
+                                padding: EdgeInsets.only(
+                                  right: index < 4 ? 5.w : 0,
+                                ),
+                                child: Icon(
+                                  Icons.star,
+                                  size: 20.sp,
+                                  color: index < profileProvider.userRating
+                                      ? Colors.amber
+                                      : Colors.grey.shade300,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 8.h),
                         GestureDetector(
-                          onTap: () async {
-                            await Navigator.push(
+                          onTap: () {
+                            Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => VehicleSelectionScreen(),
+                                builder: (context) => RatingsScreen(),
                               ),
                             );
-                            _loadPrimaryVehicle();
                           },
-                          child: Container(
-                            width: 353.w,
-                            decoration: BoxDecoration(
-                              color: Color(0xFFF7F9F8),
-                              borderRadius: BorderRadius.circular(3.r),
-                            ),
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 14.w,
-                              vertical: 15.h,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'View ratings',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              SizedBox(width: 5.w),
+                              Icon(
+                                Icons.arrow_forward_ios,
+                                size: 12.sp,
+                                color: Colors.black,
+                              ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 32.h),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20.w),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              ProfileField(
+                                label: 'Full name',
+                                value: profileProvider.userName,
+                                hasEdit: false,
+                              ),
+                              SizedBox(height: 16.h),
+                              ProfileField(
+                                label: 'Phone number',
+                                value: profileProvider.userPhone,
+                              ),
+                              SizedBox(height: 16.h),
+                              ProfileField(
+                                label: 'Date of birth',
+                                value: user?.dateOfBirth ?? 'Not set',
+                              ),
+                              SizedBox(height: 16.h),
+                              ProfileField(
+                                label: 'Email address',
+                                value: profileProvider.userEmail,
+                              ),
+                              SizedBox(height: 16.h),
+                              ProfileField(
+                                label: 'State',
+                                value: profileProvider.userCity,
+                              ),
+                              SizedBox(height: 24.h),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'My Car',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 18.sp,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: -0.32,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                  GestureDetector(
+                                    onTap: () async {
+                                      await Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              CarInformationScreen(),
+                                        ),
+                                      );
+                                      _loadPrimaryVehicle();
+                                    },
+                                    child: Text(
+                                      '+ Add another vehicle',
+                                      style: TextStyle(
+                                        fontFamily: 'Inter',
+                                        fontSize: 12.sp,
+                                        fontWeight: FontWeight.w500,
+                                        letterSpacing: -0.32,
+                                        color: Color(ConstColors.mainColor),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 15.h),
+                              GestureDetector(
+                                onTap: () async {
+                                  await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          VehicleSelectionScreen(),
+                                    ),
+                                  );
+                                  _loadPrimaryVehicle();
+                                },
+                                child: Container(
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: Color(0xFFF7F9F8),
+                                    borderRadius: BorderRadius.circular(8.r),
+                                  ),
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 14.w,
+                                    vertical: 15.h,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Expanded(
+                                        child: Row(
+                                          children: [
+                                            if (isLoadingVehicle)
+                                              SizedBox(
+                                                width: 20.w,
+                                                height: 20.h,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                      color: Color(
+                                                        ConstColors.mainColor,
+                                                      ),
+                                                    ),
+                                              )
+                                            else if (primaryVehicle
+                                                    ?.primaryPhoto !=
+                                                null)
+                                              ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(4.r),
+                                                child: Image.network(
+                                                  primaryVehicle!
+                                                      .primaryPhoto!
+                                                      .url,
+                                                  width: 40.w,
+                                                  height: 40.h,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder:
+                                                      (context, error, stack) =>
+                                                          Image.asset(
+                                                            ConstImages.car,
+                                                            width: 20.w,
+                                                            height: 20.h,
+                                                          ),
+                                                ),
+                                              )
+                                            else
+                                              Image.asset(
+                                                ConstImages.car,
+                                                width: 20.w,
+                                                height: 20.h,
+                                              ),
+                                            SizedBox(width: 10.w),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    'Active car',
+                                                    style: TextStyle(
+                                                      fontFamily: 'Inter',
+                                                      fontSize: 12.sp,
+                                                      fontWeight:
+                                                          FontWeight.w400,
+                                                      color: Colors.grey,
+                                                    ),
+                                                  ),
+                                                  if (primaryVehicle != null)
+                                                    Text(
+                                                      primaryVehicle!
+                                                          .displayName,
+                                                      style: TextStyle(
+                                                        fontFamily: 'Inter',
+                                                        fontSize: 14.sp,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        color: Colors.black,
+                                                      ),
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Icon(
+                                        Icons.arrow_forward_ios,
+                                        size: 16.sp,
+                                        color: Colors.black,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              // ProfileField(
+                              //   label: 'Location',
+                              //   value: 'Update your location',
+                              //   hasEdit: true,
+                              //   onTap: () {
+                              //     Navigator.push(
+                              //       context,
+                              //       MaterialPageRoute(
+                              //         builder: (context) => UpdateLocationScreen(),
+                              //       ),
+                              //     );
+                              //   },
+                              // ),
+                              SizedBox(height: 24.h),
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          AppLockSettingsScreen(),
+                                    ),
+                                  );
+                                },
+                                child: Container(
+                                  padding: EdgeInsets.all(10.sp),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(12.r),
+                                    border: Border.all(
+                                      color: Color(0xFFE0E0E0),
+                                      width: 1,
+                                    ),
+                                  ),
                                   child: Row(
                                     children: [
-                                      if (isLoadingVehicle)
-                                        SizedBox(
-                                          width: 20.w,
-                                          height: 20.h,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: Color(ConstColors.mainColor),
-                                          ),
-                                        )
-                                      else if (primaryVehicle?.primaryPhoto !=
-                                          null)
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            4.r,
-                                          ),
-                                          child: Image.network(
-                                            primaryVehicle!.primaryPhoto!.url,
-                                            width: 40.w,
-                                            height: 40.h,
-                                            fit: BoxFit.cover,
-                                            errorBuilder:
-                                                (context, error, stack) =>
-                                                    Image.asset(
-                                                      ConstImages.car,
-                                                      width: 20.w,
-                                                      height: 20.h,
-                                                    ),
-                                          ),
-                                        )
-                                      else
-                                        Image.asset(
-                                          ConstImages.car,
-                                          width: 20.w,
-                                          height: 20.h,
+                                      Container(
+                                        width: 48.w,
+                                        height: 48.h,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: Color(
+                                            ConstColors.mainColor,
+                                          ).withOpacity(0.1),
                                         ),
-                                      SizedBox(width: 10.w),
+                                        child: Icon(
+                                          Icons.fingerprint,
+                                          color: Color(ConstColors.mainColor),
+                                          size: 28.sp,
+                                        ),
+                                      ),
+                                      SizedBox(width: 16.w),
                                       Expanded(
                                         child: Column(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                           children: [
                                             Text(
-                                              'Active car',
+                                              'Set up biometrics',
+                                              style: TextStyle(
+                                                fontFamily: 'Inter',
+                                                fontSize: 14.sp,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.black,
+                                              ),
+                                            ),
+                                            SizedBox(height: 2.h),
+                                            Text(
+                                              'Secure your app with fingerprint \nor face unlock',
                                               style: TextStyle(
                                                 fontFamily: 'Inter',
                                                 fontSize: 12.sp,
                                                 fontWeight: FontWeight.w400,
-                                                color: Colors.grey,
+                                                color: Color(0xFF9E9E9E),
                                               ),
                                             ),
-                                            if (primaryVehicle != null)
-                                              Text(
-                                                primaryVehicle!.displayName,
-                                                style: TextStyle(
-                                                  fontFamily: 'Inter',
-                                                  fontSize: 14.sp,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.black,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
                                           ],
                                         ),
+                                      ),
+                                      Icon(
+                                        Icons.arrow_forward_ios,
+                                        size: 16.sp,
+                                        color: Color(0xFF9E9E9E),
                                       ),
                                     ],
                                   ),
                                 ),
-                                Icon(
-                                  Icons.arrow_forward_ios,
-                                  size: 16.sp,
-                                  color: Colors.black,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 40.h),
-                        Container(
-                          width: 353.w,
-                          height: 47.h,
-                          decoration: BoxDecoration(
-                            color: Color(ConstColors.mainColor),
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          child: GestureDetector(
-                            onTap: () => _showLogoutSheet(context),
-                            child: Center(
-                              child: Text(
-                                'Logout',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.w600,
-                                ),
                               ),
-                            ),
+                              // SizedBox(height: 24.h),
+                              // GestureDetector(
+                              //   onTap: () {
+                              //     Navigator.push(
+                              //       context,
+                              //       MaterialPageRoute(
+                              //         builder: (context) => EditProfileScreen(),
+                              //       ),
+                              //     );
+                              //   },
+                              //   child: Container(
+                              //     width: double.infinity,
+                              //     height: 56.h,
+                              //     decoration: BoxDecoration(
+                              //       color: Color(ConstColors.mainColor),
+                              //       borderRadius: BorderRadius.circular(12.r),
+                              //     ),
+                              //     child: Center(
+                              //       child: Text(
+                              //         'Edit profile',
+                              //         style: TextStyle(
+                              //           fontFamily: 'Inter',
+                              //           color: Colors.white,
+                              //           fontSize: 16.sp,
+                              //           fontWeight: FontWeight.w600,
+                              //         ),
+                              //       ),
+                              //     ),
+                              //   ),
+                              // ),
+                              SizedBox(height: 20.h),
+                            ],
                           ),
                         ),
-                        SizedBox(height: 20.h),
-                        Center(
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => DeleteAccountScreen(),
-                                ),
-                              );
-                            },
-                            child: Text(
-                              'Delete Account',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.red,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 20.h),
                       ],
                     ),
                   ),
@@ -462,145 +533,5 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       },
     );
-  }
-
-  void _showLogoutSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-      ),
-      builder: (context) => Container(
-        padding: EdgeInsets.all(20.w),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 69.w,
-              height: 5.h,
-              margin: EdgeInsets.only(bottom: 20.h),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade300,
-                borderRadius: BorderRadius.circular(2.5.r),
-              ),
-            ),
-            Text(
-              'Log Out',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w600,
-                color: Colors.black,
-              ),
-            ),
-            SizedBox(height: 20.h),
-            Text(
-              'Are you sure you want to log out of your account?',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w400,
-                color: Colors.black,
-              ),
-            ),
-            SizedBox(height: 30.h),
-            Row(
-              children: [
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () async {
-                      Navigator.pop(context);
-                      await _performLogout(context);
-                    },
-                    child: Container(
-                      height: 47.h,
-                      decoration: BoxDecoration(
-                        color: Color(0xFFB1B1B1),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      padding: EdgeInsets.all(10.w),
-                      child: Center(
-                        child: Text(
-                          'Log out',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                SizedBox(width: 10.w),
-                Expanded(
-                  child: GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Container(
-                      height: 47.h,
-                      decoration: BoxDecoration(
-                        color: Color(ConstColors.mainColor),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      padding: EdgeInsets.all(10.w),
-                      child: Center(
-                        child: Text(
-                          'Go Back',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _performLogout(BuildContext context) async {
-    try {
-      RideTrackingService.stopTracking();
-
-      WebSocketService.instance.disconnect();
-
-      if (context.mounted) {
-        await context.read<AuthProvider>().logout();
-        await context.read<ProfileProvider>().clearProfile();
-      }
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
-
-      if (context.mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (context) => const RiderSignupSelectionScreen(),
-          ),
-          (route) => false,
-        );
-      }
-    } catch (e) {
-      AppLogger.log('Error during logout: $e');
-      if (context.mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (context) => const RiderSignupSelectionScreen(),
-          ),
-          (route) => false,
-        );
-      }
-    }
   }
 }

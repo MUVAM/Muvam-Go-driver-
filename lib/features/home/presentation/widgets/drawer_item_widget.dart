@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:muvam_rider/core/constants/text_styles.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
 import 'package:provider/provider.dart';
@@ -26,11 +27,11 @@ class DrawerItemWidget extends StatelessWidget {
         padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
         child: Row(
           children: [
-            Image.asset(
+            SvgPicture.asset(
               iconPath,
               width: 24.w,
               height: 24.h,
-              color: themeManager.getTextColor(context),
+              fit: BoxFit.contain,
             ),
             SizedBox(width: 20.w),
             Text(

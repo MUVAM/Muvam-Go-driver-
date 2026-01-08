@@ -32,4 +32,15 @@ class ConstImages {
   static const String carIcon = 'assets/svg/car.svg';
   static const String calenddarIcon = 'assets/svg/calendar.svg';
   static const String clockCircleIcon = 'assets/svg/clock-circle.svg';
+  static const String book = 'assets/svg/Book.svg';
+  static const String calendarBlack = 'assets/svg/Calendar-black.svg';
+  static const String callIcon = 'assets/svg/Call-icon.svg';
+  static const String carIconSvg = 'assets/svg/Car-icon.svg';
+  static const String logout = 'assets/svg/Logout.svg';
+  static const String questionCircle = 'assets/svg/Question Circle.svg';
+  static const String settings = 'assets/svg/Settings.svg';
+  static const String tag = 'assets/svg/Tag.svg';
+  static const String walletStreamline = 'assets/svg/Wallet-streamline.svg';
+  static const String bin = 'assets/svg/Bin.svg';
+  static const String walletSolid = 'assets/svg/Wallet Solid.svg';
 }

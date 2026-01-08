@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
-import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/auth/presentation/widgets/edit_full_name_text_field.dart';
@@ -9,18 +8,19 @@ import 'package:muvam_rider/features/home/presentation/screens/home_screen.dart'
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
 import 'package:provider/provider.dart';
 
-class EditFullNameScreen extends StatefulWidget {
-  const EditFullNameScreen({super.key});
+class EditProfileScreen extends StatefulWidget {
+  const EditProfileScreen({super.key});
 
   @override
-  EditFullNameScreenState createState() => EditFullNameScreenState();
+  EditProfileScreenState createState() => EditProfileScreenState();
 }
 
-class EditFullNameScreenState extends State<EditFullNameScreen> {
-  late TextEditingController firstNameController;
-  late TextEditingController lastNameController;
-  late TextEditingController emailController;
+class EditProfileScreenState extends State<EditProfileScreen> {
+  late TextEditingController fullNameController;
+  late TextEditingController phoneController;
   late TextEditingController dobController;
+  late TextEditingController emailController;
+  late TextEditingController stateController;
 
   @override
   void initState() {
@@ -30,17 +30,13 @@ class EditFullNameScreenState extends State<EditFullNameScreen> {
       listen: false,
     );
 
-    final fullName = profileProvider.userName;
-    final nameParts = fullName.split(' ');
-    final firstName = nameParts.isNotEmpty ? nameParts.first : '';
-    final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
-
-    firstNameController = TextEditingController(text: firstName);
-    lastNameController = TextEditingController(text: lastName);
-    emailController = TextEditingController(text: profileProvider.userEmail);
+    fullNameController = TextEditingController(text: profileProvider.userName);
+    phoneController = TextEditingController(text: profileProvider.userPhone);
     dobController = TextEditingController(
       text: profileProvider.userDateOfBirth,
     );
+    emailController = TextEditingController(text: profileProvider.userEmail);
+    stateController = TextEditingController(text: profileProvider.userCity);
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -90,18 +86,10 @@ class EditFullNameScreenState extends State<EditFullNameScreen> {
   }
 
   Future<void> _saveProfile() async {
-    if (firstNameController.text.trim().isEmpty) {
+    if (fullNameController.text.trim().isEmpty) {
       CustomFlushbar.showError(
         context: context,
-        message: 'Please enter first name',
-      );
-      return;
-    }
-
-    if (lastNameController.text.trim().isEmpty) {
-      CustomFlushbar.showError(
-        context: context,
-        message: 'Please enter last name',
+        message: 'Please enter full name',
       );
       return;
     }
@@ -125,9 +113,14 @@ class EditFullNameScreenState extends State<EditFullNameScreen> {
 
     final provider = context.read<ProfileProvider>();
 
+    // Split full name into first and last name
+    final nameParts = fullNameController.text.trim().split(' ');
+    final firstName = nameParts.first;
+    final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
+
     final success = await provider.updateUserProfile(
-      firstName: firstNameController.text.trim(),
-      lastName: lastNameController.text.trim(),
+      firstName: firstName,
+      lastName: lastName,
       email: emailController.text.trim(),
       dateOfBirth: dobController.text.trim(),
     );
@@ -158,10 +151,11 @@ class EditFullNameScreenState extends State<EditFullNameScreen> {
 
   @override
   void dispose() {
-    firstNameController.dispose();
-    lastNameController.dispose();
-    emailController.dispose();
+    fullNameController.dispose();
+    phoneController.dispose();
     dobController.dispose();
+    emailController.dispose();
+    stateController.dispose();
     super.dispose();
   }
 
@@ -174,88 +168,63 @@ class EditFullNameScreenState extends State<EditFullNameScreen> {
           builder: (context, provider, child) {
             return Column(
               children: [
+                SizedBox(height: 16.h),
                 Padding(
-                  padding: EdgeInsets.all(20.w),
+                  padding: EdgeInsets.symmetric(horizontal: 20.w),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       GestureDetector(
                         onTap: () => Navigator.pop(context),
-                        child: Image.asset(
-                          ConstImages.back,
-                          width: 30.w,
-                          height: 30.h,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: provider.isUpdating ? null : _saveProfile,
                         child: Container(
-                          width: 60.w,
-                          height: 30.h,
+                          width: 40.w,
+                          height: 40.h,
                           decoration: BoxDecoration(
-                            color: provider.isUpdating
-                                ? Colors.grey
-                                : Color(ConstColors.mainColor),
-                            borderRadius: BorderRadius.circular(10.r),
+                            color: Color(0xFFF5F5F5),
+                            shape: BoxShape.circle,
                           ),
-                          child: Center(
-                            child: provider.isUpdating
-                                ? SizedBox(
-                                    width: 16.w,
-                                    height: 16.h,
-                                    child: CircularProgressIndicator(
-                                      color: Colors.white,
-                                      strokeWidth: 2,
-                                    ),
-                                  )
-                                : Text(
-                                    'Save',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 12.sp,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
+                          child: Icon(
+                            Icons.arrow_back,
+                            color: Colors.black,
+                            size: 20.sp,
                           ),
                         ),
                       ),
+                      Expanded(
+                        child: Center(
+                          child: Text(
+                            'Edit profile',
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 20.sp,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 40.w),
                     ],
                   ),
                 ),
+                SizedBox(height: 32.h),
                 Expanded(
                   child: SingleChildScrollView(
                     padding: EdgeInsets.symmetric(horizontal: 20.w),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        SizedBox(height: 20.h),
-                        Text(
-                          'Edit Profile',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 24.sp,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black,
-                          ),
-                        ),
-                        SizedBox(height: 30.h),
                         EditFullNameTextField(
-                          label: 'First name',
-                          controller: firstNameController,
+                          label: 'Full name',
+                          controller: fullNameController,
                         ),
-                        SizedBox(height: 20.h),
+                        SizedBox(height: 16.h),
                         EditFullNameTextField(
-                          label: 'Last name',
-                          controller: lastNameController,
+                          label: 'Phone number',
+                          controller: phoneController,
+                          keyboardType: TextInputType.phone,
+                          readOnly: true,
                         ),
-                        SizedBox(height: 20.h),
-                        EditFullNameTextField(
-                          label: 'Email',
-                          controller: emailController,
-                          keyboardType: TextInputType.emailAddress,
-                        ),
-                        SizedBox(height: 20.h),
+                        SizedBox(height: 16.h),
                         GestureDetector(
                           onTap: () => _selectDate(context),
                           child: AbsorbPointer(
@@ -267,8 +236,59 @@ class EditFullNameScreenState extends State<EditFullNameScreen> {
                             ),
                           ),
                         ),
+                        SizedBox(height: 16.h),
+                        EditFullNameTextField(
+                          label: 'Email address',
+                          controller: emailController,
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                        SizedBox(height: 16.h),
+                        EditFullNameTextField(
+                          label: 'State',
+                          controller: stateController,
+                          readOnly: true,
+                        ),
                         SizedBox(height: 40.h),
                       ],
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 20.w,
+                    vertical: 20.h,
+                  ),
+                  child: GestureDetector(
+                    onTap: provider.isUpdating ? null : _saveProfile,
+                    child: Container(
+                      width: double.infinity,
+                      height: 47.h,
+                      decoration: BoxDecoration(
+                        color: provider.isUpdating
+                            ? Colors.grey
+                            : Color(ConstColors.mainColor),
+                        borderRadius: BorderRadius.circular(12.r),
+                      ),
+                      child: Center(
+                        child: provider.isUpdating
+                            ? SizedBox(
+                                width: 24.w,
+                                height: 24.h,
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                  strokeWidth: 2.5,
+                                ),
+                              )
+                            : Text(
+                                'Save changes',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
+                              ),
+                      ),
                     ),
                   ),
                 ),
