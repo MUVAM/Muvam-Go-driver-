@@ -24,6 +24,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final TextEditingController phoneController = TextEditingController();
   bool _isLoading = false;
 
+  bool _isValidPhone() {
+    return phoneController.text.length == 10;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -110,6 +114,69 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 countryFlag = country.flagEmoji;
                               });
                             },
+                            countryListTheme: CountryListThemeData(
+                              borderRadius: BorderRadius.circular(8.r),
+                              // Search field styling
+                              searchTextStyle: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.grey[700],
+                              ),
+                              inputDecoration: InputDecoration(
+                                hintText: 'Search location',
+                                hintStyle: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 12.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.grey,
+                                  height: 1.0,
+                                ),
+                                prefixIcon: Padding(
+                                  padding: EdgeInsets.all(12.w),
+                                  child: Image.asset(
+                                    'assets/images/search.png',
+                                    width: 20.w,
+                                    height: 20.h,
+                                  ),
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8.r),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey,
+                                    width: 1,
+                                  ),
+                                ),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8.r),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey,
+                                    width: 1,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(8.r),
+                                  borderSide: BorderSide(
+                                    color: Colors.grey,
+                                    width: 1.5,
+                                  ),
+                                ),
+                                contentPadding: EdgeInsets.symmetric(
+                                  horizontal: 12.w,
+                                  vertical: 12.h,
+                                ),
+                              ),
+                              // Country list item styling
+                              textStyle: TextStyle(
+                                fontFamily: 'Inter',
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              bottomSheetHeight: 500.h,
+                              backgroundColor: Colors.white,
+                            ),
+                            // Show phone code in the list
+                            showPhoneCode: true,
                           );
                         },
                         child: Container(
@@ -147,9 +214,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           controller: phoneController,
                           keyboardType: TextInputType.phone,
                           style: ConstTextStyles.inputText,
+                          maxLength: 10,
                           decoration: InputDecoration(
                             hintText: 'Phone number',
                             border: InputBorder.none,
+                            counterText: '',
                             contentPadding: EdgeInsets.symmetric(
                               horizontal: 12.w,
                               vertical: 15.h,
@@ -162,21 +231,28 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
                 SizedBox(height: 95.h),
                 GestureDetector(
-                  onTap: (phoneController.text.isNotEmpty && !_isLoading)
+                  onTap: (_isValidPhone() && !_isLoading)
                       ? _sendOtp
                       : null,
                   child: Container(
-                    width: double.infinity,
+                    width: 353.w,
                     height: 48.h,
                     decoration: BoxDecoration(
-                      color: phoneController.text.isNotEmpty
+                      color: _isValidPhone() && !_isLoading
                           ? Color(ConstColors.mainColor)
                           : Color(ConstColors.fieldColor),
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: Center(
                       child: _isLoading
-                          ? CircularProgressIndicator(color: Colors.white)
+                          ? SizedBox(
+                              width: 20.w,
+                              height: 20.h,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
                           : Text(
                               'Continue',
                               style: TextStyle(
