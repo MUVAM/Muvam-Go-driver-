@@ -90,14 +90,11 @@ class _RiderSignupSelectionScreenState
                 child: GestureDetector(
                   onTap: selectedOptions.isNotEmpty
                       ? () {
-                          String serviceType = selectedOptions.contains(0)
-                              ? 'taxi'
-                              : 'delivery';
                           Navigator.push(
                             context,
                             MaterialPageRoute(
                               builder: (context) =>
-                                  OnboardingScreen(serviceType: serviceType),
+                                  const OnboardingScreen(),
                             ),
                           );
                         }
