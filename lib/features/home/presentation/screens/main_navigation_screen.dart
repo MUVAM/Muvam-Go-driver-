@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
+import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/activities/data/providers/request_provider.dart';
 import 'package:muvam_rider/features/activities/presentation/screens/activities_screen.dart';
 import 'package:muvam_rider/features/earnings/presentation/screens/wallet_screen.dart';
@@ -49,11 +50,9 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           if (_lastBackPress == null ||
               now.difference(_lastBackPress!) > Duration(seconds: 2)) {
             _lastBackPress = now;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Press back again to exit'),
-                duration: Duration(seconds: 2),
-              ),
+            CustomFlushbar.showInfo(
+              context: context,
+              message: 'Press back again to exit',
             );
           } else {
             Navigator.of(context).pop();
