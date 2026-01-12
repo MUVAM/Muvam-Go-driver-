@@ -6,6 +6,7 @@ import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/constants/text_styles.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
+import 'package:muvam_rider/features/home/presentation/screens/main_navigation_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:muvam_rider/features/home/presentation/screens/home_screen.dart';
 import 'package:pinput/pinput.dart';
@@ -96,7 +97,7 @@ class _OtpScreenState extends State<OtpScreen> {
         await authProvider.updateLastLoginTime();
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
+          MaterialPageRoute(builder: (context) => MainNavigationScreen()),
           (route) => false,
         );
       }

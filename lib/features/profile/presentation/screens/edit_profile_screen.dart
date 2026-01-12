@@ -4,7 +4,7 @@ import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/auth/presentation/widgets/edit_full_name_text_field.dart';
-import 'package:muvam_rider/features/home/presentation/screens/home_screen.dart';
+import 'package:muvam_rider/features/home/presentation/screens/main_navigation_screen.dart';
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -137,7 +137,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
         if (mounted) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => HomeScreen()),
+            MaterialPageRoute(builder: (context) => MainNavigationScreen()),
           );
         }
       });

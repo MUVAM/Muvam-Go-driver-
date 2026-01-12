@@ -37,7 +37,7 @@ class ActivitiesScreenState extends State<ActivitiesScreen> {
       body: Stack(
         children: [
           Positioned(
-            top: 90.h,
+            top: 70.h,
             left: 20.w,
             child: Container(
               width: 353.w,

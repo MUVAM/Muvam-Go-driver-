@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geolocator/geolocator.dart';
@@ -20,7 +19,6 @@ import 'package:muvam_rider/core/services/websocket_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/activities/data/providers/request_provider.dart';
-import 'package:muvam_rider/features/activities/presentation/screens/activities_screen.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_selection_screen.dart';
 import 'package:muvam_rider/features/communication/data/models/chat_model.dart';
@@ -29,7 +27,6 @@ import 'package:muvam_rider/features/communication/presentation/screens/call_scr
 import 'package:muvam_rider/features/communication/presentation/screens/chat_screen.dart';
 import 'package:muvam_rider/features/communication/presentation/widgets/chat_notification_service.dart';
 import 'package:muvam_rider/features/earnings/data/provider/wallet_provider.dart';
-import 'package:muvam_rider/features/earnings/presentation/screens/wallet_screen.dart';
 import 'package:muvam_rider/features/home/data/provider/driver_provider.dart';
 import 'package:muvam_rider/features/home/presentation/widgets/driver_app_drawer.dart';
 import 'package:muvam_rider/features/home/presentation/widgets/ride_info_widget.dart';
@@ -976,518 +973,427 @@ class _HomeScreenState extends State<HomeScreen> {
         key: _scaffoldKey,
         backgroundColor: themeManager.getBackgroundColor(context),
         drawer: DriverAppDrawer(onContactUsTap: _showContactBottomSheet),
-        bottomNavigationBar: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          backgroundColor: themeManager.getCardColor(context),
-          selectedItemColor: Color(ConstColors.mainColor),
-          unselectedItemColor: Colors.grey,
-          onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-          items: [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-            BottomNavigationBarItem(
-              icon: Consumer<RequestProvider>(
-                builder: (context, requestProvider, child) {
-                  final count =
-                      requestProvider.activeRides.length +
-                      requestProvider.prebookedRides.length;
-
-                  return Stack(
-                    children: [
-                      Image.asset(
-                        ConstImages.requests,
-                        width: 24.w,
-                        height: 24.h,
-                        color: _currentIndex == 1
-                            ? Color(ConstColors.mainColor)
-                            : Colors.grey,
-                      ),
-                      if (count > 0)
-                        Positioned(
-                          right: 0,
-                          top: 0,
-                          child: Container(
-                            padding: EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            constraints: BoxConstraints(
-                              minWidth: 16,
-                              minHeight: 16,
-                            ),
-                            child: Text(
-                              '$count',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
+        body: Stack(
+          children: [
+            // Google Map
+            GoogleMap(
+              onMapCreated: (GoogleMapController controller) {
+                _mapController = controller;
+                RideTrackingService.setMapController(controller);
+                // If there's an active ride when map is created, center on it
+                if (_activeRide != null) {
+                  _centerMapOnActiveRide();
+                }
+              },
+              initialCameraPosition: CameraPosition(
+                target: _currentLocation,
+                zoom: 14.0,
+              ),
+              myLocationEnabled: _activeRide == null,
+              myLocationButtonEnabled: false,
+              zoomControlsEnabled: false,
+              mapToolbarEnabled: false,
+              markers: _mapMarkers,
+              polylines: _mapPolylines,
+            ),
+            // Center location pin
+            // Center(
+            //   child: Icon(
+            //     Icons.location_on,
+            //     color: Color(ConstColors.mainColor),
+            //     size: 40.sp,
+            //   ),
+            // ),
+            // Online/Offline Toggle
+            Positioned(
+              top: 60.h,
+              left: 109.w,
+              child: Consumer<DriverProvider>(
+                builder: (context, driverProvider, child) {
+                  return Container(
+                    width: 175.w,
+                    height: 38.h,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(15.r),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: driverProvider.isLoading
+                                ? null
+                                : () => _updateDriverStatus(true),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: driverProvider.isOnline
+                                    ? Color(ConstColors.mainColor)
+                                    : Color(0xFFB1B1B1).withOpacity(0.3),
+                                borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(15.r),
+                                  bottomLeft: Radius.circular(15.r),
+                                ),
                               ),
-                              textAlign: TextAlign.center,
+                              child: Center(
+                                child: driverProvider.isLoading
+                                    ? SizedBox(
+                                        width: 12.w,
+                                        height: 12.h,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                Colors.white,
+                                              ),
+                                        ),
+                                      )
+                                    : Text(
+                                        'Online',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14.sp,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                              ),
                             ),
                           ),
                         ),
-                    ],
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: driverProvider.isLoading
+                                ? null
+                                : () => _updateDriverStatus(false),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: !driverProvider.isOnline
+                                    ? Colors.red
+                                    : Color(0xFFB1B1B1).withOpacity(0.3),
+                                borderRadius: BorderRadius.only(
+                                  topRight: Radius.circular(15.r),
+                                  bottomRight: Radius.circular(15.r),
+                                ),
+                              ),
+                              child: Center(
+                                child: driverProvider.isLoading
+                                    ? SizedBox(
+                                        width: 12.w,
+                                        height: 12.h,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          valueColor:
+                                              AlwaysStoppedAnimation<Color>(
+                                                Colors.white,
+                                              ),
+                                        ),
+                                      )
+                                    : Text(
+                                        'Offline',
+                                        style: TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 14.sp,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   );
                 },
               ),
-              label: 'Requests',
             ),
-            BottomNavigationBarItem(
-              icon: Image.asset(
-                ConstImages.wallet,
-                width: 24.w,
-                height: 24.h,
-                color: _currentIndex == 2
-                    ? Color(ConstColors.mainColor)
-                    : Colors.grey,
-              ),
-              label: 'Earnings',
-            ),
-          ],
-        ),
-        body: _currentIndex == 1
-            ? ActivitiesScreen()
-            : _currentIndex == 2
-            ? WalletScreen()
-            : Stack(
-                children: [
-                  // Google Map
-                  GoogleMap(
-                    onMapCreated: (GoogleMapController controller) {
-                      _mapController = controller;
-                      RideTrackingService.setMapController(controller);
-                      // If there's an active ride when map is created, center on it
-                      if (_activeRide != null) {
-                        _centerMapOnActiveRide();
-                      }
-                    },
-                    initialCameraPosition: CameraPosition(
-                      target: _currentLocation,
-                      zoom: 14.0,
-                    ),
-                    myLocationEnabled: _activeRide == null,
-                    myLocationButtonEnabled: false,
-                    zoomControlsEnabled: false,
-                    mapToolbarEnabled: false,
-                    markers: _mapMarkers,
-                    polylines: _mapPolylines,
+            // Drawer button
+            Positioned(
+              top: 50.h,
+              left: 20.w,
+              child: GestureDetector(
+                onTap: () => _scaffoldKey.currentState?.openDrawer(),
+                child: Container(
+                  width: 50.w,
+                  height: 50.h,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(25.r),
                   ),
-                  // Center location pin
-                  // Center(
-                  //   child: Icon(
-                  //     Icons.location_on,
-                  //     color: Color(ConstColors.mainColor),
-                  //     size: 40.sp,
-                  //   ),
-                  // ),
-                  // Online/Offline Toggle
-                  Positioned(
-                    top: 60.h,
-                    left: 109.w,
-                    child: Consumer<DriverProvider>(
-                      builder: (context, driverProvider, child) {
-                        return Container(
-                          width: 175.w,
-                          height: 38.h,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(15.r),
-                          ),
-                          child: Row(
+                  padding: EdgeInsets.all(10.w),
+                  child: Icon(Icons.menu, size: 24.sp),
+                ),
+              ),
+            ),
+            // My Location button
+            Positioned(
+              top: 50.h,
+              right: 20.w,
+              child: GestureDetector(
+                onTap: () {
+                  if (_activeRide != null) {
+                    // If there's an active ride, center on it
+                    _centerMapOnActiveRide();
+                  } else {
+                    // Otherwise center on current location
+                    _getCurrentLocation();
+                  }
+                },
+                child: Container(
+                  width: 50.w,
+                  height: 50.h,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(25.r),
+                  ),
+                  padding: EdgeInsets.all(10.w),
+                  child: Icon(
+                    _activeRide != null
+                        ? Icons.directions_car
+                        : Icons.my_location,
+                    size: 24.sp,
+                  ),
+                ),
+              ),
+            ),
+            // Stop Address Marker (if exists)
+            if (_activeRide != null &&
+                _activeRide!['StopAddress'] != null &&
+                _activeRide!['StopAddress'].toString().isNotEmpty)
+              Positioned(
+                top: 120.h,
+                left: 0,
+                right: 0,
+                child: Center(child: _buildStopMarkerWidget()),
+              ),
+            // Bottom sheet
+            Positioned(
+              bottom: _isBottomSheetVisible ? 0 : -294.h,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: 344.h,
+                width: 393.w,
+                decoration: BoxDecoration(
+                  color: themeManager.getCardColor(context),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20.r),
+                    topRight: Radius.circular(20.r),
+                  ),
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _isBottomSheetVisible = !_isBottomSheetVisible;
+                          });
+                        },
+                        child: SizedBox(
+                          height: 50.h,
+                          child: Column(
                             children: [
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: driverProvider.isLoading
-                                      ? null
-                                      : () => _updateDriverStatus(true),
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: driverProvider.isOnline
-                                          ? Color(ConstColors.mainColor)
-                                          : Color(0xFFB1B1B1).withOpacity(0.3),
-                                      borderRadius: BorderRadius.only(
-                                        topLeft: Radius.circular(15.r),
-                                        bottomLeft: Radius.circular(15.r),
-                                      ),
-                                    ),
-                                    child: Center(
-                                      child: driverProvider.isLoading
-                                          ? SizedBox(
-                                              width: 12.w,
-                                              height: 12.h,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                valueColor:
-                                                    AlwaysStoppedAnimation<
-                                                      Color
-                                                    >(Colors.white),
-                                              ),
-                                            )
-                                          : Text(
-                                              'Online',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 14.sp,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              Expanded(
-                                child: GestureDetector(
-                                  onTap: driverProvider.isLoading
-                                      ? null
-                                      : () => _updateDriverStatus(false),
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: !driverProvider.isOnline
-                                          ? Colors.red
-                                          : Color(0xFFB1B1B1).withOpacity(0.3),
-                                      borderRadius: BorderRadius.only(
-                                        topRight: Radius.circular(15.r),
-                                        bottomRight: Radius.circular(15.r),
-                                      ),
-                                    ),
-                                    child: Center(
-                                      child: driverProvider.isLoading
-                                          ? SizedBox(
-                                              width: 12.w,
-                                              height: 12.h,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 2,
-                                                valueColor:
-                                                    AlwaysStoppedAnimation<
-                                                      Color
-                                                    >(Colors.white),
-                                              ),
-                                            )
-                                          : Text(
-                                              'Offline',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 14.sp,
-                                                fontWeight: FontWeight.w500,
-                                              ),
-                                            ),
-                                    ),
-                                  ),
+                              SizedBox(height: 11.75.h),
+                              Container(
+                                width: 69.w,
+                                height: 5.h,
+                                decoration: BoxDecoration(
+                                  color: Colors.grey.shade300,
+                                  borderRadius: BorderRadius.circular(2.5.r),
                                 ),
                               ),
                             ],
                           ),
-                        );
-                      },
-                    ),
-                  ),
-                  // Drawer button
-                  Positioned(
-                    top: 50.h,
-                    left: 20.w,
-                    child: GestureDetector(
-                      onTap: () => _scaffoldKey.currentState?.openDrawer(),
-                      child: Container(
-                        width: 50.w,
+                        ),
+                      ),
+                      Container(
+                        width: 353.w,
                         height: 50.h,
+                        padding: EdgeInsets.symmetric(horizontal: 10.w),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(25.r),
+                          color: Color(0xFFB1B1B1).withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(8.r),
                         ),
-                        padding: EdgeInsets.all(10.w),
-                        child: Icon(Icons.menu, size: 24.sp),
-                      ),
-                    ),
-                  ),
-                  // My Location button
-                  Positioned(
-                    top: 50.h,
-                    right: 20.w,
-                    child: GestureDetector(
-                      onTap: () {
-                        if (_activeRide != null) {
-                          // If there's an active ride, center on it
-                          _centerMapOnActiveRide();
-                        } else {
-                          // Otherwise center on current location
-                          _getCurrentLocation();
-                        }
-                      },
-                      child: Container(
-                        width: 50.w,
-                        height: 50.h,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(25.r),
-                        ),
-                        padding: EdgeInsets.all(10.w),
-                        child: Icon(
-                          _activeRide != null
-                              ? Icons.directions_car
-                              : Icons.my_location,
-                          size: 24.sp,
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Stop Address Marker (if exists)
-                  if (_activeRide != null &&
-                      _activeRide!['StopAddress'] != null &&
-                      _activeRide!['StopAddress'].toString().isNotEmpty)
-                    Positioned(
-                      top: 120.h,
-                      left: 0,
-                      right: 0,
-                      child: Center(child: _buildStopMarkerWidget()),
-                    ),
-                  // Bottom sheet
-                  Positioned(
-                    bottom: _isBottomSheetVisible ? 0 : -294.h,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      height: 344.h,
-                      width: 393.w,
-                      decoration: BoxDecoration(
-                        color: themeManager.getCardColor(context),
-                        borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(20.r),
-                          topRight: Radius.circular(20.r),
-                        ),
-                      ),
-                      child: SingleChildScrollView(
-                        child: Column(
+                        child: Row(
                           children: [
-                            GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _isBottomSheetVisible =
-                                      !_isBottomSheetVisible;
-                                });
-                              },
-                              child: SizedBox(
-                                height: 50.h,
-                                child: Column(
-                                  children: [
-                                    SizedBox(height: 11.75.h),
-                                    Container(
-                                      width: 69.w,
-                                      height: 5.h,
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey.shade300,
-                                        borderRadius: BorderRadius.circular(
-                                          2.5.r,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
                             Container(
-                              width: 353.w,
-                              height: 50.h,
-                              padding: EdgeInsets.symmetric(horizontal: 10.w),
+                              width: 35.w,
+                              height: 35.h,
+                              padding: EdgeInsets.all(1.w),
                               decoration: BoxDecoration(
-                                color: Color(0xFFB1B1B1).withOpacity(0.12),
-                                borderRadius: BorderRadius.circular(8.r),
+                                borderRadius: BorderRadius.circular(500.r),
                               ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 35.w,
-                                    height: 35.h,
-                                    padding: EdgeInsets.all(1.w),
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(
-                                        500.r,
-                                      ),
-                                    ),
-                                    child: Image.asset(
-                                      'assets/images/Gift1.png',
-                                      fit: BoxFit.contain,
-                                    ),
-                                  ),
-                                  SizedBox(width: 10.w),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          'Refer and earn',
-                                          style: TextStyle(
-                                            fontFamily: 'Inter',
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 14.sp,
-                                            height: 1.0,
-                                            letterSpacing: -0.41,
-                                            color: themeManager.getTextColor(
-                                              context,
-                                            ),
-                                          ),
-                                        ),
-                                        Text(
-                                          'Refer a friend to earn and win up to #4000',
-                                          style: TextStyle(
-                                            fontFamily: 'Inter',
-                                            fontWeight: FontWeight.w400,
-                                            fontSize: 12.sp,
-                                            height: 1.0,
-                                            letterSpacing: -0.41,
-                                            color: themeManager.getTextColor(
-                                              context,
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
+                              child: Image.asset(
+                                'assets/images/Gift1.png',
+                                fit: BoxFit.contain,
                               ),
                             ),
-                            SizedBox(height: 20.h),
-                            _buildEarningsSection(
-                              'Today\'s earning',
-                              '₦${_earningsData['total_earnings']}',
-                            ),
-                            Divider(color: Color(0xFFE0E0E0), thickness: 1),
-                            _buildEarningsSection(
-                              'Today\'s rides',
-                              '${_earningsData['total_rides']}',
-                            ),
-                            Divider(color: Color(0xFFE0E0E0), thickness: 1),
-                            _buildEarningsSection(
-                              'Total ride completed',
-                              '${_earningsData['total_rides_completed']}',
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Ride info widget
-                  if (_activeRide != null && _currentETA.isNotEmpty)
-                    RideInfoWidget(
-                      eta: _currentETA,
-                      location: _currentLocationName,
-                      rideStatus: _activeRide!['Status'] ?? 'accepted',
-                    ),
-                  // Floating button to reopen ride sheet when dismissed
-                  if (_activeRide != null && !_isRideSheetVisible)
-                    Positioned(
-                      bottom: 120.h,
-                      right: 20.w,
-                      child: Container(
-                        width: 56.w,
-                        height: 56.h,
-                        decoration: BoxDecoration(
-                          color: Color(ConstColors.mainColor),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black26,
-                              blurRadius: 8,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(28.r),
-                            onTap: () =>
-                                _showRideAcceptedSheet(_activeRide!, {}),
-                            child: Center(
-                              child: Icon(
-                                Icons.directions_car,
-                                color: Colors.white,
-                                size: 28.sp,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  // Ride request overlay
-                  if (_hasActiveRequest && _nearbyRides.isNotEmpty)
-                    _buildRideRequestSheet(),
-
-                  // Navigation widget positioned on top of the ride sheet
-                  if (_activeRide != null &&
-                      _activeRide!['Status'] != 'completed')
-                    Positioned(
-                      bottom: 450.h, // Position it above the bottom sheet
-                      right: 20.w,
-                      child: GestureDetector(
-                        onTap: _openGoogleMaps,
-                        child: Container(
-                          padding: EdgeInsets.symmetric(
-                            horizontal: 12.w,
-                            vertical: 8.h,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Color(
-                              ConstColors.mainColor,
-                            ).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8.r),
-                            border: Border.all(
-                              color: Color(ConstColors.mainColor),
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.navigation,
-                                color: Color(ConstColors.mainColor),
-                                size: 20.sp,
-                              ),
-                              SizedBox(width: 8.w),
-                              Column(
+                            SizedBox(width: 10.w),
+                            Expanded(
+                              child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Text(
-                                    'Navigation',
+                                    'Refer and earn',
                                     style: TextStyle(
                                       fontFamily: 'Inter',
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 12.sp,
-                                      color: Color(ConstColors.mainColor),
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 14.sp,
+                                      height: 1.0,
+                                      letterSpacing: -0.41,
+                                      color: themeManager.getTextColor(context),
                                     ),
                                   ),
                                   Text(
-                                    'Open in map',
+                                    'Refer a friend to earn and win up to #4000',
                                     style: TextStyle(
                                       fontFamily: 'Inter',
                                       fontWeight: FontWeight.w400,
-                                      fontSize: 10.sp,
-                                      color: Colors.grey[600],
+                                      fontSize: 12.sp,
+                                      height: 1.0,
+                                      letterSpacing: -0.41,
+                                      color: themeManager.getTextColor(context),
                                     ),
                                   ),
                                 ],
                               ),
-                              SizedBox(width: 4.w),
-                              Icon(
-                                Icons.arrow_forward_ios,
-                                color: Color(ConstColors.mainColor),
-                                size: 12.sp,
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 20.h),
+                      _buildEarningsSection(
+                        'Today\'s earning',
+                        '₦${_earningsData['total_earnings']}',
+                      ),
+                      Divider(color: Color(0xFFE0E0E0), thickness: 1),
+                      _buildEarningsSection(
+                        'Today\'s rides',
+                        '${_earningsData['total_rides']}',
+                      ),
+                      Divider(color: Color(0xFFE0E0E0), thickness: 1),
+                      _buildEarningsSection(
+                        'Total ride completed',
+                        '${_earningsData['total_rides_completed']}',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // Ride info widget
+            if (_activeRide != null && _currentETA.isNotEmpty)
+              RideInfoWidget(
+                eta: _currentETA,
+                location: _currentLocationName,
+                rideStatus: _activeRide!['Status'] ?? 'accepted',
+              ),
+            // Floating button to reopen ride sheet when dismissed
+            if (_activeRide != null && !_isRideSheetVisible)
+              Positioned(
+                bottom: 120.h,
+                right: 20.w,
+                child: Container(
+                  width: 56.w,
+                  height: 56.h,
+                  decoration: BoxDecoration(
+                    color: Color(ConstColors.mainColor),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black26,
+                        blurRadius: 8,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(28.r),
+                      onTap: () => _showRideAcceptedSheet(_activeRide!, {}),
+                      child: Center(
+                        child: Icon(
+                          Icons.directions_car,
+                          color: Colors.white,
+                          size: 28.sp,
                         ),
                       ),
                     ),
-
-                  // Full-screen incoming call overlay
-                ],
+                  ),
+                ),
               ),
+            // Ride request overlay
+            if (_hasActiveRequest && _nearbyRides.isNotEmpty)
+              _buildRideRequestSheet(),
+
+            // Navigation widget positioned on top of the ride sheet
+            if (_activeRide != null && _activeRide!['Status'] != 'completed')
+              Positioned(
+                bottom: 450.h, // Position it above the bottom sheet
+                right: 20.w,
+                child: GestureDetector(
+                  onTap: _openGoogleMaps,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 12.w,
+                      vertical: 8.h,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Color(ConstColors.mainColor).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8.r),
+                      border: Border.all(
+                        color: Color(ConstColors.mainColor),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.navigation,
+                          color: Color(ConstColors.mainColor),
+                          size: 20.sp,
+                        ),
+                        SizedBox(width: 8.w),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Navigation',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w700,
+                                fontSize: 12.sp,
+                                color: Color(ConstColors.mainColor),
+                              ),
+                            ),
+                            Text(
+                              'Open in map',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w400,
+                                fontSize: 10.sp,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(width: 4.w),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          color: Color(ConstColors.mainColor),
+                          size: 12.sp,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+            // Full-screen incoming call overlay
+          ],
+        ),
       ),
     );
   }

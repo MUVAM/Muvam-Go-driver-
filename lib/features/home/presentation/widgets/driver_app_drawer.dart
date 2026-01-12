@@ -11,7 +11,7 @@ import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/delete_account_screen.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_selection_screen.dart';
-import 'package:muvam_rider/features/earnings/presentation/screens/wallet_screen.dart';
+import 'package:muvam_rider/features/home/presentation/screens/main_navigation_screen.dart';
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
 import 'package:muvam_rider/features/profile/presentation/screens/profile_screen.dart';
 import 'package:muvam_rider/features/referral/presentation/screens/referral_screen.dart';
@@ -175,9 +175,11 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
               iconPath: ConstImages.walletSolid,
               onTap: () {
                 Navigator.pop(context);
-                Navigator.push(
+                Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => WalletScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => MainNavigationScreen(initialIndex: 2),
+                  ),
                 );
               },
             ),

@@ -24,14 +24,16 @@ class TripCard extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 353.w,
-        height: 120.h,
+        width: double.infinity,
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(5.r),
-          border: Border.all(color: Theme.of(context).dividerColor, width: 0.5),
+          border: Border.all(
+            color: Color(0xFFB1B1B1).withOpacity(0.5),
+            width: 0.5,
+          ),
         ),
-        padding: EdgeInsets.symmetric(horizontal: 15.w),
+        padding: EdgeInsets.all(15.sp),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

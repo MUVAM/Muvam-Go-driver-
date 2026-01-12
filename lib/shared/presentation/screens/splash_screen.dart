@@ -8,7 +8,7 @@ import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/biometric_lock_screen.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_selection_screen.dart';
 import 'package:muvam_rider/features/earnings/data/provider/withdrawal_provider.dart';
-import 'package:muvam_rider/features/home/presentation/screens/home_screen.dart';
+import 'package:muvam_rider/features/home/presentation/screens/main_navigation_screen.dart';
 import 'package:muvam_rider/shared/presentation/screens/onboarding_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -71,13 +71,16 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
     );
 
-    _circlePositionAnimation = Tween<Offset>(
-      begin: const Offset(0, 5), // Start from bottom
-      end: Offset.zero, // Move to center
-    ).animate(CurvedAnimation(
-      parent: _circlePositionController,
-      curve: Curves.easeInOut,
-    ));
+    _circlePositionAnimation =
+        Tween<Offset>(
+          begin: const Offset(0, 5), // Start from bottom
+          end: Offset.zero, // Move to center
+        ).animate(
+          CurvedAnimation(
+            parent: _circlePositionController,
+            curve: Curves.easeInOut,
+          ),
+        );
 
     // Circle expand animation controller (expands to fill screen)
     _circleExpandController = AnimationController(
@@ -85,13 +88,16 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
     );
 
-    _circleScaleAnimation = Tween<double>(
-      begin: 0.1, // Start small
-      end: 10.0, // Expand to fill screen
-    ).animate(CurvedAnimation(
-      parent: _circleExpandController,
-      curve: Curves.easeInOut,
-    ));
+    _circleScaleAnimation =
+        Tween<double>(
+          begin: 0.1, // Start small
+          end: 10.0, // Expand to fill screen
+        ).animate(
+          CurvedAnimation(
+            parent: _circleExpandController,
+            curve: Curves.easeInOut,
+          ),
+        );
 
     // Text color animation controller (changes from green to white)
     _textColorController = AnimationController(
@@ -99,13 +105,13 @@ class _SplashScreenState extends State<SplashScreen>
       vsync: this,
     );
 
-    _textColorAnimation = ColorTween(
-      begin: Color(ConstColors.mainColor),
-      end: Colors.white,
-    ).animate(CurvedAnimation(
-      parent: _textColorController,
-      curve: Curves.easeIn,
-    ));
+    _textColorAnimation =
+        ColorTween(
+          begin: Color(ConstColors.mainColor),
+          end: Colors.white,
+        ).animate(
+          CurvedAnimation(parent: _textColorController, curve: Curves.easeIn),
+        );
 
     // Start car animation, then text animation, then circle animations
     _carController.forward().then((_) {
@@ -184,7 +190,9 @@ class _SplashScreenState extends State<SplashScreen>
               onAuthenticated: () {
                 Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(builder: (context) => HomeScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => MainNavigationScreen(),
+                  ),
                 );
               },
             ),
@@ -193,7 +201,7 @@ class _SplashScreenState extends State<SplashScreen>
       } else {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
+          MaterialPageRoute(builder: (context) => MainNavigationScreen()),
         );
       }
     }
@@ -265,7 +273,9 @@ class _SplashScreenState extends State<SplashScreen>
                     return Text(
                       'MUVAM DRIVER',
                       style: TextStyle(
-                        color: _textColorAnimation.value ?? Color(ConstColors.mainColor),
+                        color:
+                            _textColorAnimation.value ??
+                            Color(ConstColors.mainColor),
                         fontSize: 36.sp,
                         fontWeight: FontWeight.bold,
                       ),
