@@ -1109,7 +1109,9 @@ class _HomeScreenState extends State<HomeScreen> {
               top: 50.h,
               left: 20.w,
               child: GestureDetector(
-                onTap: () => _scaffoldKey.currentState?.openDrawer(),
+                onTap: () {
+                  Scaffold.of(context).openDrawer();
+                },
                 child: Container(
                   width: 50.w,
                   height: 50.h,

@@ -7,7 +7,9 @@ import 'package:muvam_rider/features/activities/data/providers/request_provider.
 import 'package:muvam_rider/features/activities/presentation/screens/activities_screen.dart';
 import 'package:muvam_rider/features/earnings/presentation/screens/wallet_screen.dart';
 import 'package:muvam_rider/features/home/presentation/screens/home_screen.dart';
+import 'package:muvam_rider/features/home/presentation/widgets/driver_app_drawer.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MainNavigationScreen extends StatefulWidget {
   final int initialIndex;
@@ -21,6 +23,7 @@ class MainNavigationScreen extends StatefulWidget {
 class _MainNavigationScreenState extends State<MainNavigationScreen> {
   late int _currentIndex;
   DateTime? _lastBackPress;
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   final List<Widget> _screens = [
     const HomeScreen(),
@@ -32,6 +35,119 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+  }
+
+  void _showContactBottomSheet() {
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (context) => Container(
+        padding: EdgeInsets.all(20.w),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Contact us',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 18.sp,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                GestureDetector(
+                  onTap: () => Navigator.pop(context),
+                  child: Icon(Icons.close, size: 24.sp),
+                ),
+              ],
+            ),
+            SizedBox(height: 20.h),
+            ListTile(
+              leading: Image.asset(
+                ConstImages.phoneCall,
+                width: 22.w,
+                height: 22.h,
+              ),
+              title: Text(
+                'Via Call',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              trailing: Icon(
+                Icons.arrow_forward_ios,
+                size: 12.sp,
+                color: Colors.grey,
+              ),
+              onTap: () async {
+                Navigator.pop(context);
+                final Uri phoneUri = Uri(scheme: 'tel', path: '07032992768');
+                if (await canLaunchUrl(phoneUri)) {
+                  await launchUrl(phoneUri);
+                } else {
+                  if (mounted) {
+                    CustomFlushbar.showError(
+                      context: context,
+                      message: 'Could not open phone dialer',
+                    );
+                  }
+                }
+              },
+            ),
+            Divider(thickness: 1, color: Colors.grey.shade300),
+            ListTile(
+              leading: Image.asset(
+                ConstImages.whatsapp,
+                width: 22.w,
+                height: 22.h,
+              ),
+              title: Text(
+                'Via WhatsApp',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 16.sp,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              trailing: Icon(
+                Icons.arrow_forward_ios,
+                size: 12.sp,
+                color: Colors.grey,
+              ),
+              onTap: () async {
+                Navigator.pop(context);
+                final Uri whatsappUri = Uri.parse(
+                  'https://wa.me/2347032992768',
+                );
+                if (await canLaunchUrl(whatsappUri)) {
+                  await launchUrl(
+                    whatsappUri,
+                    mode: LaunchMode.externalApplication,
+                  );
+                } else {
+                  if (mounted) {
+                    CustomFlushbar.showError(
+                      context: context,
+                      message: 'Could not open WhatsApp',
+                    );
+                  }
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
@@ -60,6 +176,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         }
       },
       child: Scaffold(
+        key: _scaffoldKey,
+        drawer: DriverAppDrawer(onContactUsTap: _showContactBottomSheet),
         body: IndexedStack(index: _currentIndex, children: _screens),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _currentIndex,
