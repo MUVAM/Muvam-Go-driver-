@@ -9,6 +9,7 @@ import 'package:muvam_rider/core/services/websocket_service.dart';
 import 'package:muvam_rider/features/activities/data/providers/request_provider.dart';
 import 'package:muvam_rider/features/activities/data/providers/rides_provider.dart';
 import 'package:muvam_rider/features/analytics/data/providers/earnings_provider.dart';
+import 'package:muvam_rider/features/auth/data/provider/%20delete_account_provider.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
 import 'package:muvam_rider/features/communication/data/providers/chat_provider.dart';
 import 'package:muvam_rider/features/communication/presentation/screens/call_screen.dart';
@@ -63,6 +64,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => RequestProvider()),
         ChangeNotifierProvider(create: (_) => EarningsProvider()),
         ChangeNotifierProvider(create: (_) => ReferralProvider()),
+        ChangeNotifierProvider(create: (_) => DeleteAccountProvider()),
         // ChangeNotifierProvider(create: (_) => FCMProvider()),
       ],
       child: const MyApp(),

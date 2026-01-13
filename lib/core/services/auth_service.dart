@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/url_constants.dart';
 
@@ -44,8 +45,14 @@ class AuthService {
       body: jsonEncode({'code': code, 'phone': phone}),
     );
 
+    AppLogger.log('Response Status Code-------: ${response.statusCode}');
+    AppLogger.log('Response Body++++++: ${response.body}');
+
     if (response.statusCode == 200) {
       final result = jsonDecode(response.body);
+
+      AppLogger.log('Response Status Code: ${response.statusCode}');
+      AppLogger.log('Response Body: ${response.body}');
 
       // Handle the new token structure
       if (result['token'] != null) {

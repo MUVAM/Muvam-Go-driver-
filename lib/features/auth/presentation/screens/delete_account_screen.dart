@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/images.dart';
+import 'package:muvam_rider/core/utils/custom_flushbar.dart';
+import 'package:muvam_rider/features/auth/data/provider/%20delete_account_provider.dart';
 import 'package:muvam_rider/features/auth/presentation/widgets/reason_item.dart';
+import 'package:muvam_rider/shared/presentation/screens/onboarding_screen.dart';
+import 'package:provider/provider.dart';
 
 class DeleteAccountScreen extends StatefulWidget {
   const DeleteAccountScreen({super.key});
@@ -27,81 +31,111 @@ class DeleteAccountScreenState extends State<DeleteAccountScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Padding(
-          padding: EdgeInsets.all(20.w),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        child: Consumer<DeleteAccountProvider>(
+          builder: (context, deleteProvider, child) {
+            return Padding(
+              padding: EdgeInsets.all(20.w),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Image.asset(
-                      ConstImages.back,
-                      width: 30.w,
-                      height: 30.h,
-                    ),
+                  Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Image.asset(
+                          ConstImages.back,
+                          width: 30.w,
+                          height: 30.h,
+                        ),
+                      ),
+                      SizedBox(width: 15.w),
+                      Text(
+                        'Delete Account',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 18.sp,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black,
+                        ),
+                      ),
+                    ],
                   ),
-                  SizedBox(width: 15.w),
+                  SizedBox(height: 30.h),
                   Text(
-                    'Delete Account',
+                    'We\'re really sorry to see you go 😢 Are you sure you want to delete your account? Once you confirm, your data will be gone.',
                     style: TextStyle(
                       fontFamily: 'Inter',
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w400,
+                      height: 1.0,
+                      letterSpacing: -0.41,
                       color: Colors.black,
+                    ),
+                  ),
+                  SizedBox(height: 30.h),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: reasons.length,
+                      itemBuilder: (context, index) {
+                        return ReasonItem(
+                          reason: reasons[index],
+                          isSelected: selectedReason == index,
+                          onTap: () => setState(() => selectedReason = index),
+                        );
+                      },
+                    ),
+                  ),
+                  Container(
+                    width: 353.w,
+                    height: 47.h,
+                    decoration: BoxDecoration(
+                      color: deleteProvider.isDeleting
+                          ? Colors.grey
+                          : Colors.red,
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(8.r),
+                        onTap: deleteProvider.isDeleting
+                            ? null
+                            : () {
+                                if (selectedReason == null) {
+                                  CustomFlushbar.showInfo(
+                                    context: context,
+                                    message: 'Please select a reason',
+                                  );
+                                  return;
+                                }
+                                _showDeleteConfirmationSheet(context);
+                              },
+                        child: Center(
+                          child: deleteProvider.isDeleting
+                              ? SizedBox(
+                                  width: 20.w,
+                                  height: 20.h,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : Text(
+                                  'Delete my account',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                        ),
+                      ),
                     ),
                   ),
                 ],
               ),
-              SizedBox(height: 30.h),
-              Text(
-                'We\'re really sorry to see you go 😢 Are you sure you want to delete your account? Once you confirm, your data will be gone.',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w400,
-                  height: 1.0,
-                  letterSpacing: -0.41,
-                  color: Colors.black,
-                ),
-              ),
-              SizedBox(height: 30.h),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: reasons.length,
-                  itemBuilder: (context, index) {
-                    return ReasonItem(
-                      reason: reasons[index],
-                      isSelected: selectedReason == index,
-                      onTap: () => setState(() => selectedReason = index),
-                    );
-                  },
-                ),
-              ),
-              Container(
-                width: 353.w,
-                height: 47.h,
-                decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: GestureDetector(
-                  onTap: () => _showDeleteConfirmationSheet(context),
-                  child: Center(
-                    child: Text(
-                      'Delete my account',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -113,6 +147,8 @@ class DeleteAccountScreenState extends State<DeleteAccountScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
       ),
+      isDismissible: true,
+      enableDrag: true,
       builder: (context) => Container(
         padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
@@ -142,7 +178,7 @@ class DeleteAccountScreenState extends State<DeleteAccountScreen> {
             ),
             SizedBox(height: 20.h),
             Text(
-              'Are you sure you want to delete your account?',
+              'Are you sure you want to delete your account? This action cannot be undone.',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Inter',
@@ -154,42 +190,66 @@ class DeleteAccountScreenState extends State<DeleteAccountScreen> {
             SizedBox(height: 30.h),
             Row(
               children: [
-                Container(
-                  width: 170.w,
-                  height: 47.h,
-                  decoration: BoxDecoration(
-                    color: Color(0xFFB1B1B1),
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  child: GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Center(
-                      child: Text(
-                        'Cancel',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w600,
+                Expanded(
+                  child: Container(
+                    height: 47.h,
+                    decoration: BoxDecoration(
+                      color: Color(0xFFB1B1B1),
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(8.r),
+                        onTap: () => Navigator.pop(context),
+                        child: Center(
+                          child: Text(
+                            'Cancel',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ),
                 ),
                 SizedBox(width: 10.w),
-                Container(
-                  width: 170.w,
-                  height: 47.h,
-                  decoration: BoxDecoration(
-                    color: Colors.red,
-                    borderRadius: BorderRadius.circular(8.r),
-                  ),
-                  child: Center(
-                    child: Text(
-                      'Delete account',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
+                Expanded(
+                  child: Container(
+                    height: 47.h,
+                    decoration: BoxDecoration(
+                      color: Colors.red,
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(8.r),
+                        onTap: () async {
+                          // Close bottom sheet first
+                          Navigator.pop(context);
+
+                          // Wait a frame to ensure context is valid
+                          await Future.delayed(Duration(milliseconds: 100));
+
+                          // Now delete with the main screen context
+                          if (mounted) {
+                            _deleteAccount();
+                          }
+                        },
+                        child: Center(
+                          child: Text(
+                            'Delete account',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -200,5 +260,36 @@ class DeleteAccountScreenState extends State<DeleteAccountScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _deleteAccount() async {
+    final deleteProvider = context.read<DeleteAccountProvider>();
+    final reason = reasons[selectedReason!];
+
+    final success = await deleteProvider.deleteAccount(reason);
+
+    if (!mounted) return;
+
+    if (success) {
+      CustomFlushbar.showSuccess(
+        context: context,
+        message:
+            deleteProvider.successMessage ?? 'Account deleted successfully',
+      );
+
+      await Future.delayed(Duration(seconds: 2));
+
+      if (!mounted) return;
+
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+        (route) => false,
+      );
+    } else {
+      CustomFlushbar.showError(
+        context: context,
+        message: deleteProvider.errorMessage ?? 'Failed to delete account',
+      );
+    }
   }
 }
