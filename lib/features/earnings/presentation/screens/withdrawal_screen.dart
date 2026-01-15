@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:muvam_rider/core/constants/images.dart';
+import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/earnings/presentation/widgets/bank_selector_widget.dart';
 import 'package:muvam_rider/features/earnings/presentation/widgets/text_field_widget.dart';
 import 'package:provider/provider.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
 import 'package:muvam_rider/features/earnings/data/provider/withdrawal_provider.dart';
 import 'withdrawal_success_screen.dart';
@@ -39,48 +41,47 @@ class WithdrawalScreenState extends State<WithdrawalScreen> {
     super.dispose();
   }
 
-  void _showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Error'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
-
   Future<void> _handleWithdrawal() async {
     final provider = Provider.of<WithdrawalProvider>(context, listen: false);
 
     if (provider.selectedBank == null) {
-      _showErrorDialog('Please select a bank');
+      CustomFlushbar.showError(
+        context: context,
+        message: 'Please select a bank',
+      );
       return;
     }
 
     if (_accountNumberController.text.trim().isEmpty) {
-      _showErrorDialog('Please enter account number');
+      CustomFlushbar.showError(
+        context: context,
+        message: 'Please enter account number',
+      );
       return;
     }
 
     if (_accountNameController.text.trim().isEmpty) {
-      _showErrorDialog('Please enter account name');
+      CustomFlushbar.showError(
+        context: context,
+        message: 'Please enter account name',
+      );
       return;
     }
 
     if (_amountController.text.trim().isEmpty) {
-      _showErrorDialog('Please enter amount');
+      CustomFlushbar.showError(
+        context: context,
+        message: 'Please enter amount',
+      );
       return;
     }
 
     final amount = double.tryParse(_amountController.text.trim());
     if (amount == null || amount <= 0) {
-      _showErrorDialog('Please enter a valid amount');
+      CustomFlushbar.showError(
+        context: context,
+        message: 'Please enter a valid amount',
+      );
       return;
     }
 
@@ -98,7 +99,10 @@ class WithdrawalScreenState extends State<WithdrawalScreen> {
         ),
       );
     } else if (provider.errorMessage != null) {
-      _showErrorDialog(provider.errorMessage!);
+      CustomFlushbar.showError(
+        context: context,
+        message: provider.errorMessage!,
+      );
     }
   }
 
@@ -109,118 +113,117 @@ class WithdrawalScreenState extends State<WithdrawalScreen> {
 
     return Scaffold(
       backgroundColor: themeManager.getBackgroundColor(context),
-      body: Stack(
+      body: Column(
         children: [
-          Positioned(
-            top: 40.h,
-            left: 10.w,
-            child: GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                width: 45.w,
-                height: 45.h,
-                decoration: BoxDecoration(
-                  color: themeManager.getCardColor(context),
-                  borderRadius: BorderRadius.circular(100.r),
+          Container(
+            padding: EdgeInsets.fromLTRB(20.w, 50.h, 20.w, 30.h),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: Image.asset(
+                        ConstImages.back,
+                        width: 30.w,
+                        height: 30.h,
+                      ),
+                    ),
+                  ],
                 ),
-                child: Icon(
-                  Icons.arrow_back,
-                  color: themeManager.getTextColor(context),
-                  size: 20.sp,
+                SizedBox(height: 20.h),
+                Text(
+                  'Withdrawal',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w600,
+                    fontSize: 26.sp,
+                    color: themeManager.getTextColor(context),
+                  ),
                 ),
-              ),
+                Text(
+                  'Please enter your correct bank details',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w400,
+                    fontSize: 14.sp,
+                    color: Color(0xFF8E8E93),
+                  ),
+                ),
+              ],
             ),
           ),
-          Positioned(
-            top: 85.h,
-            left: 20.w,
-            right: 20.w,
+          Expanded(
             child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Center(
-                    child: Text(
-                      'Withdrawal',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w600,
-                        fontSize: 24.sp,
-                        color: themeManager.getTextColor(context),
-                      ),
-                    ),
-                  ),
-                  Center(
-                    child: Text(
-                      'Please enter your correct bank details',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w400,
-                        fontSize: 14.sp,
-                        color: themeManager.getSecondaryTextColor(context),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 40.h),
+                  SizedBox(height: 10.h),
                   BankSelectorWidget(parentContext: context),
-                  SizedBox(height: 20.h),
+                  SizedBox(height: 24.h),
                   TextFieldWidget(
-                    label: 'Account Number',
+                    label: 'Account number',
                     controller: _accountNumberController,
                     keyboardType: TextInputType.number,
-                    hintText: 'Enter account number',
+                    hintText: '1234567890',
                   ),
-                  SizedBox(height: 20.h),
+                  SizedBox(height: 24.h),
                   TextFieldWidget(
-                    label: 'Account Name',
+                    label: 'Account name',
                     controller: _accountNameController,
-                    hintText: 'Enter account name',
+                    hintText: 'John Doe',
                   ),
-                  SizedBox(height: 20.h),
+                  SizedBox(height: 24.h),
                   TextFieldWidget(
                     label: 'Amount',
                     controller: _amountController,
                     keyboardType: TextInputType.number,
-                    hintText: 'Enter amount',
+                    hintText: '#',
                   ),
-                  SizedBox(height: 40.h),
-                  GestureDetector(
-                    onTap: withdrawalProvider.isWithdrawing
-                        ? null
-                        : _handleWithdrawal,
-                    child: Container(
-                      width: double.infinity,
-                      height: 50.h,
-                      decoration: BoxDecoration(
-                        color: withdrawalProvider.isWithdrawing
-                            ? Colors.grey
-                            : const Color(ConstColors.mainColor),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: Center(
-                        child: withdrawalProvider.isWithdrawing
-                            ? SizedBox(
-                                width: 20.w,
-                                height: 20.h,
-                                child: const CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Text(
-                                'Withdraw',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16.sp,
-                                  color: Colors.white,
-                                ),
-                              ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 40.h),
+                  SizedBox(height: 60.h),
                 ],
+              ),
+            ),
+          ),
+          Container(
+            padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 40.h),
+            decoration: BoxDecoration(
+              color: themeManager.getBackgroundColor(context),
+            ),
+            child: GestureDetector(
+              onTap: withdrawalProvider.isWithdrawing
+                  ? null
+                  : _handleWithdrawal,
+              child: Container(
+                width: double.infinity,
+                height: 48.h,
+                decoration: BoxDecoration(
+                  color: withdrawalProvider.isWithdrawing
+                      ? Color(ConstColors.mainColor)
+                      : Color(0xFFB1B1B1),
+                  borderRadius: BorderRadius.circular(12.r),
+                ),
+                child: Center(
+                  child: withdrawalProvider.isWithdrawing
+                      ? SizedBox(
+                          width: 24.w,
+                          height: 24.h,
+                          child: const CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.5,
+                          ),
+                        )
+                      : Text(
+                          'Withdraw',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontWeight: FontWeight.w600,
+                            fontSize: 17.sp,
+                            color: Colors.white,
+                          ),
+                        ),
+                ),
               ),
             ),
           ),

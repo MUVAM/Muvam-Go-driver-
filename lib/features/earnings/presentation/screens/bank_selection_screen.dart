@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/svg.dart';
+import 'package:muvam_rider/core/constants/images.dart';
 import 'package:provider/provider.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
@@ -107,18 +109,10 @@ class _BankSelectionScreenState extends State<BankSelectionScreen> {
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Container(
-                      width: 40.w,
-                      height: 40.h,
-                      decoration: BoxDecoration(
-                        color: themeManager.getCardColor(context),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: Icon(
-                        Icons.arrow_back,
-                        color: themeManager.getTextColor(context),
-                        size: 20.sp,
-                      ),
+                    child: Image.asset(
+                      ConstImages.back,
+                      width: 30.w,
+                      height: 30.h,
                     ),
                   ),
                   Spacer(),
@@ -158,10 +152,11 @@ class _BankSelectionScreenState extends State<BankSelectionScreen> {
                       fontSize: 14.sp,
                       color: Colors.grey,
                     ),
-                    prefixIcon: Icon(
-                      Icons.search,
-                      color: Colors.grey,
-                      size: 20.sp,
+                    prefixIcon: SvgPicture.asset(
+                      ConstImages.search,
+                      width: 20.w,
+                      height: 20.h,
+                      fit: BoxFit.scaleDown,
                     ),
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.symmetric(
@@ -204,7 +199,7 @@ class _BankSelectionScreenState extends State<BankSelectionScreen> {
                             Padding(
                               padding: EdgeInsets.only(
                                 top: index == 0 ? 0 : 24.h,
-                                bottom: 12.h,
+                                bottom: 8.h,
                               ),
                               child: Text(
                                 header,

@@ -78,27 +78,26 @@ class _RiderSignupSelectionScreenState
                 ),
               ),
               Spacer(),
-              Container(
-                width: double.infinity,
-                height: 48.h,
-                decoration: BoxDecoration(
-                  color: selectedOptions.isNotEmpty
-                      ? Color(ConstColors.mainColor)
-                      : Color(ConstColors.fieldColor),
-                  borderRadius: BorderRadius.circular(8.r),
-                ),
-                child: GestureDetector(
-                  onTap: selectedOptions.isNotEmpty
-                      ? () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  const OnboardingScreen(),
-                            ),
-                          );
-                        }
-                      : null,
+              GestureDetector(
+                onTap: selectedOptions.isNotEmpty
+                    ? () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => OnboardingScreen(),
+                          ),
+                        );
+                      }
+                    : null,
+                child: Container(
+                  width: double.infinity,
+                  height: 48.h,
+                  decoration: BoxDecoration(
+                    color: selectedOptions.isNotEmpty
+                        ? Color(ConstColors.mainColor)
+                        : Color(ConstColors.fieldColor),
+                    borderRadius: BorderRadius.circular(8.r),
+                  ),
                   child: Center(
                     child: Text(
                       'Continue',

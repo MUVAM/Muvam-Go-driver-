@@ -62,7 +62,7 @@ class WithdrawalSuccessScreen extends StatelessWidget {
                     },
                     child: Container(
                       width: double.infinity,
-                      height: 50.h,
+                      height: 48.h,
                       decoration: BoxDecoration(
                         color: Color(0xFF2A8359),
                         borderRadius: BorderRadius.circular(8.r),

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
@@ -19,6 +20,7 @@ import 'package:muvam_rider/core/services/websocket_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/activities/data/providers/request_provider.dart';
+import 'package:muvam_rider/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_selection_screen.dart';
 import 'package:muvam_rider/features/communication/data/models/chat_model.dart';
@@ -28,6 +30,7 @@ import 'package:muvam_rider/features/communication/presentation/screens/chat_scr
 import 'package:muvam_rider/features/communication/presentation/widgets/chat_notification_service.dart';
 import 'package:muvam_rider/features/earnings/data/provider/wallet_provider.dart';
 import 'package:muvam_rider/features/home/data/provider/driver_provider.dart';
+import 'package:muvam_rider/features/home/presentation/screens/main_navigation_screen.dart';
 import 'package:muvam_rider/features/home/presentation/widgets/driver_app_drawer.dart';
 import 'package:muvam_rider/features/home/presentation/widgets/ride_info_widget.dart';
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
@@ -1166,121 +1169,156 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Center(child: _buildStopMarkerWidget()),
               ),
             // Bottom sheet
-            Positioned(
-              bottom: _isBottomSheetVisible ? 0 : -294.h,
-              left: 0,
-              right: 0,
-              child: Container(
-                height: 344.h,
-                width: 393.w,
-                decoration: BoxDecoration(
-                  color: themeManager.getCardColor(context),
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(20.r),
-                    topRight: Radius.circular(20.r),
+            DraggableScrollableSheet(
+              initialChildSize: 0.42,
+              minChildSize: 0.15,
+              maxChildSize: 0.85,
+              snap: true,
+              snapSizes: [0.15, 0.42, 0.85],
+              builder: (BuildContext context, ScrollController scrollController) {
+                return Container(
+                  decoration: BoxDecoration(
+                    color: themeManager.getCardColor(context),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20.r),
+                      topRight: Radius.circular(20.r),
+                    ),
                   ),
-                ),
-                child: SingleChildScrollView(
-                  child: Column(
+                  child: ListView(
+                    controller: scrollController,
+                    padding: EdgeInsets.zero,
                     children: [
-                      GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            _isBottomSheetVisible = !_isBottomSheetVisible;
-                          });
-                        },
-                        child: SizedBox(
-                          height: 50.h,
-                          child: Column(
-                            children: [
-                              SizedBox(height: 11.75.h),
-                              Container(
-                                width: 69.w,
-                                height: 5.h,
-                                decoration: BoxDecoration(
-                                  color: Colors.grey.shade300,
-                                  borderRadius: BorderRadius.circular(2.5.r),
-                                ),
-                              ),
-                            ],
+                      // Drag handle
+                      Center(
+                        child: Container(
+                          width: 69.w,
+                          height: 5.h,
+                          margin: EdgeInsets.symmetric(vertical: 11.75.h),
+                          decoration: BoxDecoration(
+                            color: Colors.grey.shade300,
+                            borderRadius: BorderRadius.circular(2.5.r),
                           ),
                         ),
                       ),
-                      Container(
-                        width: 353.w,
-                        height: 50.h,
-                        padding: EdgeInsets.symmetric(horizontal: 10.w),
-                        decoration: BoxDecoration(
-                          color: Color(0xFFB1B1B1).withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(8.r),
-                        ),
-                        child: Row(
+                      // Content with padding
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20.w),
+                        child: Column(
                           children: [
+                            // Refer and earn banner
                             Container(
-                              width: 35.w,
-                              height: 35.h,
-                              padding: EdgeInsets.all(1.w),
+                              width: 353.w,
+                              height: 50.h,
+                              padding: EdgeInsets.symmetric(horizontal: 10.w),
                               decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(500.r),
+                                color: Color(0xFFB1B1B1).withOpacity(0.12),
+                                borderRadius: BorderRadius.circular(8.r),
                               ),
-                              child: Image.asset(
-                                'assets/images/Gift1.png',
-                                fit: BoxFit.contain,
-                              ),
-                            ),
-                            SizedBox(width: 10.w),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment: MainAxisAlignment.center,
+                              child: Row(
                                 children: [
-                                  Text(
-                                    'Refer and earn',
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 14.sp,
-                                      height: 1.0,
-                                      letterSpacing: -0.41,
-                                      color: themeManager.getTextColor(context),
+                                  Container(
+                                    width: 35.w,
+                                    height: 35.h,
+                                    padding: EdgeInsets.all(1.w),
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(
+                                        500.r,
+                                      ),
+                                    ),
+                                    child: Image.asset(
+                                      'assets/images/Gift1.png',
+                                      fit: BoxFit.contain,
                                     ),
                                   ),
-                                  Text(
-                                    'Refer a friend to earn and win up to #4000',
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontWeight: FontWeight.w400,
-                                      fontSize: 12.sp,
-                                      height: 1.0,
-                                      letterSpacing: -0.41,
-                                      color: themeManager.getTextColor(context),
+                                  SizedBox(width: 10.w),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Text(
+                                          'Refer and earn',
+                                          style: TextStyle(
+                                            fontFamily: 'Inter',
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 14.sp,
+                                            height: 1.0,
+                                            letterSpacing: -0.41,
+                                            color: themeManager.getTextColor(
+                                              context,
+                                            ),
+                                          ),
+                                        ),
+                                        Text(
+                                          'Refer a friend to earn and win up to #4000',
+                                          style: TextStyle(
+                                            fontFamily: 'Inter',
+                                            fontWeight: FontWeight.w400,
+                                            fontSize: 12.sp,
+                                            height: 1.0,
+                                            letterSpacing: -0.41,
+                                            color: themeManager.getTextColor(
+                                              context,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
                               ),
                             ),
+                            SizedBox(height: 20.h),
+                            // Earnings sections
+                            _buildEarningsSection(
+                              'Today\'s earning',
+                              '₦${_earningsData['total_earnings']}',
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        MainNavigationScreen(initialIndex: 2),
+                                  ),
+                                );
+                              },
+                            ),
+                            Divider(color: Color(0xFFE0E0E0), thickness: 1),
+                            _buildEarningsSection(
+                              'Today\'s rides',
+                              '${_earningsData['total_rides']}',
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AnalyticsScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                            Divider(color: Color(0xFFE0E0E0), thickness: 1),
+                            _buildEarningsSection(
+                              'Total ride completed',
+                              '${_earningsData['total_rides_completed']}',
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => AnalyticsScreen(),
+                                  ),
+                                );
+                              },
+                            ),
+                            SizedBox(height: 20.h),
                           ],
                         ),
                       ),
-                      SizedBox(height: 20.h),
-                      _buildEarningsSection(
-                        'Today\'s earning',
-                        '₦${_earningsData['total_earnings']}',
-                      ),
-                      Divider(color: Color(0xFFE0E0E0), thickness: 1),
-                      _buildEarningsSection(
-                        'Today\'s rides',
-                        '${_earningsData['total_rides']}',
-                      ),
-                      Divider(color: Color(0xFFE0E0E0), thickness: 1),
-                      _buildEarningsSection(
-                        'Total ride completed',
-                        '${_earningsData['total_rides_completed']}',
-                      ),
                     ],
                   ),
-                ),
-              ),
+                );
+              },
             ),
             // Ride info widget
             if (_activeRide != null && _currentETA.isNotEmpty)
@@ -1392,18 +1430,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-
             // Full-screen incoming call overlay
           ],
         ),
       ),
     );
-  }
-
-  void _checkBothFields() {
-    if (fromController.text.isNotEmpty && toController.text.isNotEmpty) {
-      _showVehicleSelection();
-    }
   }
 
   void _showVehicleSelection() {
@@ -3691,44 +3722,56 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Widget _buildEarningsSection(String title, String value) {
+  Widget _buildEarningsSection(
+    String title,
+    String value, {
+    required VoidCallback onTap,
+  }) {
     final themeManager = Provider.of<ThemeManager>(context);
     return Padding(
-      padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 20.w),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
-                    fontSize: 12.sp,
-                    height: 1.0,
-                    letterSpacing: -0.41,
-                    color: themeManager.getTextColor(context),
+      padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 5.w),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w400,
+                      fontSize: 12.sp,
+                      height: 1.0,
+                      letterSpacing: -0.41,
+                      color: themeManager.getTextColor(context),
+                    ),
                   ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 24.sp,
-                    height: 1.0,
-                    letterSpacing: -0.41,
-                    color: themeManager.getTextColor(context),
+                  SizedBox(height: 4.h),
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w600,
+                      fontSize: 24.sp,
+                      height: 1.0,
+                      letterSpacing: -0.41,
+                      color: themeManager.getTextColor(context),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          Icon(Icons.arrow_forward_ios, size: 16.sp, color: Colors.black),
-        ],
+            SvgPicture.asset(
+              ConstImages.chevronBack,
+              width: 20.w,
+              height: 20.h,
+              fit: BoxFit.scaleDown,
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -3764,133 +3807,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRequestsScreen() {
-    final themeManager = Provider.of<ThemeManager>(context);
-    return Scaffold(
-      backgroundColor: themeManager.getBackgroundColor(context),
-      body: SingleChildScrollView(
-        padding: EdgeInsets.all(20.w),
-        child: Column(
-          children: [
-            SizedBox(height: 40.h),
-            _buildEarningsSection('Today\'s earning', '₦2,500'),
-            Divider(color: Color(0xFFE0E0E0), thickness: 1),
-            _buildEarningsSection('Today\'s rides', '12'),
-            Divider(color: Color(0xFFE0E0E0), thickness: 1),
-            _buildEarningsSection('Total ride completed', '245'),
-            SizedBox(height: 30.h),
-            _buildOrderItem(
-              '10:30 AM',
-              'Nov 28, 2024',
-              '#12345',
-              'Destination',
-              'Ikeja, Lagos',
-            ),
-            SizedBox(height: 15.h),
-            _buildOrderItem(
-              '2:15 PM',
-              'Nov 27, 2024',
-              '#12346',
-              'Destination',
-              'Victoria Island',
-            ),
-            SizedBox(height: 15.h),
-            _buildOrderItem(
-              '8:45 AM',
-              'Nov 27, 2024',
-              '#12347',
-              'Destination',
-              'Lekki Phase 1',
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOrderItem(
-    String time,
-    String date,
-    String tripId,
-    String destinationLabel,
-    String location,
-  ) {
-    final themeManager = Provider.of<ThemeManager>(context);
-    return Container(
-      padding: EdgeInsets.all(15.w),
-      decoration: BoxDecoration(
-        color: themeManager.getCardColor(context),
-        borderRadius: BorderRadius.circular(8.r),
-        border: Border.all(color: Colors.grey.shade300),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  time,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                    color: themeManager.getTextColor(context),
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  date,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w400,
-                    color: themeManager.getSecondaryTextColor(context),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  tripId,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                    color: themeManager.getTextColor(context),
-                  ),
-                ),
-                SizedBox(height: 4.h),
-                Text(
-                  destinationLabel,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w400,
-                    color: themeManager.getSecondaryTextColor(context),
-                  ),
-                ),
-                Text(
-                  location,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 12.sp,
-                    fontWeight: FontWeight.w500,
-                    color: themeManager.getTextColor(context),
-                  ),
-                ),
-              ],
             ),
           ),
         ],
