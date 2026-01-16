@@ -8,7 +8,6 @@ import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
 import 'package:muvam_rider/features/home/presentation/screens/main_navigation_screen.dart';
 import 'package:provider/provider.dart';
-import 'package:muvam_rider/features/home/presentation/screens/home_screen.dart';
 import 'package:pinput/pinput.dart';
 import 'dart:async';
 import 'create_account_screen.dart';
@@ -159,7 +158,7 @@ class _OtpScreenState extends State<OtpScreen> {
                       'Phone Verification',
                       style: ConstTextStyles.boldTitle,
                     ),
-                    SizedBox(height: 5.h),
+                    SizedBox(height: 2.h),
                     Text(
                       'Enter the 6 digit code sent to you',
                       style: ConstTextStyles.lightSubtitle,
@@ -180,7 +179,7 @@ class _OtpScreenState extends State<OtpScreen> {
                         decoration: BoxDecoration(
                           border: Border(
                             bottom: BorderSide(
-                              color: Colors.grey.shade300,
+                              color: Color(ConstColors.blackColor),
                               width: 2,
                             ),
                           ),
@@ -239,17 +238,38 @@ class _OtpScreenState extends State<OtpScreen> {
                     SizedBox(height: 30.h),
                     GestureDetector(
                       onTap: _countdown == 0 ? _resendOtp : null,
-                      child: Text(
-                        _countdown > 0
-                            ? 'Didn\'t receive code? Resend code in: 0:${_countdown.toString().padLeft(2, '0')}'
-                            : 'Resend code',
-                        style: _countdown == 0
-                            ? TextStyle(
-                                color: Color(ConstColors.mainColor),
+                      child: RichText(
+                        text: TextSpan(
+                          style: ConstTextStyles.lightSubtitle,
+                          children: [
+                            TextSpan(
+                              text: 'Didn\'t receive code? ',
+                              style: TextStyle(
+                                color: Color(ConstColors.blackColor),
                                 fontSize: 14.sp,
-                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                            if (_countdown > 0)
+                              TextSpan(
+                                text:
+                                    '0:${_countdown.toString().padLeft(2, '0')}',
+                                style: TextStyle(
+                                  color: Color(ConstColors.mainColor),
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.w500,
+                                ),
                               )
-                            : ConstTextStyles.lightSubtitle,
+                            else
+                              TextSpan(
+                                text: 'Resend',
+                                style: TextStyle(
+                                  color: Color(ConstColors.mainColor),
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                          ],
+                        ),
                       ),
                     ),
                     SizedBox(height: 20.h),
@@ -260,9 +280,10 @@ class _OtpScreenState extends State<OtpScreen> {
                       child: Text(
                         'Edit my number',
                         style: TextStyle(
-                          color: Color(ConstColors.mainColor),
+                          color: Color(ConstColors.blackColor),
                           fontSize: 14.sp,
                           fontWeight: FontWeight.w500,
+                          decoration: TextDecoration.underline,
                         ),
                       ),
                     ),
@@ -270,7 +291,7 @@ class _OtpScreenState extends State<OtpScreen> {
                     GestureDetector(
                       onTap: isOtpComplete && !_isLoading ? _verifyOtp : null,
                       child: Container(
-                        width: 353.w,
+                        width: double.infinity,
                         height: 48.h,
                         decoration: BoxDecoration(
                           color: isOtpComplete && !_isLoading
