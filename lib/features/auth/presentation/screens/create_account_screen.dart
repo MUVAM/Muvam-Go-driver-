@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:muvam_rider/core/constants/images.dart';
+import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:provider/provider.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
@@ -41,7 +42,6 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   void initState() {
     super.initState();
 
-    // Add listeners to update button state
     firstNameController.addListener(_updateButtonState);
     lastNameController.addListener(_updateButtonState);
     dobController.addListener(_updateButtonState);
@@ -83,76 +83,90 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
     return Scaffold(
       backgroundColor: themeManager.getBackgroundColor(context),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                SizedBox(height: 25.h),
-                Center(
-                  child: Text(
-                    'Create Account',
-                    style: ConstTextStyles.createAccountTitle.copyWith(
-                      color: themeManager.getTextColor(context),
+        child: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: Column(
+                children: [
+                  SizedBox(height: 25.h),
+                  Center(
+                    child: Text(
+                      'Create Account',
+                      style: ConstTextStyles.createAccountTitle.copyWith(
+                        color: themeManager.getTextColor(context),
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(height: 5.h),
-                Center(
-                  child: Text(
-                    'Please enter your correct details as it is \non your government issued document.',
-                    style: ConstTextStyles.createAccountSubtitle.copyWith(
-                      color: themeManager.getSecondaryTextColor(context),
+                  SizedBox(height: 5.h),
+                  Center(
+                    child: Text(
+                      'Please enter your information as it is on \nyour government issued ID',
+                      style: ConstTextStyles.createAccountSubtitle.copyWith(
+                        color: themeManager.getSecondaryTextColor(context),
+                      ),
+                      textAlign: TextAlign.center,
                     ),
                   ),
-                ),
-                SizedBox(height: 30.h),
-                AccountTextField(
-                  label: 'First Name',
-                  controller: firstNameController,
-                  backgroundColor: ConstColors.formFieldColor,
-                ),
-                SizedBox(height: 20.h),
-                AccountTextField(
-                  label: 'Middle Name (Optional)',
-                  controller: middleNameController,
-                  backgroundColor: ConstColors.formFieldColor,
-                ),
-                SizedBox(height: 20.h),
-                AccountTextField(
-                  label: 'Last Name',
-                  controller: lastNameController,
-                  backgroundColor: ConstColors.formFieldColor,
-                ),
-                SizedBox(height: 20.h),
-                AccountTextField(
-                  label: 'Date of Birth',
-                  controller: dobController,
-                  backgroundColor: ConstColors.formFieldColor,
-                  isDateField: true,
-                  onTap: () => _selectDate(context, dobController),
-                ),
-                SizedBox(height: 20.h),
-                AccountTextField(
-                  label: 'Email Address',
-                  controller: emailController,
-                  backgroundColor: ConstColors.formFieldColor,
-                ),
-                SizedBox(height: 20.h),
-                _buildLocationField(themeManager),
-                SizedBox(height: 20.h),
-                AccountTextField(
-                  label: 'Referral Code (Optional)',
-                  controller: referralController,
-                  backgroundColor: ConstColors.formFieldColor,
-                ),
-                SizedBox(height: 40.h),
-                _buildContinueButton(),
-                SizedBox(height: 20.h),
-              ],
+                  SizedBox(height: 30.h),
+                ],
+              ),
             ),
-          ),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      AccountTextField(
+                        label: 'First name',
+                        controller: firstNameController,
+                        backgroundColor: ConstColors.formFieldColor,
+                      ),
+                      SizedBox(height: 20.h),
+                      AccountTextField(
+                        label: 'Middle name',
+                        controller: middleNameController,
+                        backgroundColor: ConstColors.formFieldColor,
+                      ),
+                      SizedBox(height: 20.h),
+                      AccountTextField(
+                        label: 'Last name',
+                        controller: lastNameController,
+                        backgroundColor: ConstColors.formFieldColor,
+                      ),
+                      SizedBox(height: 20.h),
+                      AccountTextField(
+                        label: 'Date of birth',
+                        controller: dobController,
+                        backgroundColor: ConstColors.formFieldColor,
+                        isDateField: true,
+                        onTap: () => _selectDate(context, dobController),
+                      ),
+                      SizedBox(height: 20.h),
+                      AccountTextField(
+                        label: 'Email address',
+                        controller: emailController,
+                        backgroundColor: ConstColors.formFieldColor,
+                      ),
+                      SizedBox(height: 20.h),
+                      _buildLocationField(themeManager),
+                      SizedBox(height: 20.h),
+                      AccountTextField(
+                        label: 'Referral code (Optional)',
+                        controller: referralController,
+                        backgroundColor: ConstColors.formFieldColor,
+                      ),
+                      SizedBox(height: 40.h),
+                      _buildContinueButton(),
+                      SizedBox(height: 20.h),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -163,7 +177,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Location',
+          'Zone (State)',
           style: ConstTextStyles.fieldLabel.copyWith(
             color: themeManager.getTextColor(context),
           ),
@@ -199,7 +213,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                 children: [
                   Text(
                     locationController.text.isEmpty
-                        ? 'Select State'
+                        ? 'States'
                         : locationController.text,
                     style: TextStyle(
                       fontFamily: 'Inter',
@@ -283,6 +297,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 
     if (result['success'] == true) {
       if (!mounted) return;
+      AppLogger.log("Registration Success----: ${result['success']}");
       Navigator.push(
         context,
         MaterialPageRoute(

@@ -51,8 +51,8 @@ class AuthService {
     if (response.statusCode == 200) {
       final result = jsonDecode(response.body);
 
-      AppLogger.log('Response Status Code: ${response.statusCode}');
-      AppLogger.log('Response Body: ${response.body}');
+      AppLogger.log('Response Status Codedjkdhe: ${response.statusCode}');
+      AppLogger.log('Response Bodyuuuuu: ${response.body}');
 
       // Handle the new token structure
       if (result['token'] != null) {
@@ -91,7 +91,19 @@ class AuthService {
 
       return result;
     } else {
-      throw Exception('Failed to verify OTP');
+      // Parse error message from response body
+      try {
+        final errorBody = jsonDecode(response.body);
+        final errorMessage =
+            errorBody['error'] ??
+            errorBody['message'] ??
+            'Failed to verify OTP';
+        throw Exception(errorMessage);
+      } catch (e) {
+        // If JSON parsing fails, throw a generic error
+        if (e is Exception) rethrow;
+        throw Exception('Failed to verify OTP');
+      }
     }
   }
 
