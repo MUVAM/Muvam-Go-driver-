@@ -102,7 +102,6 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
                   controller: licensePlateController,
                 ),
                 SizedBox(height: 20.h),
-                // AC Dropdown Field
                 _buildACDropdown(themeManager),
                 SizedBox(height: 20.h),
                 GestureDetector(
