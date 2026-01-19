@@ -10,7 +10,6 @@ import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/text_styles.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
-import 'package:muvam_rider/features/home/presentation/screens/home_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/car_text_field.dart';
 
@@ -36,6 +35,10 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
   bool isLoading = false;
   final ImagePicker _picker = ImagePicker();
 
+  // AC field
+  bool? hasAC;
+  String acDisplayText = 'Select AC availability';
+
   @override
   Widget build(BuildContext context) {
     final themeManager = Provider.of<ThemeManager>(context);
@@ -59,7 +62,6 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(height: 20.h),
                 Text(
                   'Car Information',
                   style: ConstTextStyles.createAccountTitle.copyWith(
@@ -99,6 +101,9 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
                   label: 'License Plate',
                   controller: licensePlateController,
                 ),
+                SizedBox(height: 20.h),
+                // AC Dropdown Field
+                _buildACDropdown(themeManager),
                 SizedBox(height: 20.h),
                 GestureDetector(
                   onTap: _pickRegistrationDoc,
@@ -338,6 +343,126 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
     );
   }
 
+  Widget _buildACDropdown(ThemeManager themeManager) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Air Conditioning (AC)',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            fontSize: 14.sp,
+            fontWeight: FontWeight.w500,
+            color: themeManager.getTextColor(context),
+          ),
+        ),
+        SizedBox(height: 8.h),
+        GestureDetector(
+          onTap: () => _showACBottomSheet(context, themeManager),
+          child: Container(
+            width: double.infinity,
+            height: 48.h,
+            padding: EdgeInsets.symmetric(horizontal: 16.w),
+            decoration: BoxDecoration(
+              color: Color(ConstColors.formFieldColor),
+              borderRadius: BorderRadius.circular(8.r),
+              border: Border.all(color: Colors.grey.shade300, width: 1),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  acDisplayText,
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 16.sp,
+                    fontWeight: FontWeight.w400,
+                    color: hasAC == null
+                        ? Colors.grey
+                        : themeManager.getTextColor(context),
+                  ),
+                ),
+                Icon(Icons.arrow_drop_down, color: Colors.grey, size: 24.sp),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showACBottomSheet(BuildContext context, ThemeManager themeManager) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: themeManager.getBackgroundColor(context),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: EdgeInsets.all(20.w),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Select AC Availability',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 18.sp,
+                  fontWeight: FontWeight.w600,
+                  color: themeManager.getTextColor(context),
+                ),
+              ),
+              SizedBox(height: 20.h),
+              ListTile(
+                title: Text(
+                  'Yes (Has AC)',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 16.sp,
+                    color: themeManager.getTextColor(context),
+                  ),
+                ),
+                trailing: hasAC == true
+                    ? Icon(Icons.check, color: Color(ConstColors.mainColor))
+                    : null,
+                onTap: () {
+                  setState(() {
+                    hasAC = true;
+                    acDisplayText = 'Yes (Has AC)';
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              Divider(),
+              ListTile(
+                title: Text(
+                  'No (No AC)',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 16.sp,
+                    color: themeManager.getTextColor(context),
+                  ),
+                ),
+                trailing: hasAC == false
+                    ? Icon(Icons.check, color: Color(ConstColors.mainColor))
+                    : null,
+                onTap: () {
+                  setState(() {
+                    hasAC = false;
+                    acDisplayText = 'No (No AC)';
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              SizedBox(height: 10.h),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   Future<void> _pickRegistrationDoc() async {
     final XFile? image = await _picker.pickImage(
       source: ImageSource.gallery,
@@ -386,7 +511,7 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
     AppLogger.log('Seats: ${seatsController.text}');
     AppLogger.log('Year: ${yearController.text}');
     AppLogger.log('License Number: ${licenseNumberController.text}');
-    AppLogger.log('Vehicle Photo: ${vehiclePhoto?.path}');
+    AppLogger.log('AC: $hasAC');
 
     if (makeController.text.isEmpty ||
         modelTypeController.text.isEmpty ||
@@ -395,15 +520,20 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
         licenseNumberController.text.isEmpty ||
         colorController.text.isEmpty ||
         licensePlateController.text.isEmpty ||
+        hasAC == null ||
         registrationDoc == null ||
         insuranceDoc == null ||
         vehiclePhotos.length < 3) {
       AppLogger.log('Validation failed - missing fields');
-      String message = vehiclePhotos.length < 3
-          ? 'Please upload at least 3 vehicle photos'
-          : 'Please fill all fields and upload all documents';
+      String message;
+      if (vehiclePhotos.length < 3) {
+        message = 'Please upload at least 3 vehicle photos';
+      } else if (hasAC == null) {
+        message = 'Please select AC availability';
+      } else {
+        message = 'Please fill all fields and upload all documents';
+      }
       CustomFlushbar.showError(context: context, message: message);
-
       return;
     }
 
@@ -436,6 +566,7 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
           insuranceDoc: insuranceDoc!,
           vehiclePhotos: vehiclePhotos,
           token: token,
+          ac: hasAC!,
         );
 
         AppLogger.log('API Response received:');

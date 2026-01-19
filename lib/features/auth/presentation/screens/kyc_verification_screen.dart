@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -95,6 +96,7 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    AppLogger.log('check user access token:${widget.token}');
     final themeManager = Provider.of<ThemeManager>(context);
     return Scaffold(
       backgroundColor: themeManager.getBackgroundColor(context),

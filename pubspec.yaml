@@ -58,6 +58,7 @@ dependencies:
   country_picker: ^2.0.26
   flutter_dotenv: ^6.0.0
   agora_rtc_engine: ^6.3.2
+  nigerian_states_and_lga: ^1.0.0
 
 dev_dependencies:
   flutter_test:

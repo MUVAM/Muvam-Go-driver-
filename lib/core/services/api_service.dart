@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:muvam_rider/core/constants/url_constants.dart';
 import 'package:muvam_rider/core/services/location_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   static String baseUrl = UrlConstants.baseUrl;
@@ -105,7 +106,6 @@ class ApiService {
     }
   }
 
-  // Register User
   static Future<Map<String, dynamic>> registerUser({
     required String firstName,
     String? middleName,
@@ -113,23 +113,29 @@ class ApiService {
     required String email,
     required String phoneNumber,
     required String dateOfBirth,
+    required String lga,
+    required String homeAddress,
     required String city,
     required String location,
+    String? referralCode,
     String serviceType = 'taxi',
   }) async {
     try {
-      AppLogger.log('=== REGISTER USER DEBUG ===');
+      AppLogger.log('=== REGISTER DRIVER DEBUG ===');
       final requestBody = {
         'first_name': firstName,
-        'middle_name': middleName ?? '',
+        'middle_name': middleName,
         'last_name': lastName,
         'email': email,
-        'Phone': phoneNumber,
+        'phone': phoneNumber,
         'date_of_birth': dateOfBirth,
-        'city': city,
         'role': 'driver',
-        'service_type': 'taxi',
+        'city': city,
+        'lga': lga,
         'location': location,
+        'home_address': homeAddress,
+        'referral_code': referralCode,
+        'service_type': serviceType,
       };
       AppLogger.log('Request Body: ${jsonEncode(requestBody)}');
 
@@ -144,21 +150,89 @@ class ApiService {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
+
+        // Save token to SharedPreferences
+        if (data['token'] != null) {
+          final tokenData = data['token'];
+          final prefs = await SharedPreferences.getInstance();
+
+          if (tokenData is Map<String, dynamic>) {
+            // Save access token
+            final accessToken = tokenData['access_token'];
+            if (accessToken != null) {
+              await prefs.setString('auth_token', accessToken);
+              AppLogger.log('Access token saved successfully');
+            }
+
+            // Save refresh token
+            final refreshToken = tokenData['refresh_token'];
+            if (refreshToken != null) {
+              await prefs.setString('refresh_token', refreshToken);
+              AppLogger.log('Refresh token saved successfully');
+            }
+
+            // Save token expiry
+            final expiresIn = tokenData['expires_in'];
+            if (expiresIn != null) {
+              final expiryTime =
+                  DateTime.now().millisecondsSinceEpoch + (expiresIn * 1000);
+              await prefs.setString('token_expiry', expiryTime.toString());
+              AppLogger.log('Token expiry saved successfully');
+            }
+
+            // Save last login time
+            await prefs.setString(
+              'last_login_time',
+              DateTime.now().millisecondsSinceEpoch.toString(),
+            );
+          }
+        }
+
+        // Save user data
+        if (data['user'] != null) {
+          final user = data['user'];
+          final prefs = await SharedPreferences.getInstance();
+
+          if (user['ID'] != null) {
+            await prefs.setString('user_id', user['ID'].toString());
+          }
+          if (user['first_name'] != null) {
+            await prefs.setString('first_name', user['first_name'].toString());
+          }
+          if (user['last_name'] != null) {
+            await prefs.setString('last_name', user['last_name'].toString());
+          }
+          if (user['Email'] != null) {
+            await prefs.setString('email', user['Email'].toString());
+          }
+          if (user['profile_photo'] != null) {
+            await prefs.setString(
+              'profile_photo',
+              user['profile_photo'].toString(),
+            );
+          }
+
+          AppLogger.log('User data saved successfully');
+        }
+
         return {'success': true, 'data': data};
       } else {
-        final error = jsonDecode(response.body);
-        return {
-          'success': false,
-          'message':
-              error['message'] ?? error['error'] ?? 'Registration failed',
-        };
+        final errorBody = jsonDecode(response.body);
+        String errorMessage =
+            errorBody['error'] ?? errorBody['message'] ?? 'Registration failed';
+        return {'success': false, 'message': errorMessage};
       }
     } catch (e) {
       AppLogger.log('REGISTER ERROR: $e');
       return {'success': false, 'message': 'Network error: $e'};
     } finally {
-      AppLogger.log('=== END REGISTER USER DEBUG ===\n');
+      AppLogger.log('=== END REGISTER DRIVER DEBUG ===\n');
     }
+  }
+
+  static Future<String?> getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_token');
   }
 
   // Get nearby rides
@@ -507,7 +581,7 @@ class ApiService {
       final responseBody = await response.stream.bytesToString();
 
       AppLogger.log('Response Status: ${response.statusCode}');
-      AppLogger.log('Response Body: $responseBody');
+      AppLogger.log('Response Body verification: $responseBody');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(responseBody);
@@ -541,6 +615,7 @@ class ApiService {
   }
 
   // Register vehicle
+  // Register vehicle
   static Future<Map<String, dynamic>> registerVehicle({
     required String make,
     required String modelType,
@@ -553,6 +628,7 @@ class ApiService {
     required File insuranceDoc,
     required List<File> vehiclePhotos,
     required String token,
+    required bool ac,
   }) async {
     try {
       AppLogger.log('=== REGISTER VEHICLE API DEBUG ===');
@@ -565,6 +641,7 @@ class ApiService {
       AppLogger.log('License Number: $licenseNumber');
       AppLogger.log('Color: $color');
       AppLogger.log('License Plate: $licensePlate');
+      AppLogger.log('AC: $ac');
       AppLogger.log('Vehicle Photos: ${vehiclePhotos.length}');
 
       var request = http.MultipartRequest(
@@ -581,6 +658,7 @@ class ApiService {
       request.fields['license_number'] = licenseNumber;
       request.fields['color'] = color;
       request.fields['license_plate'] = licensePlate;
+      request.fields['ac'] = ac.toString();
 
       AppLogger.log('Request fields: ${request.fields}');
       AppLogger.log('Request headers: ${request.headers}');

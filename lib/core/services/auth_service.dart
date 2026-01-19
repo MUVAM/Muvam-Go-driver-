@@ -91,19 +91,7 @@ class AuthService {
 
       return result;
     } else {
-      // Parse error message from response body
-      try {
-        final errorBody = jsonDecode(response.body);
-        final errorMessage =
-            errorBody['error'] ??
-            errorBody['message'] ??
-            'Failed to verify OTP';
-        throw Exception(errorMessage);
-      } catch (e) {
-        // If JSON parsing fails, throw a generic error
-        if (e is Exception) rethrow;
-        throw Exception('Failed to verify OTP');
-      }
+      throw Exception('Failed to verify OTP');
     }
   }
 
