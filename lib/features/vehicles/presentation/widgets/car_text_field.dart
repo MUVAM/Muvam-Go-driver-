@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/constants/text_styles.dart';
 
 class CarTextField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
   final bool hasDropdown;
+  final String? hintText;
 
   const CarTextField({
     super.key,
     required this.label,
     required this.controller,
     this.hasDropdown = false,
+    this.hintText,
   });
 
   @override
@@ -44,19 +48,34 @@ class CarTextField extends StatelessWidget {
                 child: TextField(
                   controller: controller,
                   style: ConstTextStyles.inputText,
+                  textCapitalization: TextCapitalization.words,
+                  textAlignVertical: TextAlignVertical.center,
                   decoration: InputDecoration(
                     border: InputBorder.none,
+                    hintText: hintText,
+                    hintStyle: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.grey.shade400,
+                    ),
                     contentPadding: EdgeInsets.symmetric(
                       horizontal: 16.w,
                       vertical: 15.h,
                     ),
+                    isDense: true,
                   ),
                 ),
               ),
               if (hasDropdown)
                 Padding(
                   padding: EdgeInsets.only(right: 12.w),
-                  child: Icon(Icons.arrow_drop_down, size: 20.sp),
+                  child: SvgPicture.asset(
+                    ConstImages.dropDown,
+                    width: 5.w,
+                    height: 5.h,
+                    fit: BoxFit.contain,
+                  ),
                 ),
             ],
           ),

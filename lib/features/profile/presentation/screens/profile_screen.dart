@@ -3,15 +3,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
-import 'package:muvam_rider/features/profile/presentation/screens/edit_profile_screen.dart';
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
-import 'package:muvam_rider/features/profile/presentation/screens/app_lock_settings_screen.dart';
-import 'package:muvam_rider/features/profile/presentation/screens/update_location_screen.dart';
+import 'package:muvam_rider/features/profile/presentation/screens/app_lock_screen.dart';
 import 'package:muvam_rider/features/profile/presentation/widgets/profile_field.dart';
 import 'package:muvam_rider/features/ratings/presentation/screens/ratings_screen.dart';
 import 'package:muvam_rider/features/vehicles/data/models/vehicle_response.dart';
 import 'package:muvam_rider/features/vehicles/presentation/screens/car_information_screen.dart';
-import 'package:muvam_rider/features/vehicles/presentation/screens/vehicle_selection_screen.dart';
+import 'package:muvam_rider/features/vehicles/presentation/screens/my_cars_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -84,18 +82,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     children: [
                       GestureDetector(
                         onTap: () => Navigator.pop(context),
-                        child: Container(
-                          width: 40.w,
-                          height: 40.h,
-                          decoration: BoxDecoration(
-                            color: Color(0xFFF5F5F5),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.arrow_back,
-                            size: 20.sp,
-                            color: Colors.black,
-                          ),
+                        child: Image.asset(
+                          ConstImages.back,
+                          width: 30.w,
+                          height: 30.h,
                         ),
                       ),
                       Expanded(
@@ -293,8 +283,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   await Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) =>
-                                          VehicleSelectionScreen(),
+                                      builder: (context) => MyCarsScreen(),
                                     ),
                                   );
                                   _loadPrimaryVehicle();
@@ -420,8 +409,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   Navigator.push(
                                     context,
                                     MaterialPageRoute(
-                                      builder: (context) =>
-                                          AppLockSettingsScreen(),
+                                      builder: (context) => AppLockScreen(),
                                     ),
                                   );
                                 },

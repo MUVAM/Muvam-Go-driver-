@@ -11,7 +11,6 @@ import 'package:muvam_rider/features/activities/data/providers/rides_provider.da
 import 'package:muvam_rider/features/analytics/data/providers/earnings_provider.dart';
 import 'package:muvam_rider/features/auth/data/provider/%20delete_account_provider.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
-import 'package:muvam_rider/features/auth/presentation/screens/create_account_screen.dart';
 import 'package:muvam_rider/features/communication/data/providers/chat_provider.dart';
 import 'package:muvam_rider/features/communication/presentation/screens/call_screen.dart';
 import 'package:muvam_rider/features/earnings/data/provider/wallet_provider.dart';
@@ -256,7 +255,6 @@ class _MyAppState extends State<MyApp> {
               themeMode: themeManager.isDarkMode
                   ? ThemeMode.dark
                   : ThemeMode.light,
-
               home: const ConnectivityWrapper(child: SplashScreen()),
             );
           },

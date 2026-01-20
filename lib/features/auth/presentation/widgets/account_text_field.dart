@@ -10,6 +10,7 @@ class AccountTextField extends StatelessWidget {
   final bool hasDropdown;
   final bool isPassword;
   final VoidCallback? onTap;
+  final String? hintText;
 
   const AccountTextField({
     super.key,
@@ -20,6 +21,7 @@ class AccountTextField extends StatelessWidget {
     this.hasDropdown = false,
     this.isPassword = false,
     this.onTap,
+    this.hintText,
   });
 
   @override
@@ -44,12 +46,22 @@ class AccountTextField extends StatelessWidget {
                   readOnly: isDateField,
                   obscureText: isPassword,
                   style: ConstTextStyles.inputText,
+                  textCapitalization: TextCapitalization.words,
+                  textAlignVertical: TextAlignVertical.center,
                   decoration: InputDecoration(
+                    hintText: hintText,
+                    hintStyle: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14.sp,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.grey.shade400,
+                    ),
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.symmetric(
                       horizontal: 16.w,
                       vertical: 15.h,
                     ),
+                    isDense: true,
                   ),
                   onTap: onTap,
                 ),

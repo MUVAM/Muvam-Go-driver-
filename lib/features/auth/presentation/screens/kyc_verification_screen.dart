@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
+import 'package:muvam_rider/features/auth/presentation/widgets/kyc_document_tile.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -10,7 +12,6 @@ import 'package:muvam_rider/core/constants/fonts.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
 import 'package:muvam_rider/features/vehicles/presentation/screens/car_information_screen.dart';
-import '../widgets/kyc_tile.dart';
 
 class KycVerificationScreen extends StatefulWidget {
   final String token;
@@ -100,92 +101,124 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
     final themeManager = Provider.of<ThemeManager>(context);
     return Scaffold(
       backgroundColor: themeManager.getBackgroundColor(context),
-      appBar: AppBar(
-        backgroundColor: themeManager.getBackgroundColor(context),
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back,
-            color: themeManager.getTextColor(context),
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20.w),
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(height: 20.h),
-            Text(
-              'KYC Verification',
-              style: TextStyle(
-                fontFamily: ConstFonts.inter,
-                fontWeight: FontWeight.w600,
-                fontSize: 24.sp,
-                color: themeManager.getTextColor(context),
-              ),
-            ),
-            SizedBox(height: 12.h),
-            Text(
-              'Please Submit the following documents to verify your profile',
-              style: TextStyle(
-                fontFamily: ConstFonts.inter,
-                fontWeight: FontWeight.w400,
-                fontSize: 14.sp,
-                color: themeManager.getTextColor(context),
-              ),
-            ),
-            SizedBox(height: 30.h),
-            KycTile(
-              imagePath: 'assets/images/kyc.png',
-              title: "Driver's License",
-              subtitle: "Upload your driver's license (JPG or PNG)",
-              isUploaded: driverLicense != null,
-              onTap: () => _pickImage('driver_license'),
-            ),
-            SizedBox(height: 20.h),
-            KycTile(
-              imagePath: 'assets/images/Account.png',
-              title: "Vehicle Registration",
-              subtitle:
-                  "Upload your vehicle registration document (JPG or PNG)",
-              isUploaded: vehicleRegistration != null,
-              onTap: () => _pickImage('vehicle_registration'),
-            ),
-            SizedBox(height: 20.h),
-            KycTile(
-              imagePath: 'assets/images/Account.png',
-              title: "Insurance Document",
-              subtitle: "Upload your insurance document (JPG or PNG)",
-              isUploaded: insurance != null,
-              onTap: () => _pickImage('insurance'),
-            ),
-            Spacer(),
-            Container(
-              width: double.infinity,
-              height: 48.h,
-              decoration: BoxDecoration(
-                color: Color(ConstColors.mainColor),
-                borderRadius: BorderRadius.circular(8.r),
-              ),
-              child: GestureDetector(
-                onTap: _isLoading ? null : _uploadDocuments,
-                child: Center(
-                  child: _isLoading
-                      ? CircularProgressIndicator(color: Colors.white)
-                      : Text(
-                          'Upload Documents',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: Column(
+                children: [
+                  SizedBox(height: 20.h),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(
+                          Icons.arrow_back,
+                          color: themeManager.getTextColor(context),
                         ),
+                        onPressed: () => Navigator.pop(context),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                      ),
+                      const Spacer(),
+                      Text(
+                        'Upload Documents',
+                        style: TextStyle(
+                          fontFamily: ConstFonts.inter,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 20.sp,
+                          color: themeManager.getTextColor(context),
+                        ),
+                      ),
+                      const Spacer(),
+                    ],
+                  ),
+                  Text(
+                    'Please Submit the following documents to \nverify your vehicle',
+                    style: TextStyle(
+                      fontFamily: ConstFonts.inter,
+                      fontWeight: FontWeight.w400,
+                      fontSize: 14.sp,
+                      color: themeManager.getTextColor(context),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                  SizedBox(height: 30.h),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  child: Column(
+                    children: [
+                      KycDocumentTile(
+                        icon: ConstImages.streamlineSolar,
+                        title: 'Vehicle Insurance',
+                        subtitle:
+                            'Upload a valid copy of your vehicle insurance to confirm your car is properly insured for ride-hailing services.',
+                        isUploaded: insurance != null,
+                        onTap: () => _pickImage('insurance'),
+                        themeManager: themeManager,
+                      ),
+                      Divider(height: 1.h, color: Colors.grey.shade300),
+                      KycDocumentTile(
+                        icon: ConstImages.basilDocument,
+                        title: 'Vehicle Registration',
+                        subtitle:
+                            'Provide an up-to-date vehicle registration documents to verify ownership and eligibility to operate on the platform',
+                        isUploaded: vehicleRegistration != null,
+                        onTap: () => _pickImage('vehicle_registration'),
+                        themeManager: themeManager,
+                      ),
+                      Divider(height: 1.h, color: Colors.grey.shade300),
+                      KycDocumentTile(
+                        icon: ConstImages.tablerCamera,
+                        title: 'Vehicle images',
+                        subtitle:
+                            'Provide an up-to-date vehicle registration documents to verify ownership and eligibility to operate on the platform',
+                        isUploaded: driverLicense != null,
+                        onTap: () => _pickImage('driver_license'),
+                        themeManager: themeManager,
+                      ),
+                      Divider(height: 1.h, color: Colors.grey.shade300),
+                    ],
+                  ),
                 ),
               ),
             ),
-            SizedBox(height: 24.h),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: Column(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    height: 48.h,
+                    decoration: BoxDecoration(
+                      color: const Color(ConstColors.mainColor),
+                      borderRadius: BorderRadius.circular(8.r),
+                    ),
+                    child: GestureDetector(
+                      onTap: _isLoading ? null : _uploadDocuments,
+                      child: Center(
+                        child: _isLoading
+                            ? CircularProgressIndicator(color: Colors.white)
+                            : Text(
+                                'Upload Documents',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16.sp,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20.h),
+                ],
+              ),
+            ),
           ],
         ),
       ),

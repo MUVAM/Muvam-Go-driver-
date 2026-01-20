@@ -12,6 +12,8 @@ import 'package:muvam_rider/core/constants/theme_manager.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/car_text_field.dart';
+import '../widgets/dropdown_field.dart';
+import '../widgets/custom_bottom_sheet.dart';
 
 class CarInformationScreen extends StatefulWidget {
   const CarInformationScreen({super.key});
@@ -21,443 +23,455 @@ class CarInformationScreen extends StatefulWidget {
 }
 
 class _CarInformationScreenState extends State<CarInformationScreen> {
-  final TextEditingController makeController = TextEditingController();
-  final TextEditingController modelTypeController = TextEditingController();
-  final TextEditingController seatsController = TextEditingController();
-  final TextEditingController yearController = TextEditingController();
-  final TextEditingController licenseNumberController = TextEditingController();
-  final TextEditingController colorController = TextEditingController();
   final TextEditingController licensePlateController = TextEditingController();
-  File? vehiclePhoto;
+  final TextEditingController colorController = TextEditingController();
+  final TextEditingController licenseNumberController = TextEditingController();
   File? registrationDoc;
   File? insuranceDoc;
   List<File> vehiclePhotos = [];
   bool isLoading = false;
   final ImagePicker _picker = ImagePicker();
 
-  // AC field
-  bool? hasAC;
-  String acDisplayText = 'Select AC availability';
+  String? selectedCarName;
+  String carNameDisplayText = 'Select car';
+
+  String? selectedCarModel;
+  String carModelDisplayText = 'Select model';
+
+  String? selectedCarYear;
+  String carYearDisplayText = 'Select year';
+
+  String? selectedSeats;
+  String seatsDisplayText = 'Select seats';
+
+  String? selectedAC;
+  String acDisplayText = 'Select';
+
+  final List<String> carNames = ['Toyota', 'Honda', 'Ford', 'BMW', 'Mercedes'];
+  final List<String> carModels = ['Camry', 'Accord', 'Focus', 'X5', 'C-Class'];
+  final List<String> carYears = [
+    '2024',
+    '2023',
+    '2022',
+    '2021',
+    '2020',
+    '2019',
+  ];
+  final List<String> seatOptions = ['2', '4', '5', '7', '8'];
+  final List<String> acOptions = ['Yes', 'No'];
 
   @override
   Widget build(BuildContext context) {
     final themeManager = Provider.of<ThemeManager>(context);
     return Scaffold(
       backgroundColor: themeManager.getBackgroundColor(context),
-      appBar: AppBar(
-        backgroundColor: themeManager.getBackgroundColor(context),
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back,
-            color: themeManager.getTextColor(context),
-          ),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 20.w),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Car Information',
-                  style: ConstTextStyles.createAccountTitle.copyWith(
-                    color: themeManager.getTextColor(context),
-                  ),
-                ),
-                SizedBox(height: 8.h),
-                Text(
-                  'Please enter your car details correctly.',
-                  style: ConstTextStyles.createAccountSubtitle.copyWith(
-                    color: themeManager.getSecondaryTextColor(context),
-                  ),
-                ),
-                SizedBox(height: 30.h),
-                CarTextField(label: 'Make', controller: makeController),
-                SizedBox(height: 20.h),
-                CarTextField(
-                  label: 'Model Type',
-                  controller: modelTypeController,
-                ),
-                SizedBox(height: 20.h),
-                CarTextField(
-                  label: 'Number of Seats',
-                  controller: seatsController,
-                ),
-                SizedBox(height: 20.h),
-                CarTextField(label: 'Year', controller: yearController),
-                SizedBox(height: 20.h),
-                CarTextField(
-                  label: 'License Number',
-                  controller: licenseNumberController,
-                ),
-                SizedBox(height: 20.h),
-                CarTextField(label: 'Color', controller: colorController),
-                SizedBox(height: 20.h),
-                CarTextField(
-                  label: 'License Plate',
-                  controller: licensePlateController,
-                ),
-                SizedBox(height: 20.h),
-                _buildACDropdown(themeManager),
-                SizedBox(height: 20.h),
-                GestureDetector(
-                  onTap: _pickRegistrationDoc,
-                  child: Container(
-                    width: 353.w,
-                    height: 120.h,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(8.r),
+        child: Column(
+          children: [
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: Column(
+                children: [
+                  SizedBox(height: 30.h),
+                  Text(
+                    'Car information',
+                    style: ConstTextStyles.createAccountTitle.copyWith(
+                      color: themeManager.getTextColor(context),
                     ),
-                    child: registrationDoc != null
-                        ? Stack(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(8.r),
-                                child: Image.file(
-                                  registrationDoc!,
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                ),
-                              ),
-                              Positioned(
-                                top: 4.h,
-                                right: 4.w,
-                                child: GestureDetector(
-                                  onTap: () =>
-                                      setState(() => registrationDoc = null),
-                                  child: Container(
-                                    padding: EdgeInsets.all(4.w),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      Icons.close,
-                                      color: Colors.white,
-                                      size: 16.sp,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          )
-                        : Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.upload_file,
-                                size: 40.sp,
-                                color: Colors.grey,
-                              ),
-                              SizedBox(height: 8.h),
-                              Text(
-                                'Upload Registration Doc',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 14.sp,
-                                ),
-                              ),
-                            ],
-                          ),
+                    textAlign: TextAlign.center,
                   ),
-                ),
-                SizedBox(height: 20.h),
-                GestureDetector(
-                  onTap: _pickInsuranceDoc,
-                  child: Container(
-                    width: 353.w,
-                    height: 120.h,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(8.r),
+                  Text(
+                    'Please enter your car details',
+                    style: ConstTextStyles.createAccountSubtitle.copyWith(
+                      color: themeManager.getSecondaryTextColor(context),
                     ),
-                    child: insuranceDoc != null
-                        ? Stack(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(8.r),
-                                child: Image.file(
-                                  insuranceDoc!,
-                                  fit: BoxFit.cover,
-                                  width: double.infinity,
-                                ),
-                              ),
-                              Positioned(
-                                top: 4.h,
-                                right: 4.w,
-                                child: GestureDetector(
-                                  onTap: () =>
-                                      setState(() => insuranceDoc = null),
-                                  child: Container(
-                                    padding: EdgeInsets.all(4.w),
-                                    decoration: BoxDecoration(
-                                      color: Colors.red,
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      Icons.close,
-                                      color: Colors.white,
-                                      size: 16.sp,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          )
-                        : Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.upload_file,
-                                size: 40.sp,
-                                color: Colors.grey,
-                              ),
-                              SizedBox(height: 8.h),
-                              Text(
-                                'Upload Insurance Doc',
-                                style: TextStyle(
-                                  color: Colors.grey,
-                                  fontSize: 14.sp,
-                                ),
-                              ),
-                            ],
-                          ),
+                    textAlign: TextAlign.center,
                   ),
-                ),
-                SizedBox(height: 20.h),
-                GestureDetector(
-                  onTap: _pickVehiclePhotos,
-                  child: Container(
-                    width: 353.w,
-                    padding: EdgeInsets.all(8.w),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    child: vehiclePhotos.isNotEmpty
-                        ? Wrap(
-                            spacing: 8.w,
-                            runSpacing: 8.h,
-                            children: vehiclePhotos.asMap().entries.map((
-                              entry,
-                            ) {
-                              int index = entry.key;
-                              File photo = entry.value;
-                              return Stack(
-                                children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(4.r),
-                                    child: Image.file(
-                                      photo,
-                                      width: 80.w,
-                                      height: 80.h,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
-                                  Positioned(
-                                    top: 2.h,
-                                    right: 2.w,
-                                    child: GestureDetector(
-                                      onTap: () => setState(
-                                        () => vehiclePhotos.removeAt(index),
-                                      ),
-                                      child: Container(
-                                        padding: EdgeInsets.all(2.w),
-                                        decoration: BoxDecoration(
-                                          color: Colors.red,
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: Icon(
-                                          Icons.close,
-                                          color: Colors.white,
-                                          size: 12.sp,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              );
-                            }).toList(),
-                          )
-                        : Container(
-                            height: 120.h,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.camera_alt,
-                                  size: 40.sp,
-                                  color: Colors.grey,
-                                ),
-                                SizedBox(height: 8.h),
-                                Text(
-                                  'Upload Vehicle Photos',
-                                  style: TextStyle(
-                                    color: Colors.grey,
-                                    fontSize: 14.sp,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                  ),
-                ),
-                SizedBox(height: 40.h),
-                GestureDetector(
-                  onTap: isLoading ? null : _registerVehicle,
-                  child: Container(
-                    width: 353.w,
-                    height: 48.h,
-                    decoration: BoxDecoration(
-                      color: isLoading
-                          ? Colors.grey
-                          : Color(ConstColors.mainColor),
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    child: Center(
-                      child: isLoading
-                          ? CircularProgressIndicator(color: Colors.white)
-                          : Text(
-                              'Continue',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                    ),
-                  ),
-                ),
-                SizedBox(height: 20.h),
-              ],
+                  SizedBox(height: 30.h),
+                ],
+              ),
             ),
-          ),
+            Expanded(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      DropdownField(
+                        label: 'Car name',
+                        displayText: carNameDisplayText,
+                        textColor: selectedCarName != null
+                            ? Colors.black
+                            : null,
+                        onTap: () => _showCarNameBottomSheet(themeManager),
+                      ),
+                      SizedBox(height: 20.h),
+                      DropdownField(
+                        label: 'Car model',
+                        displayText: carModelDisplayText,
+                        textColor: selectedCarModel != null
+                            ? Colors.black
+                            : null,
+                        onTap: () => _showCarModelBottomSheet(themeManager),
+                      ),
+                      SizedBox(height: 20.h),
+                      DropdownField(
+                        label: 'Car year',
+                        displayText: carYearDisplayText,
+                        textColor: selectedCarYear != null
+                            ? Colors.black
+                            : null,
+                        onTap: () => _showCarYearBottomSheet(themeManager),
+                      ),
+                      SizedBox(height: 20.h),
+                      DropdownField(
+                        label: 'Number of seats',
+                        displayText: seatsDisplayText,
+                        textColor: selectedSeats != null ? Colors.black : null,
+                        onTap: () => _showSeatsBottomSheet(themeManager),
+                      ),
+                      SizedBox(height: 20.h),
+                      CarTextField(
+                        label: 'License plate',
+                        controller: licensePlateController,
+                        hintText: 'AB-1234-XY',
+                      ),
+                      SizedBox(height: 20.h),
+                      CarTextField(
+                        label: 'Car color',
+                        controller: colorController,
+                        hintText: 'Yellow, red',
+                      ),
+                      SizedBox(height: 20.h),
+                      DropdownField(
+                        label: 'AC',
+                        displayText: acDisplayText,
+                        textColor: selectedAC != null ? Colors.black : null,
+                        onTap: () => _showACBottomSheet(themeManager),
+                      ),
+                      SizedBox(height: 20.h),
+                      GestureDetector(
+                        onTap: _pickRegistrationDoc,
+                        child: Container(
+                          width: 353.w,
+                          height: 120.h,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: registrationDoc != null
+                              ? Stack(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8.r),
+                                      child: Image.file(
+                                        registrationDoc!,
+                                        fit: BoxFit.cover,
+                                        width: double.infinity,
+                                      ),
+                                    ),
+                                    Positioned(
+                                      top: 4.h,
+                                      right: 4.w,
+                                      child: GestureDetector(
+                                        onTap: () => setState(
+                                          () => registrationDoc = null,
+                                        ),
+                                        child: Container(
+                                          padding: EdgeInsets.all(4.w),
+                                          decoration: BoxDecoration(
+                                            color: Colors.red,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Icon(
+                                            Icons.close,
+                                            color: Colors.white,
+                                            size: 16.sp,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.upload_file,
+                                      size: 40.sp,
+                                      color: Colors.grey,
+                                    ),
+                                    SizedBox(height: 8.h),
+                                    Text(
+                                      'Upload Registration Doc',
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 14.sp,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ),
+                      SizedBox(height: 20.h),
+                      GestureDetector(
+                        onTap: _pickInsuranceDoc,
+                        child: Container(
+                          width: 353.w,
+                          height: 120.h,
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: insuranceDoc != null
+                              ? Stack(
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(8.r),
+                                      child: Image.file(
+                                        insuranceDoc!,
+                                        fit: BoxFit.cover,
+                                        width: double.infinity,
+                                      ),
+                                    ),
+                                    Positioned(
+                                      top: 4.h,
+                                      right: 4.w,
+                                      child: GestureDetector(
+                                        onTap: () =>
+                                            setState(() => insuranceDoc = null),
+                                        child: Container(
+                                          padding: EdgeInsets.all(4.w),
+                                          decoration: BoxDecoration(
+                                            color: Colors.red,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Icon(
+                                            Icons.close,
+                                            color: Colors.white,
+                                            size: 16.sp,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                )
+                              : Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.upload_file,
+                                      size: 40.sp,
+                                      color: Colors.grey,
+                                    ),
+                                    SizedBox(height: 8.h),
+                                    Text(
+                                      'Upload Insurance Doc',
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 14.sp,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                        ),
+                      ),
+                      SizedBox(height: 20.h),
+                      GestureDetector(
+                        onTap: _pickVehiclePhotos,
+                        child: Container(
+                          width: 353.w,
+                          padding: EdgeInsets.all(8.w),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.grey.shade300),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: vehiclePhotos.isNotEmpty
+                              ? Wrap(
+                                  spacing: 8.w,
+                                  runSpacing: 8.h,
+                                  children: vehiclePhotos.asMap().entries.map((
+                                    entry,
+                                  ) {
+                                    int index = entry.key;
+                                    File photo = entry.value;
+                                    return Stack(
+                                      children: [
+                                        ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            4.r,
+                                          ),
+                                          child: Image.file(
+                                            photo,
+                                            width: 80.w,
+                                            height: 80.h,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                        Positioned(
+                                          top: 2.h,
+                                          right: 2.w,
+                                          child: GestureDetector(
+                                            onTap: () => setState(
+                                              () =>
+                                                  vehiclePhotos.removeAt(index),
+                                            ),
+                                            child: Container(
+                                              padding: EdgeInsets.all(2.w),
+                                              decoration: BoxDecoration(
+                                                color: Colors.red,
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Icon(
+                                                Icons.close,
+                                                color: Colors.white,
+                                                size: 12.sp,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  }).toList(),
+                                )
+                              : Container(
+                                  height: 120.h,
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.camera_alt,
+                                        size: 40.sp,
+                                        color: Colors.grey,
+                                      ),
+                                      SizedBox(height: 8.h),
+                                      Text(
+                                        'Upload Vehicle Photos',
+                                        style: TextStyle(
+                                          color: Colors.grey,
+                                          fontSize: 14.sp,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                        ),
+                      ),
+                      SizedBox(height: 40.h),
+                      GestureDetector(
+                        onTap: isLoading ? null : _registerVehicle,
+                        child: Container(
+                          width: 353.w,
+                          height: 48.h,
+                          decoration: BoxDecoration(
+                            color: isLoading
+                                ? Colors.grey
+                                : Color(ConstColors.mainColor),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: Center(
+                            child: isLoading
+                                ? CircularProgressIndicator(color: Colors.white)
+                                : Text(
+                                    'Continue',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 16.sp,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 20.h),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildACDropdown(ThemeManager themeManager) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Air Conditioning (AC)',
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w500,
-            color: themeManager.getTextColor(context),
-          ),
-        ),
-        SizedBox(height: 8.h),
-        GestureDetector(
-          onTap: () => _showACBottomSheet(context, themeManager),
-          child: Container(
-            width: double.infinity,
-            height: 48.h,
-            padding: EdgeInsets.symmetric(horizontal: 16.w),
-            decoration: BoxDecoration(
-              color: Color(ConstColors.formFieldColor),
-              borderRadius: BorderRadius.circular(8.r),
-              border: Border.all(color: Colors.grey.shade300, width: 1),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  acDisplayText,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w400,
-                    color: hasAC == null
-                        ? Colors.grey
-                        : themeManager.getTextColor(context),
-                  ),
-                ),
-                Icon(Icons.arrow_drop_down, color: Colors.grey, size: 24.sp),
-              ],
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  void _showACBottomSheet(BuildContext context, ThemeManager themeManager) {
-    showModalBottomSheet(
+  void _showCarNameBottomSheet(ThemeManager themeManager) {
+    CustomBottomSheet.showSelectionBottomSheet(
       context: context,
-      backgroundColor: themeManager.getBackgroundColor(context),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-      ),
-      builder: (context) {
-        return Container(
-          padding: EdgeInsets.all(20.w),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Select AC Availability',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w600,
-                  color: themeManager.getTextColor(context),
-                ),
-              ),
-              SizedBox(height: 20.h),
-              ListTile(
-                title: Text(
-                  'Yes (Has AC)',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 16.sp,
-                    color: themeManager.getTextColor(context),
-                  ),
-                ),
-                trailing: hasAC == true
-                    ? Icon(Icons.check, color: Color(ConstColors.mainColor))
-                    : null,
-                onTap: () {
-                  setState(() {
-                    hasAC = true;
-                    acDisplayText = 'Yes (Has AC)';
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-              Divider(),
-              ListTile(
-                title: Text(
-                  'No (No AC)',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 16.sp,
-                    color: themeManager.getTextColor(context),
-                  ),
-                ),
-                trailing: hasAC == false
-                    ? Icon(Icons.check, color: Color(ConstColors.mainColor))
-                    : null,
-                onTap: () {
-                  setState(() {
-                    hasAC = false;
-                    acDisplayText = 'No (No AC)';
-                  });
-                  Navigator.pop(context);
-                },
-              ),
-              SizedBox(height: 10.h),
-            ],
-          ),
-        );
+      themeManager: themeManager,
+      title: 'Select Car Name',
+      options: carNames,
+      selectedValue: selectedCarName,
+      onSelected: (value) {
+        setState(() {
+          selectedCarName = value;
+          carNameDisplayText = value;
+        });
+      },
+    );
+  }
+
+  void _showCarModelBottomSheet(ThemeManager themeManager) {
+    CustomBottomSheet.showSelectionBottomSheet(
+      context: context,
+      themeManager: themeManager,
+      title: 'Select Car Model',
+      options: carModels,
+      selectedValue: selectedCarModel,
+      onSelected: (value) {
+        setState(() {
+          selectedCarModel = value;
+          carModelDisplayText = value;
+        });
+      },
+    );
+  }
+
+  void _showCarYearBottomSheet(ThemeManager themeManager) {
+    CustomBottomSheet.showSelectionBottomSheet(
+      context: context,
+      themeManager: themeManager,
+      title: 'Select Car Year',
+      options: carYears,
+      selectedValue: selectedCarYear,
+      onSelected: (value) {
+        setState(() {
+          selectedCarYear = value;
+          carYearDisplayText = value;
+        });
+      },
+    );
+  }
+
+  void _showSeatsBottomSheet(ThemeManager themeManager) {
+    CustomBottomSheet.showSelectionBottomSheet(
+      context: context,
+      themeManager: themeManager,
+      title: 'Select Number of Seats',
+      options: seatOptions,
+      selectedValue: selectedSeats,
+      onSelected: (value) {
+        setState(() {
+          selectedSeats = value;
+          seatsDisplayText = value;
+        });
+      },
+    );
+  }
+
+  void _showACBottomSheet(ThemeManager themeManager) {
+    CustomBottomSheet.showSelectionBottomSheet(
+      context: context,
+      themeManager: themeManager,
+      title: 'Select AC Availability',
+      options: acOptions,
+      selectedValue: selectedAC,
+      onSelected: (value) {
+        setState(() {
+          selectedAC = value;
+          acDisplayText = value;
+        });
       },
     );
   }
@@ -505,21 +519,21 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
 
   Future<void> _registerVehicle() async {
     AppLogger.log('=== REGISTER VEHICLE DEBUG START ===');
-    AppLogger.log('Make: ${makeController.text}');
-    AppLogger.log('Model Type: ${modelTypeController.text}');
-    AppLogger.log('Seats: ${seatsController.text}');
-    AppLogger.log('Year: ${yearController.text}');
-    AppLogger.log('License Number: ${licenseNumberController.text}');
-    AppLogger.log('AC: $hasAC');
+    AppLogger.log('Car Name: $selectedCarName');
+    AppLogger.log('Car Model: $selectedCarModel');
+    AppLogger.log('Car Year: $selectedCarYear');
+    AppLogger.log('Number of Seats: $selectedSeats');
+    AppLogger.log('License Plate: ${licensePlateController.text}');
+    AppLogger.log('Color: ${colorController.text}');
+    AppLogger.log('AC: $selectedAC');
 
-    if (makeController.text.isEmpty ||
-        modelTypeController.text.isEmpty ||
-        seatsController.text.isEmpty ||
-        yearController.text.isEmpty ||
-        licenseNumberController.text.isEmpty ||
-        colorController.text.isEmpty ||
+    if (selectedCarName == null ||
+        selectedCarModel == null ||
+        selectedCarYear == null ||
+        selectedSeats == null ||
         licensePlateController.text.isEmpty ||
-        hasAC == null ||
+        colorController.text.isEmpty ||
+        selectedAC == null ||
         registrationDoc == null ||
         insuranceDoc == null ||
         vehiclePhotos.length < 3) {
@@ -527,8 +541,10 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
       String message;
       if (vehiclePhotos.length < 3) {
         message = 'Please upload at least 3 vehicle photos';
-      } else if (hasAC == null) {
+      } else if (selectedAC == null) {
         message = 'Please select AC availability';
+      } else if (selectedSeats == null) {
+        message = 'Please select number of seats';
       } else {
         message = 'Please fill all fields and upload all documents';
       }
@@ -551,13 +567,13 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
         AppLogger.log('Token preview: ${token.substring(0, 20)}...');
       }
 
-      if (token != null) {
+      if (token != null && mounted) {
         AppLogger.log('Calling ApiService.registerVehicle...');
         final result = await ApiService.registerVehicle(
-          make: makeController.text,
-          modelType: modelTypeController.text,
-          seats: seatsController.text,
-          year: yearController.text,
+          make: selectedCarName!,
+          modelType: selectedCarModel!,
+          seats: selectedSeats!,
+          year: selectedCarYear!,
           licenseNumber: licenseNumberController.text,
           color: colorController.text,
           licensePlate: licensePlateController.text,
@@ -565,13 +581,15 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
           insuranceDoc: insuranceDoc!,
           vehiclePhotos: vehiclePhotos,
           token: token,
-          ac: hasAC!,
+          ac: selectedAC == 'Yes',
         );
 
         AppLogger.log('API Response received:');
         AppLogger.log('Success: ${result['success']}');
         AppLogger.log('Message: ${result['message']}');
         AppLogger.log('Full result: $result');
+
+        if (!mounted) return;
 
         if (result['success'] == true) {
           AppLogger.log(
@@ -591,11 +609,13 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
               errorMessage.contains('unauthorized')) {
             errorMessage = 'Your session has expired. Please login again.';
             await prefs.remove('auth_token');
-            Navigator.pushNamedAndRemoveUntil(
-              context,
-              '/login',
-              (route) => false,
-            );
+            if (mounted) {
+              Navigator.pushNamedAndRemoveUntil(
+                context,
+                '/login',
+                (route) => false,
+              );
+            }
             return;
           }
           CustomFlushbar.showError(context: context, message: errorMessage);
@@ -613,9 +633,11 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
       CustomFlushbar.showError(context: context, message: 'Error: $e');
     } finally {
       AppLogger.log('Setting isLoading to false');
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+      }
       AppLogger.log('=== REGISTER VEHICLE DEBUG END ===\n');
     }
   }
