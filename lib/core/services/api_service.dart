@@ -211,10 +211,8 @@ class ApiService {
               user['profile_photo'].toString(),
             );
           }
-
           AppLogger.log('User data saved successfully');
         }
-
         return {'success': true, 'data': data};
       } else {
         final errorBody = jsonDecode(response.body);

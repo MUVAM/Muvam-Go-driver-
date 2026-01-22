@@ -4,12 +4,15 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/constants/text_styles.dart';
+import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
 import 'package:muvam_rider/features/home/presentation/screens/main_navigation_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:pinput/pinput.dart';
 import 'dart:async';
+import 'package:muvam_rider/core/services/api_service.dart';
+import 'package:muvam_rider/features/auth/presentation/screens/kyc_verification_screen.dart';
 import 'create_account_screen.dart';
 
 class OtpScreen extends StatefulWidget {
@@ -93,12 +96,36 @@ class _OtpScreenState extends State<OtpScreen> {
           ),
         );
       } else {
-        await authProvider.updateLastLoginTime();
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => MainNavigationScreen()),
-          (route) => false,
-        );
+AppLogger.log("THIS IS THE RERSPONSE ${authProvider.verifyOtpResponse.toString()}");        // Check if vehicle documents are submitted
+        final vehicleSubmitted = 
+            authProvider.verifyOtpResponse?['user']?['vehicle_submitted'] ?? 
+            authProvider.verifyOtpResponse?['vehicle_submitted'] ?? 
+            false;
+            
+        if (vehicleSubmitted == true) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => MainNavigationScreen()),
+            (route) => false,
+          );
+        } else {
+          // Get token to pass to KycVerificationScreen
+          final token = await ApiService.getToken();
+          if (token != null) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => KycVerificationScreen(token: token),
+              ),
+            );
+          } else {
+             // Fallback if token not found (should be rare as login just succeeded)
+             CustomFlushbar.showError(
+               context: context,
+               message: 'Authentication error. Please try again.',
+             );
+          }
+        }
       }
     } else {
       CustomFlushbar.showError(

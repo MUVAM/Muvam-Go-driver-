@@ -2,15 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
-import 'package:muvam_rider/core/services/biometric_auth_service.dart';
-import 'package:muvam_rider/core/utils/app_logger.dart';
-import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
-import 'package:muvam_rider/features/auth/presentation/screens/biometric_lock_screen.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_selection_screen.dart';
-import 'package:muvam_rider/features/earnings/data/provider/withdrawal_provider.dart';
-import 'package:muvam_rider/features/home/presentation/screens/main_navigation_screen.dart';
 import 'package:muvam_rider/shared/presentation/screens/onboarding_screen.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -133,77 +126,24 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _checkAuthAndNavigate() async {
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    final withdrawalProvider = Provider.of<WithdrawalProvider>(
-      context,
-      listen: false,
-    );
+    // Check if this is the first time the user is opening the app
+    final isFirstTime = await _isFirstTimeUser();
 
-    final hasToken = await authProvider.checkTokenValidity();
-    AppLogger.log('HAS TOKEN+++$hasToken');
-
-    if (!hasToken) {
-      // Check if this is the first time the user is opening the app
-      final isFirstTime = await _isFirstTimeUser();
-
-      if (isFirstTime) {
-        // First-time user: show rider selection screen
-        await _markAppAsOpened();
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const RiderSignupSelectionScreen(),
-          ),
-        );
-      } else {
-        // Returning user without token: show phone number input screen
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const OnboardingScreen()),
-        );
-      }
-      return;
-    }
-
-    final isExpired = await authProvider.isSessionExpired();
-
-    if (isExpired) {
-      // Session expired: show phone number input screen
+    if (isFirstTime) {
+      // First-time user: show rider selection screen
+      await _markAppAsOpened();
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const RiderSignupSelectionScreen(),
+        ),
+      );
+    } else {
+      // Always show phone number input screen for returning users (forcing re-login)
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const OnboardingScreen()),
       );
-    } else {
-      AppLogger.log('fetch the user bank....');
-      withdrawalProvider.fetchBanks();
-      await authProvider.updateLastLoginTime();
-
-      final biometricService = BiometricAuthService();
-      final isBiometricEnabled = await biometricService.isBiometricEnabled();
-
-      if (isBiometricEnabled && mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => BiometricLockScreen(
-              isLoginScreen: true,
-              onAuthenticated: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => MainNavigationScreen(),
-                  ),
-                );
-              },
-            ),
-          ),
-        );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => MainNavigationScreen()),
-        );
-      }
     }
   }
 
