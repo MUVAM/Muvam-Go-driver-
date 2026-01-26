@@ -50,4 +50,6 @@ class ConstImages {
   static const String basilDocument = 'assets/svg/basil_document.svg';
   static const String streamlineSolar = 'assets/svg/Streamline Solar.svg';
   static const String tablerCamera = 'assets/svg/tabler_camera.svg';
+  static const String arrowLeftAlt = 'assets/svg/arrow_left_alt.svg';
+  static const String copyIcon = 'assets/svg/Copy-icon.svg';
 }

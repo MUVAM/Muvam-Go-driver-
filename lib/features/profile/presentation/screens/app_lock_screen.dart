@@ -158,12 +158,13 @@ class _AppLockScreenState extends State<AppLockScreen> {
                     onTap: () => Navigator.pop(context),
                     child: Image.asset(
                       ConstImages.back,
-                      width: 30.w,
-                      height: 30.h,
+                      width: 33.w,
+                      height: 33.h,
                     ),
                   ),
+                  Spacer(),
                   Text(
-                    'App Lock',
+                    'App Lock Settings',
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 18.sp,
@@ -171,7 +172,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
                       color: Colors.black,
                     ),
                   ),
-                  SizedBox(width: 24.w),
+                  Spacer(),
                 ],
               ),
             ),

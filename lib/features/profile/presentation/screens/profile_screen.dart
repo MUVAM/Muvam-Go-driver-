@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
+import 'package:muvam_rider/features/auth/presentation/screens/delete_account_screen.dart';
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
 import 'package:muvam_rider/features/profile/presentation/screens/app_lock_screen.dart';
 import 'package:muvam_rider/features/profile/presentation/widgets/profile_field.dart';
@@ -84,8 +86,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         onTap: () => Navigator.pop(context),
                         child: Image.asset(
                           ConstImages.back,
-                          width: 30.w,
-                          height: 30.h,
+                          width: 33.w,
+                          height: 33.h,
                         ),
                       ),
                       Expanded(
@@ -477,37 +479,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   ),
                                 ),
                               ),
-                              // SizedBox(height: 24.h),
-                              // GestureDetector(
-                              //   onTap: () {
-                              //     Navigator.push(
-                              //       context,
-                              //       MaterialPageRoute(
-                              //         builder: (context) => EditProfileScreen(),
-                              //       ),
-                              //     );
-                              //   },
-                              //   child: Container(
-                              //     width: double.infinity,
-                              //     height: 56.h,
-                              //     decoration: BoxDecoration(
-                              //       color: Color(ConstColors.mainColor),
-                              //       borderRadius: BorderRadius.circular(12.r),
-                              //     ),
-                              //     child: Center(
-                              //       child: Text(
-                              //         'Edit profile',
-                              //         style: TextStyle(
-                              //           fontFamily: 'Inter',
-                              //           color: Colors.white,
-                              //           fontSize: 16.sp,
-                              //           fontWeight: FontWeight.w600,
-                              //         ),
-                              //       ),
-                              //     ),
-                              //   ),
-                              // ),
-                              SizedBox(height: 20.h),
+                              SizedBox(height: 10.h),
+                              GestureDetector(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          DeleteAccountScreen(),
+                                    ),
+                                  );
+                                },
+                                child: Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 20.w,
+                                    vertical: 16.h,
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      SvgPicture.asset(
+                                        ConstImages.bin,
+                                        width: 20.w,
+                                        height: 20.h,
+                                        fit: BoxFit.contain,
+                                      ),
+                                      SizedBox(width: 16.w),
+                                      Text(
+                                        'Delete account',
+                                        style: TextStyle(
+                                          fontFamily: 'Inter',
+                                          fontSize: 14.sp,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(ConstColors.redColor),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ],
                           ),
                         ),

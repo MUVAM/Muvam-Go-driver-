@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
@@ -39,19 +40,19 @@ class _ReferralScreenState extends State<ReferralScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Container(
-                        width: 40.w,
-                        height: 40.h,
+                        width: 35.w,
+                        height: 35.h,
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(100.r),
                         ),
-                        padding: EdgeInsets.all(10.w),
+                        padding: EdgeInsets.all(5.w),
                         child: GestureDetector(
                           onTap: () => Navigator.pop(context),
-                          child: Image.asset(
-                            ConstImages.back,
-                            width: 24.w,
-                            height: 24.h,
+                          child: SvgPicture.asset(
+                            ConstImages.arrowLeftAlt,
+                            fit: BoxFit.contain,
+                            color: Color(ConstColors.blackColor),
                           ),
                         ),
                       ),
@@ -111,7 +112,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                       color: Colors.white,
                     ),
                   ),
-                  SizedBox(height: 20.h),
+                  SizedBox(height: 24.h),
                   if (referralProvider.isLoading)
                     Container(
                       width: 350.w,
@@ -257,7 +258,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                     width: 353.w,
                     height: 154.h,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Colors.black.withOpacity(0.4),
                       borderRadius: BorderRadius.circular(10.r),
                     ),
                     child: Column(
@@ -270,7 +271,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                             fontFamily: 'Inter',
                             fontSize: 16.sp,
                             fontWeight: FontWeight.w500,
-                            color: Colors.black,
+                            color: Colors.white,
                           ),
                         ),
                         SizedBox(height: 10.h),
@@ -285,7 +286,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
                             fontWeight: FontWeight.w700,
                             height: 1.0,
                             letterSpacing: -0.41,
-                            color: Colors.black,
+                            color: Colors.white,
                           ),
                         ),
                       ],

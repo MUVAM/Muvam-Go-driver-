@@ -9,7 +9,6 @@ import 'package:muvam_rider/core/services/ride_tracking_service.dart';
 import 'package:muvam_rider/core/services/websocket_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
-import 'package:muvam_rider/features/auth/presentation/screens/delete_account_screen.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_selection_screen.dart';
 import 'package:muvam_rider/features/home/presentation/screens/main_navigation_screen.dart';
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
@@ -280,36 +279,6 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
                       onTap: () => _showLogoutSheet(context),
                       child: SvgPicture.asset(
                         ConstImages.logout,
-                        width: 24.w,
-                        height: 24.h,
-                        fit: BoxFit.contain,
-                        colorFilter: ColorFilter.mode(
-                          Color(0xFFEF5350),
-                          BlendMode.srcIn,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            GestureDetector(
-              onTap: () => _showLogoutSheet(context),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-                child: Row(
-                  children: [
-                    GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => DeleteAccountScreen(),
-                          ),
-                        );
-                      },
-                      child: SvgPicture.asset(
-                        ConstImages.bin,
                         width: 24.w,
                         height: 24.h,
                         fit: BoxFit.contain,

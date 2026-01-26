@@ -1107,7 +1107,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 },
               ),
             ),
-            // Drawer button
             Positioned(
               top: 50.h,
               left: 20.w,
@@ -1116,8 +1115,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   Scaffold.of(context).openDrawer();
                 },
                 child: Container(
-                  width: 50.w,
-                  height: 50.h,
+                  width: 45.w,
+                  height: 45.h,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(25.r),
@@ -1127,7 +1126,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            // My Location button
             Positioned(
               top: 50.h,
               right: 20.w,

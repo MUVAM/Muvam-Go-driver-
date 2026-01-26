@@ -48,7 +48,7 @@ class DeleteAccountScreenState extends State<DeleteAccountScreen> {
                           height: 30.h,
                         ),
                       ),
-                      SizedBox(width: 15.w),
+                      Spacer(),
                       Text(
                         'Delete Account',
                         style: TextStyle(
@@ -58,6 +58,7 @@ class DeleteAccountScreenState extends State<DeleteAccountScreen> {
                           color: Colors.black,
                         ),
                       ),
+                      Spacer(),
                     ],
                   ),
                   SizedBox(height: 30.h),
@@ -67,7 +68,7 @@ class DeleteAccountScreenState extends State<DeleteAccountScreen> {
                       fontFamily: 'Inter',
                       fontSize: 14.sp,
                       fontWeight: FontWeight.w400,
-                      height: 1.0,
+                      height: 1.3,
                       letterSpacing: -0.41,
                       color: Colors.black,
                     ),

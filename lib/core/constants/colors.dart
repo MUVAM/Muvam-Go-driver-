@@ -10,4 +10,5 @@ class ConstColors {
   static const successColor = 0xFF4CAF50;
   static const failureColor = 0xFFF44336;
   static const whiteColor = 0xFFFFFFFF;
+  static const redColor = 0xFFFF4040;
 }
