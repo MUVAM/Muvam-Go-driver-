@@ -30,7 +30,7 @@ import 'package:muvam_rider/features/communication/presentation/screens/chat_scr
 import 'package:muvam_rider/features/communication/presentation/widgets/chat_notification_service.dart';
 import 'package:muvam_rider/features/earnings/data/provider/wallet_provider.dart';
 import 'package:muvam_rider/features/home/data/provider/driver_provider.dart';
-import 'package:muvam_rider/features/home/presentation/screens/main_navigation_screen.dart';
+
 import 'package:muvam_rider/features/home/presentation/widgets/driver_app_drawer.dart';
 import 'package:muvam_rider/features/home/presentation/widgets/ride_info_widget.dart';
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
@@ -1277,8 +1277,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        MainNavigationScreen(initialIndex: 2),
+                                    builder: (context) => AnalyticsScreen(),
                                   ),
                                 );
                               },

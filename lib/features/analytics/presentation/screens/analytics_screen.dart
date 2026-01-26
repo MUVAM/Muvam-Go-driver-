@@ -6,6 +6,7 @@ import 'package:muvam_rider/features/analytics/presentation/widgets/ride_item.da
 import 'package:muvam_rider/features/analytics/presentation/widgets/stat_card.dart';
 import 'package:muvam_rider/features/analytics/presentation/widgets/weekly_earnings_chart.dart';
 import 'package:provider/provider.dart';
+import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
@@ -105,12 +106,14 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                       children: [
                         _buildPeriodTab('Today', 0),
                         Container(
+                          margin: EdgeInsets.symmetric(vertical: 7.h),
                           width: 0.5.w,
                           height: 36.h,
                           color: Theme.of(context).dividerColor,
                         ),
                         _buildPeriodTab('Weekly', 1),
                         Container(
+                          margin: EdgeInsets.symmetric(vertical: 7.h),
                           width: 0.5.w,
                           height: 36.h,
                           color: Theme.of(context).dividerColor,
@@ -161,7 +164,9 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                               valueColor: Color(0xFF2664EB),
                             ),
                             StatCard(
-                              value: '4.8',
+                              value: Provider.of<ProfileProvider>(
+                                context,
+                              ).userRating.toStringAsFixed(1),
                               label: 'Ratings',
                               bgColor: Color(0xFFFEFBE8),
                               valueColor: Color(0xFFCA8A00),

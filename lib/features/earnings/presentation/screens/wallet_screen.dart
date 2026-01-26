@@ -20,6 +20,9 @@ class WalletScreen extends StatefulWidget {
 class WalletScreenState extends State<WalletScreen> {
   int selectedTab = 0;
   final List<String> tabs = ['Weekly', 'Monthly', 'All'];
+  
+  String selectedFilter = 'All';
+  final List<String> filterOptions = ['All', 'Credit', 'Debit'];
 
   @override
   void initState() {
@@ -187,6 +190,7 @@ class WalletScreenState extends State<WalletScreen> {
                       Container(
                         width: 100.w,
                         height: 24.h,
+                        alignment: Alignment.center,
                         decoration: BoxDecoration(
                           border: Border.all(
                             color: themeManager.getSecondaryTextColor(context),
@@ -194,70 +198,94 @@ class WalletScreenState extends State<WalletScreen> {
                           ),
                           borderRadius: BorderRadius.circular(4.r),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              'All',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w400,
-                                color: themeManager.getTextColor(context),
-                              ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<String>(
+                            value: selectedFilter,
+                            icon: Padding(
+                              padding: EdgeInsets.only(left: 6.w),
+                              child: SvgPicture.asset(ConstImages.dropDown),
                             ),
-                            SizedBox(width: 6.w),
-                            SvgPicture.asset(ConstImages.dropDown),
-                          ],
+                            isExpanded: false,
+                            isDense: true,
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 12.sp,
+                              fontWeight: FontWeight.w400,
+                              color: themeManager.getTextColor(context),
+                            ),
+                            items: filterOptions.map((String value) {
+                              return DropdownMenuItem<String>(
+                                value: value,
+                                child: Text(value),
+                              );
+                            }).toList(),
+                            onChanged: (newValue) {
+                              if (newValue != null) {
+                                setState(() {
+                                  selectedFilter = newValue;
+                                });
+                              }
+                            },
+                          ),
                         ),
                       ),
                     ],
                   ),
                   SizedBox(height: 20.h),
                   Expanded(
-                    child: walletSummary.transactions.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.receipt_long_outlined,
-                                  size: 48.sp,
-                                  color: Colors.grey.shade300,
-                                ),
-                                SizedBox(height: 16.h),
-                                Text(
-                                  'No transactions yet',
-                                  style: TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 14.sp,
-                                    color: Colors.grey,
+                    child: Builder(builder: (context) {
+                      final filteredTransactions =
+                          walletSummary.transactions.where((t) {
+                        if (selectedFilter == 'All') return true;
+                        if (selectedFilter == 'Credit') return t.type == 'credit';
+                        if (selectedFilter == 'Debit') return t.type == 'debit';
+                        return true;
+                      }).toList();
+
+                      return filteredTransactions.isEmpty
+                          ? Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.receipt_long_outlined,
+                                    size: 48.sp,
+                                    color: Colors.grey.shade300,
                                   ),
-                                ),
-                              ],
-                            ),
-                          )
-                        : ListView.separated(
-                            itemCount: walletSummary.transactions.length,
-                            separatorBuilder: (context, index) => Divider(
-                              thickness: 1,
-                              color: Colors.grey.shade300,
-                            ),
-                            itemBuilder: (context, index) {
-                              final transaction =
-                                  walletSummary.transactions[index];
-                              final isCredit = transaction.type == 'credit';
-                              return TransactionItem(
-                                amount: transaction.description,
-                                dateTime: walletProvider.formatDateTime(
-                                  transaction.createdAt,
-                                ),
-                                status:
-                                    '${isCredit ? '+' : '-'}${walletProvider.formatAmount(transaction.amount)}',
-                                statusColor: themeManager.getTextColor(context),
-                              );
-                            },
-                          ),
+                                  SizedBox(height: 16.h),
+                                  Text(
+                                    'No transactions yet',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 14.sp,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          : ListView.separated(
+                              itemCount: filteredTransactions.length,
+                              separatorBuilder: (context, index) => Divider(
+                                thickness: 1,
+                                color: Colors.grey.shade300,
+                              ),
+                              itemBuilder: (context, index) {
+                                final transaction = filteredTransactions[index];
+                                final isCredit = transaction.type == 'credit';
+                                return TransactionItem(
+                                  amount: transaction.description,
+                                  dateTime: walletProvider.formatDateTime(
+                                    transaction.createdAt,
+                                  ),
+                                  status:
+                                      '${isCredit ? '+' : '-'}${walletProvider.formatAmount(transaction.amount)}',
+                                  statusColor:
+                                      themeManager.getTextColor(context),
+                                );
+                              },
+                            );
+                    }),
                   ),
                 ],
               ),

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
-import 'package:muvam_rider/features/home/presentation/screens/main_navigation_screen.dart';
+import 'package:muvam_rider/features/auth/presentation/screens/document_verification_success_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
@@ -593,12 +593,12 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
 
         if (result['success'] == true) {
           AppLogger.log(
-            'Vehicle registration successful - navigating to HomeScreen',
+            'Vehicle registration successful - navigating to DocumentVerificationSuccessScreen',
           );
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => const MainNavigationScreen(),
+              builder: (context) => const DocumentVerificationSuccessScreen(),
             ),
           );
         } else {

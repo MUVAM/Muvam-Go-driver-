@@ -7,6 +7,7 @@ import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/profile/presentation/widgets/lock_radio_option.dart';
+import 'package:muvam_rider/features/auth/presentation/screens/biometric_setup_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AppLockScreen extends StatefulWidget {
@@ -81,8 +82,22 @@ class _AppLockScreenState extends State<AppLockScreen> {
     }
 
     if (value) {
-      bool authenticated = await _authenticate();
-      if (authenticated) {
+      // Navigate to biometric setup screen
+      final result = await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => BiometricSetupScreen(
+            onComplete: () {
+              // This will be called after successful setup
+              Navigator.pop(context, true);
+            },
+            isLoginScreen: false,
+          ),
+        ),
+      );
+
+      // If setup was successful, enable biometric
+      if (result == true && mounted) {
         setState(() {
           _isBiometricEnabled = true;
         });
@@ -91,13 +106,6 @@ class _AppLockScreenState extends State<AppLockScreen> {
           CustomFlushbar.showSuccess(
             context: context,
             message: 'Biometric authentication enabled successfully',
-          );
-        }
-      } else {
-        if (mounted) {
-          CustomFlushbar.showError(
-            context: context,
-            message: 'Authentication failed. Please try again.',
           );
         }
       }
