@@ -55,7 +55,7 @@ class WalletCardWidget extends StatelessWidget {
                       height: 30.h,
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(8.r),
+                        borderRadius: BorderRadius.circular(3.r),
                       ),
                       child: GestureDetector(
                         onTap: () => Navigator.push(

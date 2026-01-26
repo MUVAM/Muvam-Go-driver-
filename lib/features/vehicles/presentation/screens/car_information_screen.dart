@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/document_verification_success_screen.dart';
@@ -16,7 +17,9 @@ import '../widgets/dropdown_field.dart';
 import '../widgets/custom_bottom_sheet.dart';
 
 class CarInformationScreen extends StatefulWidget {
-  const CarInformationScreen({super.key});
+  final bool showBackButton;
+
+  const CarInformationScreen({super.key, this.showBackButton = false});
 
   @override
   State<CarInformationScreen> createState() => _CarInformationScreenState();
@@ -73,13 +76,37 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
               child: Column(
                 children: [
                   SizedBox(height: 30.h),
-                  Text(
-                    'Car information',
-                    style: ConstTextStyles.createAccountTitle.copyWith(
-                      color: themeManager.getTextColor(context),
+                  if (widget.showBackButton)
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Image.asset(
+                            ConstImages.back,
+                            width: 33.w,
+                            height: 33.h,
+                          ),
+                        ),
+                        Expanded(
+                          child: Text(
+                            'Car information',
+                            style: ConstTextStyles.createAccountTitle.copyWith(
+                              color: themeManager.getTextColor(context),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                        SizedBox(width: 24.w),
+                      ],
+                    )
+                  else
+                    Text(
+                      'Car information',
+                      style: ConstTextStyles.createAccountTitle.copyWith(
+                        color: themeManager.getTextColor(context),
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
                   Text(
                     'Please enter your car details',
                     style: ConstTextStyles.createAccountSubtitle.copyWith(
@@ -281,7 +308,7 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
                       GestureDetector(
                         onTap: _pickVehiclePhotos,
                         child: Container(
-                          width: 353.w,
+                          width: double.infinity,
                           padding: EdgeInsets.all(8.w),
                           decoration: BoxDecoration(
                             border: Border.all(color: Colors.grey.shade300),
@@ -362,7 +389,7 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
                       GestureDetector(
                         onTap: isLoading ? null : _registerVehicle,
                         child: Container(
-                          width: 353.w,
+                          width: double.infinity,
                           height: 48.h,
                           decoration: BoxDecoration(
                             color: isLoading

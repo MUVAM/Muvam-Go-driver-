@@ -33,7 +33,7 @@ class ActivitiesScreenState extends State<ActivitiesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Color(0xFFF7F9F8),
       body: Stack(
         children: [
           Positioned(

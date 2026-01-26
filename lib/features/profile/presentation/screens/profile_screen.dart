@@ -261,7 +261,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) =>
-                                              CarInformationScreen(),
+                                              CarInformationScreen(
+                                                showBackButton: true,
+                                              ),
                                         ),
                                       );
                                       _loadPrimaryVehicle();
