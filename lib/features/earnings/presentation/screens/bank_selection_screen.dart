@@ -111,8 +111,8 @@ class _BankSelectionScreenState extends State<BankSelectionScreen> {
                     onTap: () => Navigator.pop(context),
                     child: Image.asset(
                       ConstImages.back,
-                      width: 30.w,
-                      height: 30.h,
+                      width: 33.w,
+                      height: 33.h,
                     ),
                   ),
                   Spacer(),
@@ -129,6 +129,7 @@ class _BankSelectionScreenState extends State<BankSelectionScreen> {
                 ],
               ),
             ),
+            SizedBox(height: 10.h),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: Container(
