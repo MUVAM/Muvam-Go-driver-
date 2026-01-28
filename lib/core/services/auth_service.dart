@@ -17,6 +17,9 @@ class AuthService {
       body: jsonEncode({'phone': phone}),
     );
 
+    AppLogger.log('Response Status Code----: ${response.statusCode}');
+    AppLogger.log('Response Body++++: ${response.body}');
+
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {

@@ -74,7 +74,6 @@ class _FaqScreenState extends State<FaqScreen> {
         child: Column(
           children: [
             SizedBox(height: 20.h),
-            // Header
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: Row(
