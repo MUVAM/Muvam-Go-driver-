@@ -13,6 +13,7 @@ import 'package:muvam_rider/core/constants/text_styles.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/account_verification_success_screen.dart';
+import 'package:muvam_rider/features/auth/presentation/screens/kyc_verification_page.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/state_selection_screen.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/lga_selection_screen.dart';
 import '../widgets/account_text_field.dart';
@@ -725,9 +726,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const AccountVerificationSuccessScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const KycVerificationPage()),
       );
     } else {
       if (!mounted) return;

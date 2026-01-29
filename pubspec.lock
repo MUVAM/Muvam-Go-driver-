@@ -1024,6 +1024,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.1.5+1"
+  qoreidsdk:
+    dependency: "direct main"
+    description:
+      name: qoreidsdk
+      sha256: a6c75879be7ba625c0e73ca47d44f70f0c98e53e5f88c28fd2790ce9e6623b9f
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.4"
   sanitize_html:
     dependency: transitive
     description:
