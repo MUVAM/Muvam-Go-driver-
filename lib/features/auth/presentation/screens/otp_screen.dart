@@ -7,12 +7,14 @@ import 'package:muvam_rider/core/constants/text_styles.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
+import 'package:muvam_rider/features/auth/presentation/screens/kyc_verification_page.dart';
+import 'package:muvam_rider/features/auth/presentation/screens/testKyc.dart';
 import 'package:muvam_rider/features/home/presentation/screens/main_navigation_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:pinput/pinput.dart';
 import 'dart:async';
 import 'package:muvam_rider/core/services/api_service.dart';
-import 'package:muvam_rider/features/auth/presentation/screens/kyc_verification_screen.dart';
+import 'package:muvam_rider/features/auth/presentation/screens/upload_document_screen.dart';
 import 'create_account_screen.dart';
 
 class OtpScreen extends StatefulWidget {
@@ -112,10 +114,25 @@ AppLogger.log("THIS IS THE RERSPONSE ${authProvider.verifyOtpResponse.toString()
           // Get token to pass to KycVerificationScreen
           final token = await ApiService.getToken();
           if (token != null) {
+            // Extract user data from the response
+            final userData = authProvider.verifyOtpResponse?['user'];
+            
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
-                builder: (context) => KycVerificationScreen(token: token),
+                builder: (context) =>
+                
+                // TestKyc(title: "",
+                  
+                // )
+                
+                 KycVerificationPage(
+                  firstName: userData?['first_name'],
+                  lastName: userData?['last_name'],
+                  email: userData?['Email'],
+                  phone: widget.phoneNumber,
+                  dob: userData?['date_of_birth'],
+                ),
               ),
             );
           } else {

@@ -5,58 +5,111 @@ import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/auth/presentation/widgets/kyc_document_tile.dart';
 import 'package:provider/provider.dart';
-import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/fonts.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
+
+import 'package:muvam_rider/features/auth/presentation/screens/vehicle_insurance_screen.dart';
+import 'package:muvam_rider/features/auth/presentation/screens/vehicle_registration_screen.dart';
+import 'package:muvam_rider/features/auth/presentation/screens/vehicle_photos_screen.dart';
+
 import 'package:muvam_rider/core/services/api_service.dart';
-import 'package:muvam_rider/features/vehicles/presentation/screens/car_information_screen.dart';
+import 'package:muvam_rider/features/auth/presentation/screens/document_verification_success_screen.dart';
 
 class KycVerificationScreen extends StatefulWidget {
   final String token;
+  final String carMake;
+  final String carModel;
+  final String carYear;
+  final String carSeats;
+  final String licensePlate;
+  final String licenseNumber;
+  final String carColor;
+  final bool isAcEnabled;
 
-  const KycVerificationScreen({super.key, required this.token});
+  const KycVerificationScreen({
+    super.key,
+    required this.token,
+    required this.carMake,
+    required this.carModel,
+    required this.carYear,
+    required this.carSeats,
+    required this.licensePlate,
+    required this.licenseNumber,
+    required this.carColor,
+    required this.isAcEnabled,
+  });
 
   @override
   State<KycVerificationScreen> createState() => _KycVerificationScreenState();
 }
 
 class _KycVerificationScreenState extends State<KycVerificationScreen> {
-  File? driverLicense;
-  File? vehicleRegistration;
   File? insurance;
+  File? vehicleRegistration;
+  List<File> vehiclePhotos = [];
   bool _isLoading = false;
-  final ImagePicker _picker = ImagePicker();
 
-  Future<void> _pickImage(String type) async {
-    final XFile? image = await _picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 1024,
-      maxHeight: 1024,
-      imageQuality: 70,
+  @override
+  void initState() {
+    super.initState();
+    // Listen for results when returning from upload screens
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkUploadStatus();
+    });
+  }
+
+  void _checkUploadStatus() {
+    setState(() {});
+  }
+
+  Future<void> _navigateToInsuranceScreen() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const VehicleInsuranceScreen(),
+      ),
     );
-    if (image != null) {
+    if (result != null && result is File) {
       setState(() {
-        switch (type) {
-          case 'driver_license':
-            driverLicense = File(image.path);
-            break;
-          case 'vehicle_registration':
-            vehicleRegistration = File(image.path);
-            break;
-          case 'insurance':
-            insurance = File(image.path);
-            break;
-        }
+        insurance = result;
+      });
+    }
+  }
+
+  Future<void> _navigateToRegistrationScreen() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const VehicleRegistrationScreen(),
+      ),
+    );
+    if (result != null && result is File) {
+      setState(() {
+        vehicleRegistration = result;
+      });
+    }
+  }
+
+  Future<void> _navigateToVehiclePhotosScreen() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const VehiclePhotosScreen(),
+      ),
+    );
+    if (result != null && result is List<File>) {
+      setState(() {
+        vehiclePhotos = result;
       });
     }
   }
 
   Future<void> _uploadDocuments() async {
-    if (driverLicense == null ||
-        vehicleRegistration == null ||
-        insurance == null) {
+    if (vehicleRegistration == null ||
+        insurance == null ||
+        vehiclePhotos.length < 3) {
       CustomFlushbar.showInfo(
         context: context,
         message: 'Please upload all required documents',
@@ -66,32 +119,45 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
 
     setState(() => _isLoading = true);
 
-    final result = await ApiService.uploadVerificationDocuments(
-      driverLicense: driverLicense!,
-      vehicleRegistration: vehicleRegistration!,
-      insurance: insurance!,
-      token: widget.token,
-    );
-
-    setState(() => _isLoading = false);
-
-    if (result['success'] == true) {
-      CustomFlushbar.showSuccess(
-        context: context,
-        message: 'Documents uploaded successfully!',
+    try {
+      final result = await ApiService.registerVehicle(
+        make: widget.carMake,
+        modelType: widget.carModel,
+        seats: widget.carSeats,
+        year: widget.carYear,
+        licenseNumber: widget.licenseNumber,
+        color: widget.carColor,
+        licensePlate: widget.licensePlate,
+        registrationDoc: vehicleRegistration!,
+        insuranceDoc: insurance!,
+        vehiclePhotos: vehiclePhotos,
+        token: widget.token,
+        ac: widget.isAcEnabled,
       );
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => CarInformationScreen()),
-        (route) => false,
-      );
-    } else {
-      String errorMessage = result['message'] ?? 'Upload failed';
-      if (errorMessage.contains('413') || errorMessage.contains('Too Large')) {
-        errorMessage =
-            'Images are too large. Please select smaller images and try again.';
+
+      if (!mounted) return;
+
+      if (result['success'] == true) {
+        // Navigate to success screen
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const DocumentVerificationSuccessScreen(),
+          ),
+        );
+      } else {
+        String errorMessage = result['message'] ?? 'Registration failed';
+        if (errorMessage.contains('413') || errorMessage.contains('Too Large')) {
+          errorMessage = 'Images are too large. Please select smaller images.';
+        }
+        CustomFlushbar.showError(context: context, message: errorMessage);
       }
-      CustomFlushbar.showError(context: context, message: errorMessage);
+    } catch (e) {
+      CustomFlushbar.showError(context: context, message: 'Error: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -159,7 +225,7 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
                         subtitle:
                             'Upload a valid copy of your vehicle insurance to confirm your car is properly insured for ride-hailing services.',
                         isUploaded: insurance != null,
-                        onTap: () => _pickImage('insurance'),
+                        onTap: _navigateToInsuranceScreen,
                         themeManager: themeManager,
                       ),
                       Divider(height: 1.h, color: Colors.grey.shade300),
@@ -169,7 +235,7 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
                         subtitle:
                             'Provide an up-to-date vehicle registration documents to verify ownership and eligibility to operate on the platform',
                         isUploaded: vehicleRegistration != null,
-                        onTap: () => _pickImage('vehicle_registration'),
+                        onTap: _navigateToRegistrationScreen,
                         themeManager: themeManager,
                       ),
                       Divider(height: 1.h, color: Colors.grey.shade300),
@@ -178,8 +244,8 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
                         title: 'Vehicle images',
                         subtitle:
                             'Provide an up-to-date vehicle registration documents to verify ownership and eligibility to operate on the platform',
-                        isUploaded: driverLicense != null,
-                        onTap: () => _pickImage('driver_license'),
+                        isUploaded: vehiclePhotos.length >= 3,
+                        onTap: _navigateToVehiclePhotosScreen,
                         themeManager: themeManager,
                       ),
                       Divider(height: 1.h, color: Colors.grey.shade300),

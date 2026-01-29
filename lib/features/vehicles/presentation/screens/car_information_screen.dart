@@ -6,11 +6,11 @@ import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/document_verification_success_screen.dart';
 import 'package:provider/provider.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/text_styles.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
+import 'package:muvam_rider/features/auth/presentation/screens/upload_document_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../widgets/car_text_field.dart';
 import '../widgets/dropdown_field.dart';
@@ -19,7 +19,10 @@ import '../widgets/custom_bottom_sheet.dart';
 class CarInformationScreen extends StatefulWidget {
   final bool showBackButton;
 
-  const CarInformationScreen({super.key, this.showBackButton = false});
+  const CarInformationScreen({
+    super.key,
+    this.showBackButton = false,
+  });
 
   @override
   State<CarInformationScreen> createState() => _CarInformationScreenState();
@@ -29,11 +32,7 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
   final TextEditingController licensePlateController = TextEditingController();
   final TextEditingController colorController = TextEditingController();
   final TextEditingController licenseNumberController = TextEditingController();
-  File? registrationDoc;
-  File? insuranceDoc;
-  List<File> vehiclePhotos = [];
   bool isLoading = false;
-  final ImagePicker _picker = ImagePicker();
 
   String? selectedCarName;
   String carNameDisplayText = 'Select car';
@@ -177,214 +176,6 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
                         textColor: selectedAC != null ? Colors.black : null,
                         onTap: () => _showACBottomSheet(themeManager),
                       ),
-                      SizedBox(height: 20.h),
-                      GestureDetector(
-                        onTap: _pickRegistrationDoc,
-                        child: Container(
-                          width: 353.w,
-                          height: 120.h,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade300),
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          child: registrationDoc != null
-                              ? Stack(
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(8.r),
-                                      child: Image.file(
-                                        registrationDoc!,
-                                        fit: BoxFit.cover,
-                                        width: double.infinity,
-                                      ),
-                                    ),
-                                    Positioned(
-                                      top: 4.h,
-                                      right: 4.w,
-                                      child: GestureDetector(
-                                        onTap: () => setState(
-                                          () => registrationDoc = null,
-                                        ),
-                                        child: Container(
-                                          padding: EdgeInsets.all(4.w),
-                                          decoration: BoxDecoration(
-                                            color: Colors.red,
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: Icon(
-                                            Icons.close,
-                                            color: Colors.white,
-                                            size: 16.sp,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.upload_file,
-                                      size: 40.sp,
-                                      color: Colors.grey,
-                                    ),
-                                    SizedBox(height: 8.h),
-                                    Text(
-                                      'Upload Registration Doc',
-                                      style: TextStyle(
-                                        color: Colors.grey,
-                                        fontSize: 14.sp,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                        ),
-                      ),
-                      SizedBox(height: 20.h),
-                      GestureDetector(
-                        onTap: _pickInsuranceDoc,
-                        child: Container(
-                          width: 353.w,
-                          height: 120.h,
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade300),
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          child: insuranceDoc != null
-                              ? Stack(
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: BorderRadius.circular(8.r),
-                                      child: Image.file(
-                                        insuranceDoc!,
-                                        fit: BoxFit.cover,
-                                        width: double.infinity,
-                                      ),
-                                    ),
-                                    Positioned(
-                                      top: 4.h,
-                                      right: 4.w,
-                                      child: GestureDetector(
-                                        onTap: () =>
-                                            setState(() => insuranceDoc = null),
-                                        child: Container(
-                                          padding: EdgeInsets.all(4.w),
-                                          decoration: BoxDecoration(
-                                            color: Colors.red,
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: Icon(
-                                            Icons.close,
-                                            color: Colors.white,
-                                            size: 16.sp,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                )
-                              : Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.upload_file,
-                                      size: 40.sp,
-                                      color: Colors.grey,
-                                    ),
-                                    SizedBox(height: 8.h),
-                                    Text(
-                                      'Upload Insurance Doc',
-                                      style: TextStyle(
-                                        color: Colors.grey,
-                                        fontSize: 14.sp,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                        ),
-                      ),
-                      SizedBox(height: 20.h),
-                      GestureDetector(
-                        onTap: _pickVehiclePhotos,
-                        child: Container(
-                          width: double.infinity,
-                          padding: EdgeInsets.all(8.w),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey.shade300),
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          child: vehiclePhotos.isNotEmpty
-                              ? Wrap(
-                                  spacing: 8.w,
-                                  runSpacing: 8.h,
-                                  children: vehiclePhotos.asMap().entries.map((
-                                    entry,
-                                  ) {
-                                    int index = entry.key;
-                                    File photo = entry.value;
-                                    return Stack(
-                                      children: [
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            4.r,
-                                          ),
-                                          child: Image.file(
-                                            photo,
-                                            width: 80.w,
-                                            height: 80.h,
-                                            fit: BoxFit.cover,
-                                          ),
-                                        ),
-                                        Positioned(
-                                          top: 2.h,
-                                          right: 2.w,
-                                          child: GestureDetector(
-                                            onTap: () => setState(
-                                              () =>
-                                                  vehiclePhotos.removeAt(index),
-                                            ),
-                                            child: Container(
-                                              padding: EdgeInsets.all(2.w),
-                                              decoration: BoxDecoration(
-                                                color: Colors.red,
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: Icon(
-                                                Icons.close,
-                                                color: Colors.white,
-                                                size: 12.sp,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    );
-                                  }).toList(),
-                                )
-                              : Container(
-                                  height: 120.h,
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.camera_alt,
-                                        size: 40.sp,
-                                        color: Colors.grey,
-                                      ),
-                                      SizedBox(height: 8.h),
-                                      Text(
-                                        'Upload Vehicle Photos',
-                                        style: TextStyle(
-                                          color: Colors.grey,
-                                          fontSize: 14.sp,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                        ),
-                      ),
                       SizedBox(height: 40.h),
                       GestureDetector(
                         onTap: isLoading ? null : _registerVehicle,
@@ -503,169 +294,54 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
     );
   }
 
-  Future<void> _pickRegistrationDoc() async {
-    final XFile? image = await _picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 1280,
-      maxHeight: 1280,
-      imageQuality: 40,
-    );
-    if (image != null) {
-      setState(() {
-        registrationDoc = File(image.path);
-      });
-    }
-  }
-
-  Future<void> _pickInsuranceDoc() async {
-    final XFile? image = await _picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: 1280,
-      maxHeight: 1280,
-      imageQuality: 40,
-    );
-    if (image != null) {
-      setState(() {
-        insuranceDoc = File(image.path);
-      });
-    }
-  }
-
-  Future<void> _pickVehiclePhotos() async {
-    final List<XFile> images = await _picker.pickMultiImage(
-      imageQuality: 40,
-      maxWidth: 1280,
-      maxHeight: 1280,
-    );
-    if (images.isNotEmpty) {
-      setState(() {
-        vehiclePhotos = images.map((img) => File(img.path)).toList();
-      });
-    }
-  }
-
   Future<void> _registerVehicle() async {
-    AppLogger.log('=== REGISTER VEHICLE DEBUG START ===');
-    AppLogger.log('Car Name: $selectedCarName');
-    AppLogger.log('Car Model: $selectedCarModel');
-    AppLogger.log('Car Year: $selectedCarYear');
-    AppLogger.log('Number of Seats: $selectedSeats');
-    AppLogger.log('License Plate: ${licensePlateController.text}');
-    AppLogger.log('Color: ${colorController.text}');
-    AppLogger.log('AC: $selectedAC');
-
     if (selectedCarName == null ||
         selectedCarModel == null ||
         selectedCarYear == null ||
         selectedSeats == null ||
         licensePlateController.text.isEmpty ||
         colorController.text.isEmpty ||
-        selectedAC == null ||
-        registrationDoc == null ||
-        insuranceDoc == null ||
-        vehiclePhotos.length < 3) {
-      AppLogger.log('Validation failed - missing fields');
-      String message;
-      if (vehiclePhotos.length < 3) {
-        message = 'Please upload at least 3 vehicle photos';
-      } else if (selectedAC == null) {
-        message = 'Please select AC availability';
-      } else if (selectedSeats == null) {
-        message = 'Please select number of seats';
-      } else {
-        message = 'Please fill all fields and upload all documents';
-      }
-      CustomFlushbar.showError(context: context, message: message);
+        selectedAC == null) {
+      CustomFlushbar.showError(
+          context: context, message: 'Please fill all required fields');
       return;
     }
 
-    AppLogger.log('All fields validated successfully');
-    setState(() {
-      isLoading = true;
-    });
+    setState(() => isLoading = true);
 
     try {
-      AppLogger.log('Getting auth token from SharedPreferences...');
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
 
-      AppLogger.log('Token found: ${token != null}');
-      if (token != null) {
-        AppLogger.log('Token preview: ${token.substring(0, 20)}...');
-      }
-
       if (token != null && mounted) {
-        AppLogger.log('Calling ApiService.registerVehicle...');
-        final result = await ApiService.registerVehicle(
-          make: selectedCarName!,
-          modelType: selectedCarModel!,
-          seats: selectedSeats!,
-          year: selectedCarYear!,
-          licenseNumber: licenseNumberController.text,
-          color: colorController.text,
-          licensePlate: licensePlateController.text,
-          registrationDoc: registrationDoc!,
-          insuranceDoc: insuranceDoc!,
-          vehiclePhotos: vehiclePhotos,
-          token: token,
-          ac: selectedAC == 'Yes',
-        );
-
-        AppLogger.log('API Response received:');
-        AppLogger.log('Success: ${result['success']}');
-        AppLogger.log('Message: ${result['message']}');
-        AppLogger.log('Full result: $result');
-
-        if (!mounted) return;
-
-        if (result['success'] == true) {
-          AppLogger.log(
-            'Vehicle registration successful - navigating to DocumentVerificationSuccessScreen',
-          );
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const DocumentVerificationSuccessScreen(),
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => KycVerificationScreen(
+              token: token,
+              carMake: selectedCarName!,
+              carModel: selectedCarModel!,
+              carYear: selectedCarYear!,
+              carSeats: selectedSeats!,
+              licenseNumber: licenseNumberController.text,
+              licensePlate: licensePlateController.text,
+              carColor: colorController.text,
+              isAcEnabled: selectedAC == 'Yes',
             ),
-          );
-        } else {
-          AppLogger.log('Vehicle registration failed: ${result['message']}');
-          String errorMessage = result['message'] ?? 'Registration failed';
-
-          if (errorMessage.contains('user not found') ||
-              errorMessage.contains('unauthorized')) {
-            errorMessage = 'Your session has expired. Please login again.';
-            await prefs.remove('auth_token');
-            if (mounted) {
-              Navigator.pushNamedAndRemoveUntil(
-                context,
-                '/login',
-                (route) => false,
-              );
-            }
-            return;
-          }
-          CustomFlushbar.showError(context: context, message: errorMessage);
-        }
+          ),
+        );
       } else {
-        AppLogger.log('No auth token found');
         CustomFlushbar.showError(
           context: context,
           message: 'Authentication token not found. Please login again.',
         );
       }
-    } catch (e, stackTrace) {
-      AppLogger.log('EXCEPTION in _registerVehicle: $e');
-      AppLogger.log('Stack trace: $stackTrace');
+    } catch (e) {
       CustomFlushbar.showError(context: context, message: 'Error: $e');
     } finally {
-      AppLogger.log('Setting isLoading to false');
       if (mounted) {
-        setState(() {
-          isLoading = false;
-        });
+        setState(() => isLoading = false);
       }
-      AppLogger.log('=== REGISTER VEHICLE DEBUG END ===\n');
     }
   }
 }

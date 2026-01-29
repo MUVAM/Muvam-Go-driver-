@@ -19,6 +19,16 @@ subprojects {
 }
 subprojects {
     project.evaluationDependsOn(":app")
+
+    if (project.name == "qoreidsdk") {
+        plugins.withId("java-base") {
+            extensions.configure<JavaPluginExtension> {
+                toolchain {
+                    vendor.set(JvmVendorSpec.AMAZON)
+                }
+            }
+        }
+    }
 }
 
 tasks.register<Delete>("clean") {

@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
+import 'package:muvam_rider/features/auth/presentation/screens/testKyc.dart';
 import 'package:provider/provider.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/text_styles.dart';
@@ -726,7 +727,18 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (context) => const KycVerificationPage()),
+        MaterialPageRoute(
+          builder: (context) =>
+          // TestKyc(title: "",)
+          
+           KycVerificationPage(
+            firstName: firstNameController.text.trim(),
+            lastName: lastNameController.text.trim(),
+            email: emailController.text.trim(),
+            phone: widget.phoneNumber,
+            dob: dobController.text.trim(),
+          ),
+        ),
       );
     } else {
       if (!mounted) return;

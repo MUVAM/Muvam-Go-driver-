@@ -1,0 +1,33 @@
+> Task :gradle:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle:compileKotlin UP-TO-DATE
+> Task :gradle:compileJava NO-SOURCE
+> Task :gradle:compileGroovy NO-SOURCE
+> Task :gradle:pluginDescriptors UP-TO-DATE
+> Task :gradle:processResources UP-TO-DATE
+> Task :gradle:classes UP-TO-DATE
+> Task :gradle:jar UP-TO-DATE
+
+> Configure project :
+e: file:///C:/Users/Office-PC/worky/Muvam-Go-driver-/android/build.gradle.kts:26:49: Unresolved reference: of
+
+FAILURE: Build failed with an exception.
+
+* Where:
+Build file 'C:\Users\Office-PC\worky\Muvam-Go-driver-\android\build.gradle.kts' line: 26
+
+* What went wrong:
+Script compilation error:
+
+  Line 26:                 languageVersion.set(JavaVersion.of(17))
+                                                           ^ Unresolved reference: of
+
+1 error
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+BUILD FAILED in 8s
+4 actionable tasks: 4 up-to-date

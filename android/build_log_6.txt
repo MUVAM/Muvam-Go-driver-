@@ -1,0 +1,36 @@
+> Task :gradle:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :gradle:compileKotlin UP-TO-DATE
+> Task :gradle:compileJava NO-SOURCE
+> Task :gradle:compileGroovy NO-SOURCE
+> Task :gradle:pluginDescriptors UP-TO-DATE
+> Task :gradle:processResources UP-TO-DATE
+> Task :gradle:classes UP-TO-DATE
+> Task :gradle:jar UP-TO-DATE
+
+[Incubating] Problems report is available at: file:///C:/Users/Office-PC/worky/Muvam-Go-driver-/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Could not determine the dependencies of task ':qoreidsdk:bundleLibCompileToJarDebug'.
+> Could not create task ':qoreidsdk:compileDebugJavaWithJavac'.
+   > Failed to calculate the value of task ':qoreidsdk:compileDebugJavaWithJavac' property 'javaCompiler'.
+      > Cannot find a Java installation on your machine matching this tasks requirements: {languageVersion=17, vendor=any vendor, implementation=vendor-specific} for WINDOWS on x86_64.
+         > No matching toolchain could be found in the locally installed toolchains or the configured toolchain download repositories. Some toolchain resolvers had provisioning failures: foojay (Unable to download toolchain matching the requirements ({languageVersion=17, vendor=any vendor, implementation=vendor-specific}) from 'https://api.foojay.io/disco/v3.0/ids/16008c489780dfb402c44316e612a16c/redirect', due to: Could not HEAD 'https://release-assets.githubusercontent.com/github-production-release-asset/372925194/9a57b3bf-e4b0-4c64-a0a2-a98ffabc6a18?sp=r&sv=2018-11-09&sr=b&spr=https&se=2026-01-29T08%3A50%3A42Z&rscd=attachment%3B+filename%3DOpenJDK17U-jdk_x64_windows_hotspot_17.0.16_8.zip&rsct=application%2Foctet-stream&skoid=96c2d410-5711-43a1-aedd-ab1947aa7ab0&sktid=398a6654-997b-47e9-b12b-9515b896b4de&skt=2026-01-29T07%3A50%3A02Z&ske=2026-01-29T08%3A50%3A42Z&sks=b&skv=2018-11-09&sig=b2xhKJWSuF20daqVmxjDVcyOfz1WVL1%2FHoKKOzxqlQI%3D&jwt=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmVsZWFzZS1hc3NldHMuZ2l0aHVidXNlcmNvbnRlbnQuY29tIiwia2V5Ijoia2V5MSIsImV4cCI6MTc2OTY3NzQxOCwibmJmIjoxNzY5NjczODE4LCJwYXRoIjoicmVsZWFzZWFzc2V0cHJvZHVjdGlvbi5ibG9iLmNvcmUud2luZG93cy5uZXQifQ.4PkU_D9KNBScziHZW9IayYFz3ZfyMibZ6Z4m25gEYsc&response-content-disposition=attachment%3B%20filename%3DOpenJDK17U-jdk_x64_windows_hotspot_17.0.16_8.zip&response-content-type=application%2Foctet-stream'.).
+
+* Try:
+> Learn more about toolchain auto-detection at https://docs.gradle.org/8.12/userguide/toolchains.html#sec:auto_detection.
+> Learn more about toolchain repositories at https://docs.gradle.org/8.12/userguide/toolchains.html#sub:download_repositories.
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.12/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 2m 15s
+4 actionable tasks: 4 up-to-date

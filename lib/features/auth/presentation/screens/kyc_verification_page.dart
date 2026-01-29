@@ -9,7 +9,20 @@ import 'package:muvam_rider/features/auth/presentation/screens/account_verificat
 import 'package:qoreidsdk/qoreidsdk.dart';
 
 class KycVerificationPage extends StatefulWidget {
-  const KycVerificationPage({super.key});
+  final String? firstName;
+  final String? lastName;
+  final String? email;
+  final String? phone;
+  final String? dob;
+
+  const KycVerificationPage({
+    super.key,
+    this.firstName,
+    this.lastName,
+    this.email,
+    this.phone,
+    this.dob,
+  });
 
   @override
   State<KycVerificationPage> createState() => _KycVerificationPageState();
@@ -50,11 +63,11 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
     );
   }
 
-  Future<void> _launchQoreID() async {
+  Future<void> _launchQoreIDIdentity() async {
     // TODO: Replace with your actual QoreID Client ID
-    const String clientId = "YOUR_CLIENT_ID_HERE";
+    const String clientId = "KBC1C1YDB6ACWN2AB5PK";
 
-    if (clientId == "YOUR_CLIENT_ID_HERE") {
+    if (clientId != "KBC1C1YDB6ACWN2AB5PK") {
       CustomFlushbar.showError(
         context: context,
         message: 'QoreID Client ID not configured.',
@@ -62,23 +75,65 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
       return;
     }
 
-    final data = QoreidData(
+    // Prepare applicant data with actual user information
+    // IMPORTANT: QoreID SDK expects camelCase field names
+    final applicantData = <String, dynamic>{
+      'firstName': widget.firstName ?? '',
+      'lastName': widget.lastName ?? '',
+      'middleName': '',  // Add middleName field
+      'email': widget.email ?? '',
+      'gender': '',  // Add gender field
+    };
+    
+    if (widget.phone != null && widget.phone!.isNotEmpty) {
+      // Remove any non-digit characters and format properly
+      String cleanPhone = widget.phone!.replaceAll(RegExp(r'[^\d+]'), '');
+      applicantData['phoneNumber'] = cleanPhone;
+    } else {
+      applicantData['phoneNumber'] = '';
+    }
+    
+    if (widget.dob != null && widget.dob!.isNotEmpty) {
+      // Convert MM/DD/YYYY to YYYY-MM-DD format if needed
+      try {
+        final parts = widget.dob!.split('/');
+        if (parts.length == 3) {
+          applicantData['dob'] = '${parts[2]}-${parts[0]}-${parts[1]}';
+        }
+      } catch (e) {
+        debugPrint('Error parsing DOB: $e');
+        applicantData['dob'] = '';
+      }
+    } else {
+      applicantData['dob'] = '';
+    }
+
+    debugPrint('QoreID Applicant Data: $applicantData');
+    debugPrint('QoreID Client ID: $clientId');
+    debugPrint('QoreID Product Code: face_verification');
+
+    final data = 
+    
+    QoreidData(
       clientId: clientId,
       customerReference:
           "user_${DateTime.now().millisecondsSinceEpoch}", // Unique Ref
       productCode:
-          "face_verification", // Assuming face verification based on "Identity verification"
+          "nin", // Try face verification first
       flowId: 0,
       addressData: {},
-      applicantData: {},
+      applicantData: applicantData,
       ocrAcceptedDocuments: "",
       identityData: {},
     );
-
+   
     try {
+      debugPrint('Launching QoreID SDK...');
       await Qoreidsdk.launchQoreid(data);
-    } catch (e) {
+      debugPrint('QoreID SDK launched successfully');
+    } catch (e, stackTrace) {
       debugPrint("QoreID Launch Error: $e");
+      debugPrint("Stack Trace: $stackTrace");
       CustomFlushbar.showError(
         context: context,
         message: 'Failed to launch verification: $e',
@@ -86,6 +141,90 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
     }
   }
 
+
+
+
+
+
+
+
+  Future<void> _launchQoreIDdriversLicense() async {
+    // TODO: Replace with your actual QoreID Client ID
+    const String clientId = "KBC1C1YDB6ACWN2AB5PK";
+
+    if (clientId != "KBC1C1YDB6ACWN2AB5PK") {
+      CustomFlushbar.showError(
+        context: context,
+        message: 'QoreID Client ID not configured.',
+      );
+      return;
+    }
+
+    // Prepare applicant data with actual user information
+    // IMPORTANT: QoreID SDK expects camelCase field names
+    final applicantData = <String, dynamic>{
+      'firstName': widget.firstName ?? '',
+      'lastName': widget.lastName ?? '',
+      'middleName': '',  // Add middleName field
+      'email': widget.email ?? '',
+      'gender': '',  // Add gender field
+    };
+    
+    if (widget.phone != null && widget.phone!.isNotEmpty) {
+      // Remove any non-digit characters and format properly
+      String cleanPhone = widget.phone!.replaceAll(RegExp(r'[^\d+]'), '');
+      applicantData['phoneNumber'] = cleanPhone;
+    } else {
+      applicantData['phoneNumber'] = '';
+    }
+    
+    if (widget.dob != null && widget.dob!.isNotEmpty) {
+      // Convert MM/DD/YYYY to YYYY-MM-DD format if needed
+      try {
+        final parts = widget.dob!.split('/');
+        if (parts.length == 3) {
+          applicantData['dob'] = '${parts[2]}-${parts[0]}-${parts[1]}';
+        }
+      } catch (e) {
+        debugPrint('Error parsing DOB: $e');
+        applicantData['dob'] = '';
+      }
+    } else {
+      applicantData['dob'] = '';
+    }
+
+    debugPrint('QoreID Applicant Data: $applicantData');
+    debugPrint('QoreID Client ID: $clientId');
+    debugPrint('QoreID Product Code: face_verification');
+
+    final data = 
+    
+    QoreidData(
+      clientId: clientId,
+      customerReference:
+          "user_${DateTime.now().millisecondsSinceEpoch}", // Unique Ref
+      productCode:
+          "drivers_license", // Try face verification first
+      flowId: 0,
+      addressData: {},
+      applicantData: applicantData,
+      ocrAcceptedDocuments: "",
+      identityData: {},
+    );
+   
+    try {
+      debugPrint('Launching QoreID SDK...');
+      await Qoreidsdk.launchQoreid(data);
+      debugPrint('QoreID SDK launched successfully');
+    } catch (e, stackTrace) {
+      debugPrint("QoreID Launch Error: $e");
+      debugPrint("Stack Trace: $stackTrace");
+      CustomFlushbar.showError(
+        context: context,
+        message: 'Failed to launch verification: $e',
+      );
+    }
+  }
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -97,11 +236,7 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
           onTap: () => Navigator.pop(context),
           child: Padding(
             padding: EdgeInsets.all(12.w),
-            child: SvgPicture.asset(
-              'assets/svg/back-chevron.svg', // Assuming this exists or similar
-              colorFilter: ColorFilter.mode(Colors.black, BlendMode.srcIn),
-              fit: BoxFit.contain,
-            ),
+            child: Icon(Icons.arrow_back_ios_new, color: Colors.black),
           ),
         ),
         centerTitle: true,
@@ -129,7 +264,7 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
                   fontFamily: 'Inter',
                   fontSize: 14.sp,
                   fontWeight: FontWeight.w400,
-                  color: Colors.grey[600],
+                  color: Colors.black,
                   height: 1.5,
                 ),
               ),
@@ -140,10 +275,9 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
                 imagePath: 'assets/images/kyc.png',
                 title: "Driver's License Verification",
                 subtitle:
-                    "To process your application we require valid identification to confirm your availability to offer this service",
-                onTap: () {
-                  // No specific action defined for this tile in requirements
-                },
+                    "To process your application, we require valid identification to confirm your eligibility to offer this service.",
+                onTap: _launchQoreIDdriversLicense,
+                isActionable: true,
               ),
 
               Padding(
@@ -153,12 +287,15 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
 
               // Tile 2: Identity Verification
               _buildVerificationTile(
-                imagePath: 'assets/images/avatar.png',
+                imagePath: 'assets/images/accountImage.png',
                 title: "Identity verification",
                 subtitle:
-                    "Please provide a clear and valid form of identification to verify your identity, this helps us to verify who you are",
-                onTap: _launchQoreID,
+                    "Provide a clear and valid form of identification to verify your identity. This helps us ensure the safety and trust of everyone using our platform",
+                onTap: _launchQoreIDIdentity,
                 isActionable: true,
+              ),  Padding(
+                padding: EdgeInsets.symmetric(vertical: 10.h),
+                child: Divider(color: Colors.grey[200], thickness: 1),
               ),
             ],
           ),
