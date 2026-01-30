@@ -30,6 +30,8 @@ class KycVerificationPage extends StatefulWidget {
 
 class _KycVerificationPageState extends State<KycVerificationPage> {
   bool _isLoading = false;
+  bool _driversLicenseVerified = false;
+  bool _identityVerified = false;
 
   @override
   void initState() {
@@ -40,10 +42,45 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
   void _listenToResults() {
     Qoreidsdk.onResult((result) async {
       debugPrint('QoreID Result: $result');
+
+      // Check for cancellation or error first based on the provided log format
+      if (result['code'] == 'E_USER_CANCELED' || 
+          result['event'] == 'ERROR_RESULT' || 
+          result['message'] == 'User canceled') {
+        CustomFlushbar.showError(
+          context: context,
+          message: result['message'] ?? 'Verification cancelled',
+        );
+        return;
+      }
+
+      // Check for success verification status
+      // We interpret the presence of non-null verification data as success ONLY if it's not an error event
+      // Check for success verification status
+      // We interpret the presence of non-null verification data as success ONLY if it's not an error event
       if (result['status'] == 'success' ||
-          (result['data']?['verification'] != null)) {
-        // Handle success
-        _handleSuccess();
+          (result['data']?['verification'] != null &&
+              result['data']?['verification']?['status'] != null)) {
+        
+        final productCode = result['data']?['productCode'];
+        
+        setState(() {
+          if (productCode == 'drivers_license') {
+            _driversLicenseVerified = true;
+          } else if (productCode == 'nin') { // Assuming 'nin' is for identity verification as per launch params
+            _identityVerified = true;
+          }
+        });
+
+        // Handle success if both are verified
+        if (_driversLicenseVerified && _identityVerified) {
+          _handleSuccess();
+        } else {
+             CustomFlushbar.showSuccess(
+              context: context,
+              message: 'Verification successful. Please complete the remaining step.',
+            );
+        }
       } else if (result['status'] == 'error' ||
           result['status'] == 'cancelled') {
         CustomFlushbar.showError(
@@ -276,8 +313,9 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
                 title: "Driver's License Verification",
                 subtitle:
                     "To process your application, we require valid identification to confirm your eligibility to offer this service.",
-                onTap: _launchQoreIDdriversLicense,
-                isActionable: true,
+                onTap: _driversLicenseVerified ? () {} : _launchQoreIDdriversLicense,
+                isActionable: !_driversLicenseVerified,
+                isVerified: _driversLicenseVerified,
               ),
 
               Padding(
@@ -291,8 +329,9 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
                 title: "Identity verification",
                 subtitle:
                     "Provide a clear and valid form of identification to verify your identity. This helps us ensure the safety and trust of everyone using our platform",
-                onTap: _launchQoreIDIdentity,
-                isActionable: true,
+                onTap: _identityVerified ? () {} : _launchQoreIDIdentity,
+                isActionable: !_identityVerified,
+                isVerified: _identityVerified,
               ),  Padding(
                 padding: EdgeInsets.symmetric(vertical: 10.h),
                 child: Divider(color: Colors.grey[200], thickness: 1),
@@ -310,6 +349,7 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
     required String subtitle,
     required VoidCallback onTap,
     bool isActionable = false,
+    bool isVerified = false,
   }) {
     return InkWell(
       onTap: onTap,
@@ -372,7 +412,16 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
                 ],
               ),
             ),
-            if (isActionable)
+            if (isVerified)
+              Padding(
+                padding: EdgeInsets.only(left: 8.w, top: 10.h),
+                child: Icon(
+                  Icons.check_circle,
+                  size: 20.sp,
+                  color: Colors.green,
+                ),
+              )
+            else if (isActionable)
               Padding(
                 padding: EdgeInsets.only(left: 8.w, top: 10.h),
                 child: Icon(

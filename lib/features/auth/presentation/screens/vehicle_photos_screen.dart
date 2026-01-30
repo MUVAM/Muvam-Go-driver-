@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
@@ -164,58 +165,104 @@ class _VehiclePhotosScreenState extends State<VehiclePhotosScreen> {
     
     return GestureDetector(
       onTap: () => photo == null ? _pickImage(index) : null,
-      child: Container(
-        width: 102.w,
-        height: 102.w,
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: Colors.grey.shade400,
-            width: 2,
-            style: BorderStyle.solid,
-          ),
-          borderRadius: BorderRadius.circular(8.r),
+      child: CustomPaint(
+        foregroundPainter: DashedBorderPainter(
+          color: Colors.grey.shade400,
+          strokeWidth: 2,
+          gap: 6,
+          radius: 8.r,
         ),
-        child: photo != null
-            ? Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(6.r),
-                    child: Image.file(
-                      photo,
-                      width: double.infinity,
-                      height: double.infinity,
-                      fit: BoxFit.cover,
+        child: Container(
+          width: 102.w,
+          height: 102.w,
+          child: photo != null
+              ? Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6.r),
+                      child: Image.file(
+                        photo,
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
                     ),
-                  ),
-                  Positioned(
-                    top: 4.h,
-                    right: 4.w,
-                    child: GestureDetector(
-                      onTap: () => _removeImage(index),
-                      child: Container(
-                        padding: EdgeInsets.all(4.w),
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.close,
-                          color: Colors.white,
-                          size: 16.sp,
+                    Positioned(
+                      top: 4.h,
+                      right: 4.w,
+                      child: GestureDetector(
+                        onTap: () => _removeImage(index),
+                        child: Container(
+                          padding: EdgeInsets.all(4.w),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 16.sp,
+                          ),
                         ),
                       ),
                     ),
+                  ],
+                )
+              : Center(
+                  child: Icon(
+                    Icons.add,
+                    size: 40.sp,
+                    color: Colors.grey.shade400,
                   ),
-                ],
-              )
-            : Center(
-                child: Icon(
-                  Icons.add,
-                  size: 40.sp,
-                  color: Colors.grey.shade400,
                 ),
-              ),
+        ),
       ),
     );
   }
+
+
+}
+
+class DashedBorderPainter extends CustomPainter {
+  final Color color;
+  final double strokeWidth;
+  final double gap;
+  final double radius;
+
+  DashedBorderPainter({
+    required this.color,
+    this.strokeWidth = 1.0,
+    this.gap = 5.0,
+    this.radius = 0.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final Paint paint = Paint()
+      ..color = color
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke;
+
+    final Path path = Path();
+    path.addRRect(RRect.fromRectAndRadius(
+      Rect.fromLTWH(0, 0, size.width, size.height),
+      Radius.circular(radius),
+    ));
+
+    final Path dashedPath = Path();
+    for (final ui.PathMetric metric in path.computeMetrics()) {
+      double distance = 0.0;
+      while (distance < metric.length) {
+        dashedPath.addPath(
+          metric.extractPath(distance, distance + gap),
+          Offset.zero,
+        );
+        distance += gap * 2;
+      }
+    }
+    canvas.drawPath(dashedPath, paint);
+  }
+
+  @override
+  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }
