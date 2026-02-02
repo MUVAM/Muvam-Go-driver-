@@ -102,9 +102,10 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
 
   Future<void> _launchQoreIDIdentity() async {
     // TODO: Replace with your actual QoreID Client ID
-    const String clientId = "KBC1C1YDB6ACWN2AB5PK";
+    // const String clientId = "KBC1C1YDB6ACWN2AB5PK";
+    const String clientId = "NYPPI7J3M2CAROJ4U28O";
 
-    if (clientId != "KBC1C1YDB6ACWN2AB5PK") {
+    if (clientId != "NYPPI7J3M2CAROJ4U28O") {
       CustomFlushbar.showError(
         context: context,
         message: 'QoreID Client ID not configured.',

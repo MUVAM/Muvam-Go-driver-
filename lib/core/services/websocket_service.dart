@@ -96,9 +96,14 @@ class WebSocketService {
       AppLogger.log('Token: ${authToken.substring(0, 20)}...');
       AppLogger.log('Time: ${DateTime.now()}');
       AppLogger.log('═══════════════════════════════════════');
-
+      String url = UrlConstants.wsUrl;
+      if (url.startsWith('https://')) {
+        url = url.replaceFirst('https://', 'wss://');
+      } else if (url.startsWith('http://')) {
+        url = url.replaceFirst('http://', 'ws://');
+      }
       // Parse URL
-      final uri = Uri.parse(UrlConstants.wsUrl);
+      final uri = Uri.parse(url);
 
       // Headers - Try lowercase 'authorization' to match Postman exactly
       final headers = {'authorization': 'Bearer $authToken'};
