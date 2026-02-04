@@ -361,7 +361,7 @@ class _ReferralScreenState extends State<ReferralScreen> {
     if (text.isEmpty) return;
 
     Clipboard.setData(ClipboardData(text: text));
-    CustomFlushbar.showError(
+    CustomFlushbar.showSuccess(
       context: context,
       message: 'Referral code copied to clipboard',
     );
