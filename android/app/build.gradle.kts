@@ -3,24 +3,26 @@ plugins {
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
     id("com.google.gms.google-services")
-
 }
 
 android {
     namespace = "com.example.muvam_rider"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+
+    // ✅ FIX: Pin stable NDK (avoid llvm-strip crash)
+    ndkVersion = "25.2.9519653"
 
     compileOptions {
-        // ✅ CORRECT SYNTAX FOR KOTLIN DSL
+        // ✅ Required for newer Java APIs
         isCoreLibraryDesugaringEnabled = true
-        
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+
+        // ✅ Flutter recommended
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 
     defaultConfig {
@@ -29,16 +31,23 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        
-        // ✅ ADD THIS: Enable multidex
+
+        // ✅ Required when minify + Firebase + Play Core
         multiDexEnabled = true
     }
 
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("debug")
+
+            // ✅ Keep R8 ON (now safe)
             isMinifyEnabled = true
-            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            isShrinkResources = true
+
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }
@@ -48,8 +57,17 @@ flutter {
 }
 
 dependencies {
-    // ✅ ADD THIS: Core library desugaring
+    // ✅ Core desugaring
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
-implementation("com.google.firebase:firebase-analytics")
+
+    // ✅ REQUIRED: Fix missing SplitInstall / Play Core classes
+    implementation("com.google.android.play:core:1.10.3")
+    implementation("com.google.android.play:core-ktx:1.8.1")
+
+    // ✅ Firebase (correct order)
     implementation(platform("com.google.firebase:firebase-bom:34.7.0"))
+    implementation("com.google.firebase:firebase-analytics")
+
+    // ✅ Multidex support
+    implementation("androidx.multidex:multidex:2.0.1")
 }

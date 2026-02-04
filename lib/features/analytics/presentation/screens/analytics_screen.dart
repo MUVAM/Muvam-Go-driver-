@@ -18,6 +18,7 @@ class AnalyticsScreen extends StatefulWidget {
 class AnalyticsScreenState extends State<AnalyticsScreen> {
   int _selectedPeriodIndex = 0;
   int _selectedTabIndex = 0;
+  bool _hasLoadedOnce = false;
 
   @override
   void initState() {
@@ -27,18 +28,60 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
     });
   }
 
-  void _fetchData() {
+  void _fetchData() async {
+    final earningsProvider = Provider.of<EarningsProvider>(
+      context,
+      listen: false,
+    );
+
+    // Check if we already have cached data
+    final hasData =
+        earningsProvider.earningsSummary != null ||
+        earningsProvider.weeklyOverview != null ||
+        earningsProvider.earningsBreakdown != null;
+
+    if (hasData && !_hasLoadedOnce) {
+      // We have cached data, show it immediately
+      setState(() {
+        _hasLoadedOnce = true;
+      });
+
+      // Refresh in background
+      _refreshDataInBackground();
+    } else if (!hasData) {
+      // No cached data, show loader and fetch
+      final period = earningsProvider.getPeriodFromIndex(_selectedPeriodIndex);
+
+      await Future.wait([
+        earningsProvider.fetchEarningsSummary(period),
+        earningsProvider.fetchEarningsOverview(period),
+        earningsProvider.fetchEarningsBreakdown(_selectedPeriodIndex),
+      ]);
+
+      if (mounted) {
+        setState(() {
+          _hasLoadedOnce = true;
+        });
+      }
+    } else {
+      // Already loaded before, just refresh in background
+      _refreshDataInBackground();
+    }
+  }
+
+  void _refreshDataInBackground() {
     final earningsProvider = Provider.of<EarningsProvider>(
       context,
       listen: false,
     );
     final period = earningsProvider.getPeriodFromIndex(_selectedPeriodIndex);
-    earningsProvider.fetchEarningsSummary(period);
-    if (_selectedTabIndex == 0) {
-      earningsProvider.fetchEarningsOverview(period);
-    } else if (_selectedTabIndex == 1) {
-      earningsProvider.fetchEarningsBreakdown(_selectedPeriodIndex);
-    }
+
+    // Fetch in background without showing loader
+    Future.wait([
+      earningsProvider.fetchEarningsSummary(period),
+      earningsProvider.fetchEarningsOverview(period),
+      earningsProvider.fetchEarningsBreakdown(_selectedPeriodIndex),
+    ]);
   }
 
   @override
@@ -47,95 +90,96 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
       backgroundColor: Color(0xffF9FAFC),
       body: Consumer<EarningsProvider>(
         builder: (context, earningsProvider, child) {
+          // Only show loader if no data exists and haven't loaded once
+          final shouldShowLoader =
+              !_hasLoadedOnce && earningsProvider.earningsSummary == null;
+
           return SafeArea(
-            child: Column(
-              children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 20.w,
-                    vertical: 10.h,
-                  ),
-                  child: Stack(
-                    alignment: Alignment.center,
+            child: shouldShowLoader
+                ? Center(
+                    child: CircularProgressIndicator(color: Color(0xFF2A8359)),
+                  )
+                : Column(
                     children: [
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: Container(
-                            width: 35.w,
-                            height: 35.h,
-                            decoration: BoxDecoration(
-                              color: Theme.of(
-                                context,
-                              ).disabledColor.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(100.r),
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 20.w,
+                          vertical: 10.h,
+                        ),
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: GestureDetector(
+                                onTap: () => Navigator.pop(context),
+                                child: Container(
+                                  width: 35.w,
+                                  height: 35.h,
+                                  decoration: BoxDecoration(
+                                    color: Theme.of(
+                                      context,
+                                    ).disabledColor.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(100.r),
+                                  ),
+                                  child: Icon(
+                                    Icons.arrow_back,
+                                    color: Theme.of(context).iconTheme.color,
+                                    size: 20.sp,
+                                  ),
+                                ),
+                              ),
                             ),
-                            child: Icon(
-                              Icons.arrow_back,
-                              color: Theme.of(context).iconTheme.color,
-                              size: 20.sp,
+                            Text(
+                              'Analytics',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w600,
+                                fontSize: 24.sp,
+                                color: Theme.of(
+                                  context,
+                                ).textTheme.titleLarge?.color,
+                              ),
                             ),
+                          ],
+                        ),
+                      ),
+                      SizedBox(height: 20.h),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20.w),
+                        child: Container(
+                          width: double.infinity,
+                          height: 40.h,
+                          decoration: BoxDecoration(
+                            color: Color(0x767680).withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          padding: EdgeInsets.all(2.w),
+                          child: Row(
+                            children: [
+                              _buildPeriodTab('Today', 0),
+                              Container(
+                                margin: EdgeInsets.symmetric(vertical: 7.h),
+                                width: 0.5.w,
+                                height: 36.h,
+                                color: Theme.of(context).dividerColor,
+                              ),
+                              _buildPeriodTab('Weekly', 1),
+                              Container(
+                                margin: EdgeInsets.symmetric(vertical: 7.h),
+                                width: 0.5.w,
+                                height: 36.h,
+                                color: Theme.of(context).dividerColor,
+                              ),
+                              _buildPeriodTab('Monthly', 2),
+                            ],
                           ),
                         ),
                       ),
-                      Text(
-                        'Analytics',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w600,
-                          fontSize: 24.sp,
-                          color: Theme.of(context).textTheme.titleLarge?.color,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                SizedBox(height: 20.h),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  child: Container(
-                    width: double.infinity,
-                    height: 40.h,
-                    decoration: BoxDecoration(
-                      color: Color(0x767680).withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    padding: EdgeInsets.all(2.w),
-                    child: Row(
-                      children: [
-                        _buildPeriodTab('Today', 0),
-                        Container(
-                          margin: EdgeInsets.symmetric(vertical: 7.h),
-                          width: 0.5.w,
-                          height: 36.h,
-                          color: Theme.of(context).dividerColor,
-                        ),
-                        _buildPeriodTab('Weekly', 1),
-                        Container(
-                          margin: EdgeInsets.symmetric(vertical: 7.h),
-                          width: 0.5.w,
-                          height: 36.h,
-                          color: Theme.of(context).dividerColor,
-                        ),
-                        _buildPeriodTab('Monthly', 2),
-                      ],
-                    ),
-                  ),
-                ),
-                SizedBox(height: 20.h),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  child: earningsProvider.isLoading
-                      ? Container(
-                          height: 200.h,
-                          child: Center(
-                            child: CircularProgressIndicator(
-                              color: Color(0xFF2A8359),
-                            ),
-                          ),
-                        )
-                      : GridView.count(
+                      SizedBox(height: 20.h),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20.w),
+                        child: GridView.count(
                           shrinkWrap: true,
                           physics: NeverScrollableScrollPhysics(),
                           crossAxisCount: 2,
@@ -186,42 +230,42 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                             ),
                           ],
                         ),
-                ),
-                SizedBox(height: 20.h),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  child: Container(
-                    width: double.infinity,
-                    height: 40.h,
-                    decoration: BoxDecoration(
-                      color: Color(0x767680).withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    padding: EdgeInsets.all(2.w),
-                    child: Row(
-                      children: [
-                        _buildMainTab('Overview', 0),
-                        Container(
-                          width: 0.5.w,
-                          height: 36.h,
-                          color: Theme.of(context).dividerColor,
+                      ),
+                      SizedBox(height: 20.h),
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20.w),
+                        child: Container(
+                          width: double.infinity,
+                          height: 40.h,
+                          decoration: BoxDecoration(
+                            color: Color(0x767680).withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          padding: EdgeInsets.all(2.w),
+                          child: Row(
+                            children: [
+                              _buildMainTab('Overview', 0),
+                              Container(
+                                width: 0.5.w,
+                                height: 36.h,
+                                color: Theme.of(context).dividerColor,
+                              ),
+                              _buildMainTab('Earnings', 1),
+                            ],
+                          ),
                         ),
-                        _buildMainTab('Earnings', 1),
-                      ],
-                    ),
+                      ),
+                      SizedBox(height: 20.h),
+                      Expanded(
+                        child: SingleChildScrollView(
+                          padding: EdgeInsets.symmetric(horizontal: 20.w),
+                          child: _selectedTabIndex == 0
+                              ? _buildOverviewTab(earningsProvider)
+                              : _buildEarningsTab(earningsProvider),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                SizedBox(height: 20.h),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: EdgeInsets.symmetric(horizontal: 20.w),
-                    child: _selectedTabIndex == 0
-                        ? _buildOverviewTab(earningsProvider)
-                        : _buildEarningsTab(earningsProvider),
-                  ),
-                ),
-              ],
-            ),
           );
         },
       ),
@@ -277,18 +321,6 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
       child: GestureDetector(
         onTap: () {
           setState(() => _selectedTabIndex = index);
-          final earningsProvider = Provider.of<EarningsProvider>(
-            context,
-            listen: false,
-          );
-          final period = earningsProvider.getPeriodFromIndex(
-            _selectedPeriodIndex,
-          );
-          if (index == 0) {
-            earningsProvider.fetchEarningsOverview(period);
-          } else if (index == 1) {
-            earningsProvider.fetchEarningsBreakdown(_selectedPeriodIndex);
-          }
         },
         child: Container(
           height: 38.h,
@@ -313,15 +345,6 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Widget _buildOverviewTab(EarningsProvider earningsProvider) {
-    if (earningsProvider.isLoadingOverview) {
-      return Container(
-        height: 255.h,
-        child: Center(
-          child: CircularProgressIndicator(color: Color(0xFF2A8359)),
-        ),
-      );
-    }
-
     final overview = earningsProvider.weeklyOverview;
     final recentRides = earningsProvider.recentRides;
     final totalEarnings = overview?.totalEarnings ?? 0;
@@ -454,15 +477,6 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
   }
 
   Widget _buildEarningsTab(EarningsProvider earningsProvider) {
-    if (earningsProvider.isLoadingBreakdown) {
-      return Container(
-        height: 255.h,
-        child: Center(
-          child: CircularProgressIndicator(color: Color(0xFF2A8359)),
-        ),
-      );
-    }
-
     final breakdown = earningsProvider.earningsBreakdown;
 
     return Column(

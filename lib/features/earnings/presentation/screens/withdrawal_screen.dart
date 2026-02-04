@@ -125,8 +125,9 @@ class WithdrawalScreenState extends State<WithdrawalScreen> {
                       onTap: () => Navigator.pop(context),
                       child: Image.asset(
                         ConstImages.back,
-                        width: 33.w,
-                        height: 33.h,
+                        width: 40.w,
+                        height: 40.h,
+                        fit: BoxFit.cover,
                       ),
                     ),
                   ],
