@@ -66,8 +66,4 @@ dependencies {
 
     // ✅ Firebase (correct order)
     implementation(platform("com.google.firebase:firebase-bom:34.7.0"))
-    implementation("com.google.firebase:firebase-analytics")
-
-    // ✅ Multidex support
-    implementation("androidx.multidex:multidex:2.0.1")
 }
