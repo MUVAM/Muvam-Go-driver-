@@ -156,7 +156,7 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
       customerReference:
           "user_${DateTime.now().millisecondsSinceEpoch}", // Unique Ref
       productCode: "nin", // Try face verification first
-      flowId: 0,
+      flowId: 1266,
       addressData: {},
       applicantData: applicantData,
       ocrAcceptedDocuments: "",
@@ -231,7 +231,7 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
       customerReference:
           "user_${DateTime.now().millisecondsSinceEpoch}", // Unique Ref
       productCode: "drivers_license", // Try face verification first
-      flowId: 0,
+      flowId: 1266,
       addressData: {},
       applicantData: applicantData,
       ocrAcceptedDocuments: "",
