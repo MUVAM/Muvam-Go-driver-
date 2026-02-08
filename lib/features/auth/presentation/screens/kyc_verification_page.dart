@@ -44,8 +44,8 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
       debugPrint('QoreID Result: $result');
 
       // Check for cancellation or error first based on the provided log format
-      if (result['code'] == 'E_USER_CANCELED' || 
-          result['event'] == 'ERROR_RESULT' || 
+      if (result['code'] == 'E_USER_CANCELED' ||
+          result['event'] == 'ERROR_RESULT' ||
           result['message'] == 'User canceled') {
         CustomFlushbar.showError(
           context: context,
@@ -61,13 +61,13 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
       if (result['status'] == 'success' ||
           (result['data']?['verification'] != null &&
               result['data']?['verification']?['status'] != null)) {
-        
         final productCode = result['data']?['productCode'];
-        
+
         setState(() {
           if (productCode == 'drivers_license') {
             _driversLicenseVerified = true;
-          } else if (productCode == 'nin') { // Assuming 'nin' is for identity verification as per launch params
+          } else if (productCode == 'nin') {
+            // Assuming 'nin' is for identity verification as per launch params
             _identityVerified = true;
           }
         });
@@ -76,10 +76,11 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
         if (_driversLicenseVerified && _identityVerified) {
           _handleSuccess();
         } else {
-             CustomFlushbar.showSuccess(
-              context: context,
-              message: 'Verification successful. Please complete the remaining step.',
-            );
+          CustomFlushbar.showSuccess(
+            context: context,
+            message:
+                'Verification successful. Please complete the remaining step.',
+          );
         }
       } else if (result['status'] == 'error' ||
           result['status'] == 'cancelled') {
@@ -118,11 +119,11 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
     final applicantData = <String, dynamic>{
       'firstName': widget.firstName ?? '',
       'lastName': widget.lastName ?? '',
-      'middleName': '',  // Add middleName field
+      'middleName': '', // Add middleName field
       'email': widget.email ?? '',
-      'gender': '',  // Add gender field
+      'gender': '', // Add gender field
     };
-    
+
     if (widget.phone != null && widget.phone!.isNotEmpty) {
       // Remove any non-digit characters and format properly
       String cleanPhone = widget.phone!.replaceAll(RegExp(r'[^\d+]'), '');
@@ -130,7 +131,7 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
     } else {
       applicantData['phoneNumber'] = '';
     }
-    
+
     if (widget.dob != null && widget.dob!.isNotEmpty) {
       // Convert MM/DD/YYYY to YYYY-MM-DD format if needed
       try {
@@ -150,21 +151,18 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
     debugPrint('QoreID Client ID: $clientId');
     debugPrint('QoreID Product Code: face_verification');
 
-    final data = 
-    
-    QoreidData(
+    final data = QoreidData(
       clientId: clientId,
       customerReference:
           "user_${DateTime.now().millisecondsSinceEpoch}", // Unique Ref
-      productCode:
-          "nin", // Try face verification first
+      productCode: "nin", // Try face verification first
       flowId: 0,
       addressData: {},
       applicantData: applicantData,
       ocrAcceptedDocuments: "",
       identityData: {},
     );
-   
+
     try {
       debugPrint('Launching QoreID SDK...');
       await Qoreidsdk.launchQoreid(data);
@@ -179,18 +177,11 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
     }
   }
 
-
-
-
-
-
-
-
   Future<void> _launchQoreIDdriversLicense() async {
     // TODO: Replace with your actual QoreID Client ID
-    const String clientId = "KBC1C1YDB6ACWN2AB5PK";
+    const String clientId = "NYPPI7J3M2CAROJ4U28O";
 
-    if (clientId != "KBC1C1YDB6ACWN2AB5PK") {
+    if (clientId != "NYPPI7J3M2CAROJ4U28O") {
       CustomFlushbar.showError(
         context: context,
         message: 'QoreID Client ID not configured.',
@@ -203,11 +194,11 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
     final applicantData = <String, dynamic>{
       'firstName': widget.firstName ?? '',
       'lastName': widget.lastName ?? '',
-      'middleName': '',  // Add middleName field
+      'middleName': '', // Add middleName field
       'email': widget.email ?? '',
-      'gender': '',  // Add gender field
+      'gender': '', // Add gender field
     };
-    
+
     if (widget.phone != null && widget.phone!.isNotEmpty) {
       // Remove any non-digit characters and format properly
       String cleanPhone = widget.phone!.replaceAll(RegExp(r'[^\d+]'), '');
@@ -215,7 +206,7 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
     } else {
       applicantData['phoneNumber'] = '';
     }
-    
+
     if (widget.dob != null && widget.dob!.isNotEmpty) {
       // Convert MM/DD/YYYY to YYYY-MM-DD format if needed
       try {
@@ -235,21 +226,18 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
     debugPrint('QoreID Client ID: $clientId');
     debugPrint('QoreID Product Code: face_verification');
 
-    final data = 
-    
-    QoreidData(
+    final data = QoreidData(
       clientId: clientId,
       customerReference:
           "user_${DateTime.now().millisecondsSinceEpoch}", // Unique Ref
-      productCode:
-          "drivers_license", // Try face verification first
+      productCode: "drivers_license", // Try face verification first
       flowId: 0,
       addressData: {},
       applicantData: applicantData,
       ocrAcceptedDocuments: "",
       identityData: {},
     );
-   
+
     try {
       debugPrint('Launching QoreID SDK...');
       await Qoreidsdk.launchQoreid(data);
@@ -263,6 +251,7 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
       );
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -314,7 +303,9 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
                 title: "Driver's License Verification",
                 subtitle:
                     "To process your application, we require valid identification to confirm your eligibility to offer this service.",
-                onTap: _driversLicenseVerified ? () {} : _launchQoreIDdriversLicense,
+                onTap: _driversLicenseVerified
+                    ? () {}
+                    : _launchQoreIDdriversLicense,
                 isActionable: !_driversLicenseVerified,
                 isVerified: _driversLicenseVerified,
               ),
@@ -333,7 +324,8 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
                 onTap: _identityVerified ? () {} : _launchQoreIDIdentity,
                 isActionable: !_identityVerified,
                 isVerified: _identityVerified,
-              ),  Padding(
+              ),
+              Padding(
                 padding: EdgeInsets.symmetric(vertical: 10.h),
                 child: Divider(color: Colors.grey[200], thickness: 1),
               ),
