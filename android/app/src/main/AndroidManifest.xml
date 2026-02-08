@@ -30,10 +30,8 @@
         android:enableOnBackInvokedCallback="true">
         
         <meta-data android:name="com.google.android.geo.API_KEY"
-                   android:value="AIzaSyDT8ZZ6Jkzffaf2Tyhz8QCUinXx1UCE6b4"/>
-        <meta-data
-            android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="FoodHub" />
+           android:value="AIzaSyDT8ZZ6Jkzffaf2Tyhz8QCUinXx1UCE6b4"
+           tools:replace="android:value"/>
         
         <activity
             android:name=".MainActivity"
