@@ -51,6 +51,8 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
           context: context,
           message: result['message'] ?? 'Verification cancelled',
         );
+        // _handleSuccess();
+
         return;
       }
 
@@ -88,6 +90,7 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
           context: context,
           message: 'Verification failed or cancelled. Please try again.',
         );
+        // _handleSuccess();
       }
     });
   }
@@ -256,45 +259,89 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0,
-        leading: GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Padding(
-            padding: EdgeInsets.all(12.w),
-            child: Icon(Icons.arrow_back_ios_new, color: Colors.black),
-          ),
-        ),
-        centerTitle: true,
-        title: Text(
-          'KYC Verification',
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 18.sp,
-            fontWeight: FontWeight.w600,
-            color: Colors.black,
-          ),
-        ),
-      ),
+      // appBar: AppBar(
+      //   backgroundColor: Colors.white,
+      //   elevation: 0,
+      //   leading: GestureDetector(
+      //     onTap: () => Navigator.pop(context),
+      //     child: Padding(
+      //       padding: EdgeInsets.all(12.w),
+      //       child: Icon(Icons.arrow_back, color: Colors.black),
+      //     ),
+      //   ),
+      //   centerTitle: true,
+      //   title: Text(
+      //     'KYC Verification',
+      //     style: TextStyle(
+      //       fontFamily: 'Inter',
+      //       fontSize: 18.sp,
+      //       fontWeight: FontWeight.w600,
+      //       color: Colors.black,
+      //     ),
+      //   ),
+      // ),
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 20.w),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              SizedBox(height: 10.h),
-              Text(
-                'Please submit the following document to verify your profile',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w400,
-                  color: Colors.black,
-                  height: 1.5,
-                ),
+              // SizedBox(height: 10.h),
+              Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        left: 12.w,
+                        // top: 12.h,
+                        bottom: 12.h,
+                      ),
+                      child: Icon(Icons.arrow_back, color: Colors.black),
+                    ),
+                  ),
+                  SizedBox(width: 20.w),
+                  // Spacer(),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      SizedBox(height: 20.h),
+                      Center(
+                        child: Text(
+                          'KYC Verification',
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 18.sp,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.black,
+                          ),
+                        ),
+                      ),
+
+                      Center(
+                        child: Container(
+                          width: 245,
+                          child: Text(
+                            maxLines: 4,
+                            'Please submit the following document to verify your profile',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.black,
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Spacer(),
+                ],
               ),
+
               SizedBox(height: 30.h),
 
               // Tile 1: Driver's License
@@ -312,7 +359,7 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
 
               Padding(
                 padding: EdgeInsets.symmetric(vertical: 10.h),
-                child: Divider(color: Colors.grey[200], thickness: 1),
+                child: Divider(color: Color(0xff808080), thickness: 1),
               ),
 
               // Tile 2: Identity Verification
@@ -327,7 +374,7 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
               ),
               Padding(
                 padding: EdgeInsets.symmetric(vertical: 10.h),
-                child: Divider(color: Colors.grey[200], thickness: 1),
+                child: Divider(color: Color(0xff808080), thickness: 1),
               ),
             ],
           ),
@@ -348,7 +395,7 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12.r),
       child: Container(
-        padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 8.w),
+        padding: EdgeInsets.symmetric(horizontal: 8.w),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12.r),
           // Optional: Add subtle background if actionable
@@ -357,15 +404,19 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Image
+            // Container(
+            // width: 50.w,
+            // height: 50.h,
+            // decoration: BoxDecoration(
+            //   shape: BoxShape.circle,
+            //   color: Color(ConstColors.mainColor).withOpacity(0.1),
+            // ),
+            // padding: EdgeInsets.all(10.w),
             Container(
-              width: 50.w,
-              height: 50.h,
-              // decoration: BoxDecoration(
-              //   shape: BoxShape.circle,
-              //   color: Color(ConstColors.mainColor).withOpacity(0.1),
-              // ),
-              padding: EdgeInsets.all(10.w),
+              margin: EdgeInsets.only(top: 5.h),
               child: Image.asset(
+                height: 16.h,
+                width: 16.w,
                 imagePath,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
@@ -376,7 +427,8 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
                 },
               ),
             ),
-            SizedBox(width: 16.w),
+            // ),
+            SizedBox(width: 8.w),
             // Text Content
             Expanded(
               child: Column(
@@ -416,7 +468,7 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
               )
             else if (isActionable)
               Padding(
-                padding: EdgeInsets.only(left: 8.w, top: 10.h),
+                padding: EdgeInsets.only(left: 8.w, top: 30.h),
                 child: Icon(
                   Icons.arrow_forward_ios,
                   size: 16.sp,

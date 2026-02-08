@@ -104,110 +104,117 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   @override
   Widget build(BuildContext context) {
     final themeManager = Provider.of<ThemeManager>(context);
-    return Scaffold(
-      backgroundColor: themeManager.getBackgroundColor(context),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
-              child: Column(
-                children: [
-                  SizedBox(height: 25.h),
-                  Center(
-                    child: Text(
-                      'Create Account',
-                      style: ConstTextStyles.createAccountTitle.copyWith(
-                        color: themeManager.getTextColor(context),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        backgroundColor: themeManager.getBackgroundColor(context),
+        body: SafeArea(
+          child: Column(
+            children: [
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
+                child: Column(
+                  children: [
+                    SizedBox(height: 25.h),
+                    Center(
+                      child: Text(
+                        'Create Account',
+                        style: ConstTextStyles.createAccountTitle.copyWith(
+                          color: themeManager.getTextColor(context),
+                        ),
                       ),
                     ),
-                  ),
-                  SizedBox(height: 5.h),
-                  Center(
-                    child: Text(
-                      'Please enter your information as it is on \nyour government issued ID',
-                      style: ConstTextStyles.createAccountSubtitle.copyWith(
-                        color: themeManager.getSecondaryTextColor(context),
+                    SizedBox(height: 5.h),
+                    Center(
+                      child: Text(
+                        'Please enter your information as it is on \nyour government issued ID',
+                        style: ConstTextStyles.createAccountSubtitle.copyWith(
+                          color: themeManager.getSecondaryTextColor(context),
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                      textAlign: TextAlign.center,
                     ),
-                  ),
-                  SizedBox(height: 30.h),
-                ],
+                    SizedBox(height: 30.h),
+                  ],
+                ),
               ),
-            ),
-            Expanded(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AccountTextField(
-                        label: 'First name',
-                        controller: firstNameController,
-                        backgroundColor: ConstColors.formFieldColor,
-                        hintText: 'Enter your first name',
-                      ),
-                      SizedBox(height: 20.h),
-                      AccountTextField(
-                        label: 'Middle name',
-                        controller: middleNameController,
-                        backgroundColor: ConstColors.formFieldColor,
-                        hintText: 'Enter your middle name',
-                      ),
-                      SizedBox(height: 20.h),
-                      AccountTextField(
-                        label: 'Last name',
-                        controller: lastNameController,
-                        backgroundColor: ConstColors.formFieldColor,
-                        hintText: 'Enter your last name',
-                      ),
-                      SizedBox(height: 20.h),
-                      AccountTextField(
-                        label: 'Date of birth',
-                        controller: dobController,
-                        backgroundColor: ConstColors.formFieldColor,
-                        isDateField: true,
-                        hintText: 'MM/DD/YYYY',
-                        onTap: () => _selectDate(context, dobController),
-                      ),
-                      SizedBox(height: 20.h),
-                      AccountTextField(
-                        label: 'Email address',
-                        controller: emailController,
-                        backgroundColor: ConstColors.formFieldColor,
-                        hintText: 'Enter your email address',
-                      ),
-                      SizedBox(height: 20.h),
-                      _buildStateField(themeManager),
-                      SizedBox(height: 20.h),
-                      _buildLgaField(themeManager),
-                      SizedBox(height: 20.h),
-                      AccountTextField(
-                        label: 'Home Address',
-                        controller: homeAddressController,
-                        backgroundColor: ConstColors.formFieldColor,
-                        hintText: 'Enter your home address',
-                      ),
-                      SizedBox(height: 20.h),
-                      _buildLocationField(themeManager),
-                      SizedBox(height: 20.h),
-                      AccountTextField(
-                        label: 'Referral code (Optional)',
-                        controller: referralController,
-                        backgroundColor: ConstColors.formFieldColor,
-                        hintText: 'Enter referral code if you have one',
-                      ),
-                      SizedBox(height: 40.h),
-                      _buildContinueButton(),
-                      SizedBox(height: 20.h),
-                    ],
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 20.w),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        AccountTextField(
+                          label: 'First name',
+                          controller: firstNameController,
+                          backgroundColor: ConstColors.formFieldColor,
+                          hintText: 'Enter your first name',
+                        ),
+                        SizedBox(height: 20.h),
+                        AccountTextField(
+                          label: 'Middle name',
+                          controller: middleNameController,
+                          backgroundColor: ConstColors.formFieldColor,
+                          hintText: 'Enter your middle name',
+                        ),
+                        SizedBox(height: 20.h),
+                        AccountTextField(
+                          label: 'Last name',
+                          controller: lastNameController,
+                          backgroundColor: ConstColors.formFieldColor,
+                          hintText: 'Enter your last name',
+                        ),
+                        SizedBox(height: 20.h),
+                        AccountTextField(
+                          label: 'Date of birth',
+                          controller: dobController,
+                          backgroundColor: ConstColors.formFieldColor,
+                          isDateField: true,
+                          hintText: 'MM/DD/YYYY',
+                          onTap: () => _selectDate(context, dobController),
+                        ),
+                        SizedBox(height: 20.h),
+                        AccountTextField(
+                          label: 'Email address',
+                          controller: emailController,
+                          backgroundColor: ConstColors.formFieldColor,
+                          hintText: 'Enter your email address',
+                        ),
+                        SizedBox(height: 20.h),
+                        _buildStateField(themeManager),
+                        SizedBox(height: 20.h),
+                        _buildLgaField(themeManager),
+                        SizedBox(height: 20.h),
+                        AccountTextField(
+                          label: 'Home Address',
+                          controller: homeAddressController,
+                          backgroundColor: ConstColors.formFieldColor,
+                          hintText: 'Enter your home address',
+                        ),
+                        SizedBox(height: 20.h),
+                        _buildLocationField(themeManager),
+                        SizedBox(height: 20.h),
+                        AccountTextField(
+                          label: 'Referral code (Optional)',
+                          controller: referralController,
+                          backgroundColor: ConstColors.formFieldColor,
+                          hintText: 'Enter referral code if you have one',
+                        ),
+                        SizedBox(height: 40.h),
+                        // _buildContinueButton(),
+                        SizedBox(height: 20.h),
+                      ],
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+                child: _buildContinueButton(),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -252,6 +259,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               ),
               GestureDetector(
                 onTap: _getCurrentLocation,
+                behavior: HitTestBehavior.opaque,
+
                 child: Padding(
                   padding: EdgeInsets.only(right: 12.w),
                   child: Icon(
@@ -729,15 +738,14 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
         context,
         MaterialPageRoute(
           builder: (context) =>
-          // TestKyc(title: "",)
-          
-           KycVerificationPage(
-            firstName: firstNameController.text.trim(),
-            lastName: lastNameController.text.trim(),
-            email: emailController.text.trim(),
-            phone: widget.phoneNumber,
-            dob: dobController.text.trim(),
-          ),
+              // TestKyc(title: "",)
+              KycVerificationPage(
+                firstName: firstNameController.text.trim(),
+                lastName: lastNameController.text.trim(),
+                email: emailController.text.trim(),
+                phone: widget.phoneNumber,
+                dob: dobController.text.trim(),
+              ),
         ),
       );
     } else {
