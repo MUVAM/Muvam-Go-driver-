@@ -256,6 +256,10 @@ class _MyAppState extends State<MyApp> {
                   ? ThemeMode.dark
                   : ThemeMode.light,
               home: const ConnectivityWrapper(child: SplashScreen()),
+              routes: {
+                '/home': (context) =>
+                    SplashScreen(), // Replace with your actual home screen
+              },
             );
           },
         );

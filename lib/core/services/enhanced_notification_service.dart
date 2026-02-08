@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:muvam_rider/core/services/fcm_token_service.dart';
 import 'package:muvam_rider/core/services/firebase_config_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
+import 'package:muvam_rider/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vibration/vibration.dart';
 // import 'package:workpal/services/fcmTokenService.dart';
@@ -756,6 +757,12 @@ class EnhancedNotificationService {
           (NotificationResponse notificationResponse) async {
             await triggerVibration();
             // Handle notification tap for deep linking
+
+            MyApp.navigatorKey.currentState?.pushNamedAndRemoveUntil(
+              '/home',
+              (route) => false,
+            );
+
             if (notificationResponse.payload != null) {
               await _handleNotificationTap(notificationResponse.payload!);
             }
@@ -818,6 +825,10 @@ class EnhancedNotificationService {
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
       await triggerVibration();
       // Handle notification tap when app is opened from background
+      MyApp.navigatorKey.currentState?.pushNamedAndRemoveUntil(
+        '/home',
+        (route) => false,
+      );
       if (message.data['postId'] != null) {
         await _handleNotificationTap('postId:${message.data['postId']}');
       }
@@ -826,8 +837,14 @@ class EnhancedNotificationService {
     // Handle notification tap when app is launched from terminated state
     FirebaseMessaging.instance.getInitialMessage().then((
       RemoteMessage? message,
-    ) {
+    ) async {
       if (message != null && message.data['postId'] != null) {
+        await Future.delayed(Duration(seconds: 1));
+
+        MyApp.navigatorKey.currentState?.pushNamedAndRemoveUntil(
+          '/home',
+          (route) => false,
+        );
         _handleNotificationTap('postId:${message.data['postId']}');
       }
     });

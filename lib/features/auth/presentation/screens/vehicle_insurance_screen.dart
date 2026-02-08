@@ -36,7 +36,7 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
         );
 
         await _cameraController!.initialize();
-        
+
         if (mounted) {
           setState(() {
             _isCameraInitialized = true;
@@ -49,7 +49,9 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
   }
 
   Future<void> _captureDocument() async {
-    if (_cameraController == null || !_cameraController!.value.isInitialized || _isCapturing) {
+    if (_cameraController == null ||
+        !_cameraController!.value.isInitialized ||
+        _isCapturing) {
       return;
     }
 
@@ -59,7 +61,7 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
 
     try {
       final XFile image = await _cameraController!.takePicture();
-      
+
       if (mounted) {
         Navigator.pop(context, File(image.path));
       }
@@ -80,7 +82,7 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
   @override
   Widget build(BuildContext context) {
     final themeManager = Provider.of<ThemeManager>(context);
-    
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
@@ -88,13 +90,9 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
           children: [
             // Camera Preview
             if (_isCameraInitialized && _cameraController != null)
-              Positioned.fill(
-                child: CameraPreview(_cameraController!),
-              )
+              Positioned.fill(child: CameraPreview(_cameraController!))
             else
-              Center(
-                child: CircularProgressIndicator(color: Colors.white),
-              ),
+              Center(child: CircularProgressIndicator(color: Colors.white)),
 
             // Top bar with back button and title
             Positioned(
@@ -107,10 +105,7 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.black.withOpacity(0.7),
-                      Colors.transparent,
-                    ],
+                    colors: [Colors.black.withOpacity(0.7), Colors.transparent],
                   ),
                 ),
                 child: Row(
@@ -155,7 +150,10 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
                   ),
                   SizedBox(height: 20.h),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 20.w,
+                      vertical: 10.h,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.6),
                       borderRadius: BorderRadius.circular(8.r),
@@ -186,10 +184,7 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
                   gradient: LinearGradient(
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
-                    colors: [
-                      Colors.black.withOpacity(0.8),
-                      Colors.transparent,
-                    ],
+                    colors: [Colors.black.withOpacity(0.8), Colors.transparent],
                   ),
                 ),
                 child: Column(
@@ -225,10 +220,7 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
                         decoration: BoxDecoration(
                           color: Colors.transparent,
                           shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white,
-                            width: 4,
-                          ),
+                          border: Border.all(color: Colors.white, width: 4),
                         ),
                         child: Center(
                           child: _isCapturing
