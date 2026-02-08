@@ -360,10 +360,10 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
             Container(
               width: 50.w,
               height: 50.h,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color(ConstColors.mainColor).withOpacity(0.1),
-              ),
+              // decoration: BoxDecoration(
+              //   shape: BoxShape.circle,
+              //   color: Color(ConstColors.mainColor).withOpacity(0.1),
+              // ),
               padding: EdgeInsets.all(10.w),
               child: Image.asset(
                 imagePath,
@@ -420,7 +420,7 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
                 child: Icon(
                   Icons.arrow_forward_ios,
                   size: 16.sp,
-                  color: Colors.grey[400],
+                  color: Colors.black,
                 ),
               ),
           ],

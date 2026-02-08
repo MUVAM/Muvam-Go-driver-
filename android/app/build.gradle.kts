@@ -10,7 +10,7 @@ android {
     compileSdk = flutter.compileSdkVersion
 
     // ✅ FIX: Pin stable NDK (avoid llvm-strip crash)
-    ndkVersion = "27.0.12077973"
+    ndkVersion = flutter.ndkVersion
 
     compileOptions {
         // ✅ Required for newer Java APIs

@@ -30,8 +30,10 @@
         android:enableOnBackInvokedCallback="true">
         
         <meta-data android:name="com.google.android.geo.API_KEY"
-           android:value="AIzaSyDT8ZZ6Jkzffaf2Tyhz8QCUinXx1UCE6b4"
-           tools:replace="android:value"/>
+                   android:value="AIzaSyDT8ZZ6Jkzffaf2Tyhz8QCUinXx1UCE6b4"/>
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="FoodHub" />
         
         <activity
             android:name=".MainActivity"
@@ -65,11 +67,7 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-        
-        <!-- Default notification channel -->
-        <meta-data
-            android:name="com.google.firebase.messaging.default_notification_channel_id"
-            android:value="default" />
+                
         
         <!-- Default notification icon -->
         <meta-data
