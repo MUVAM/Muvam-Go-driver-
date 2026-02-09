@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:muvam_rider/core/utils/app_logger.dart';
@@ -54,8 +55,8 @@ class AuthService {
     if (response.statusCode == 200) {
       final result = jsonDecode(response.body);
 
-      AppLogger.log('Response Status Codedjkdhe: ${response.statusCode}');
-      AppLogger.log('Response Bodyuuuuu: ${response.body}');
+      log('Response Status Codedjkdhe: ${response.statusCode}');
+      log('Response Bodyuuuuu: ${response.body}');
 
       // Handle the new token structure
       if (result['token'] != null) {
@@ -91,6 +92,18 @@ class AuthService {
           profilePhoto: user['profile_photo']?.toString(),
         );
       }
+
+      // Save vehicle_submitted status
+      final prefs = await SharedPreferences.getInstance();
+      final vehicleSubmitted = result['vehicle_submitted'] ?? false;
+      await prefs.setBool('vehicle_submitted', vehicleSubmitted);
+
+      AppLogger.log('📊 Backend vehicle_submitted value: $vehicleSubmitted');
+      AppLogger.log('✅ vehicle_submitted saved to SharedPreferences');
+
+      // Verify it was saved
+      final savedValue = prefs.getBool('vehicle_submitted');
+      AppLogger.log('🔍 Immediate verification: $savedValue');
 
       return result;
     } else {

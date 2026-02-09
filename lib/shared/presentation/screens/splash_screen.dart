@@ -136,7 +136,6 @@ class _SplashScreenState extends State<SplashScreen>
 
     if (isFirstTime) {
       AppLogger.log('🆕 First-time user detected');
-      // First-time user: show rider selection screen
       await _markAppAsOpened();
       AppLogger.log('📋 Navigating to Rider Selection Screen');
       Navigator.pushReplacement(
@@ -146,7 +145,7 @@ class _SplashScreenState extends State<SplashScreen>
         ),
       );
     } else {
-      AppLogger.log('👤 Returning user - checking authentication status');
+      AppLogger.log('👤 Returning user - checking saved credentials');
 
       // Check for token and vehicle_submitted status
       final prefs = await SharedPreferences.getInstance();
@@ -156,7 +155,7 @@ class _SplashScreenState extends State<SplashScreen>
       AppLogger.log('🔑 Token exists: ${token != null}');
       AppLogger.log('🚗 Vehicle submitted: $vehicleSubmitted');
 
-      // Both conditions must be met to access the main app
+      // Both must be true to go to main app
       if (token != null && vehicleSubmitted == true) {
         AppLogger.log('✅ Both conditions met - navigating to Main App');
         AppLogger.log('========== AUTHENTICATION SUCCESSFUL ==========\n');
@@ -166,18 +165,9 @@ class _SplashScreenState extends State<SplashScreen>
           MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
         );
       } else {
-        AppLogger.log('⚠️ Conditions not met:');
-        if (token == null) {
-          AppLogger.log('  ❌ Token is missing');
-        }
-        if (vehicleSubmitted == false) {
-          AppLogger.log('  ❌ Vehicle not submitted');
-        }
-
-        AppLogger.log('📋 Navigating to Onboarding Screen (Phone Login)');
+        AppLogger.log('❌ Conditions not met - navigating to Phone Login');
         AppLogger.log('========== REDIRECTED TO LOGIN ==========\n');
 
-        // Show phone number input screen for re-login or completion
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const OnboardingScreen()),

@@ -90,43 +90,32 @@ class ApiService {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         AppLogger.log('✅ SUCCESS: OTP verified');
+        AppLogger.log('Full response: $data');
 
-        // Save token to SharedPreferences
-        if (data['token'] != null) {
-          final tokenData = data['token'];
-          final prefs = await SharedPreferences.getInstance();
+        final prefs = await SharedPreferences.getInstance();
 
-          if (tokenData is Map<String, dynamic>) {
-            // Save access token
-            final accessToken = tokenData['access_token'];
-            if (accessToken != null) {
-              await prefs.setString('auth_token', accessToken);
-              AppLogger.log('✅ Access token saved successfully');
-            }
-
-            // Save refresh token
-            final refreshToken = tokenData['refresh_token'];
-            if (refreshToken != null) {
-              await prefs.setString('refresh_token', refreshToken);
-              AppLogger.log('✅ Refresh token saved successfully');
-            }
-
-            // Save token expiry
-            final expiresIn = tokenData['expires_in'];
-            if (expiresIn != null) {
-              final expiryTime =
-                  DateTime.now().millisecondsSinceEpoch + (expiresIn * 1000);
-              await prefs.setString('token_expiry', expiryTime.toString());
-              AppLogger.log('✅ Token expiry saved successfully');
-            }
-          }
+        // Save access token from token.access_token
+        if (data['token'] != null && data['token']['access_token'] != null) {
+          final accessToken = data['token']['access_token'];
+          await prefs.setString('auth_token', accessToken);
+          AppLogger.log('✅ Access token saved');
         }
 
-        // Save vehicle_submitted status
-        final prefs = await SharedPreferences.getInstance();
+        // Save vehicle_submitted status directly from response
         final vehicleSubmitted = data['vehicle_submitted'] ?? false;
+        AppLogger.log('📊 Backend vehicle_submitted value: $vehicleSubmitted');
         await prefs.setBool('vehicle_submitted', vehicleSubmitted);
-        AppLogger.log('✅ Vehicle submitted status saved: $vehicleSubmitted');
+        AppLogger.log('✅ vehicle_submitted saved: $vehicleSubmitted');
+
+        // Immediately verify it was saved
+        final savedValue = prefs.getBool('vehicle_submitted');
+        AppLogger.log('🔍 Immediate verification read: $savedValue');
+
+        if (savedValue != vehicleSubmitted) {
+          AppLogger.log(
+            '❌ WARNING: Saved value does not match! Expected: $vehicleSubmitted, Got: $savedValue',
+          );
+        }
 
         // Save user data
         if (data['user'] != null) {

@@ -107,19 +107,32 @@ class _OtpScreenState extends State<OtpScreen> {
           ),
         );
       } else {
-        AppLogger.log('👤 Existing user - checking authentication status');
+        AppLogger.log('👤 Existing user - checking vehicle_submitted status');
 
-        // Get token and vehicle_submitted from SharedPreferences
+        // Check vehicle_submitted from SharedPreferences
         final prefs = await SharedPreferences.getInstance();
-        final token = prefs.getString('auth_token');
+
+        // Debug: Show all keys
+        final allKeys = prefs.getKeys();
+        AppLogger.log('🔍 All keys in SharedPreferences: $allKeys');
+
+        // Check if key exists
+        final hasKey = prefs.containsKey('vehicle_submitted');
+        AppLogger.log('🔍 vehicle_submitted key exists: $hasKey');
+
+        // Get raw value
+        final rawValue = prefs.get('vehicle_submitted');
+        AppLogger.log(
+          '🔍 Raw value: $rawValue (type: ${rawValue.runtimeType})',
+        );
+
         final vehicleSubmitted = prefs.getBool('vehicle_submitted') ?? false;
 
-        AppLogger.log('🔑 Token exists: ${token != null}');
-        AppLogger.log('🚗 Vehicle submitted: $vehicleSubmitted');
+        AppLogger.log('🚗 Vehicle submitted (final): $vehicleSubmitted');
 
-        // Both conditions must be met to access the main app
-        if (token != null && vehicleSubmitted == true) {
-          AppLogger.log('✅ Both conditions met - navigating to Main App');
+        // Navigate based on vehicle_submitted
+        if (vehicleSubmitted == true) {
+          AppLogger.log('✅ Vehicle submitted - navigating to Main App');
           AppLogger.log('========== AUTHENTICATION SUCCESSFUL ==========\n');
 
           Navigator.pushAndRemoveUntil(
@@ -128,15 +141,9 @@ class _OtpScreenState extends State<OtpScreen> {
             (route) => false,
           );
         } else {
-          AppLogger.log('⚠️ Conditions not met:');
-          if (token == null) {
-            AppLogger.log('  ❌ Token is missing');
-          }
-          if (vehicleSubmitted == false) {
-            AppLogger.log('  ❌ Vehicle not submitted');
-          }
-
-          AppLogger.log('📋 Navigating to KYC Verification Page');
+          AppLogger.log(
+            '❌ Vehicle not submitted - navigating to KYC Verification',
+          );
 
           // Extract user data from the response
           final userData = authProvider.verifyOtpResponse?['user'];

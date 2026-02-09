@@ -416,16 +416,17 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
       }
 
       final prefs = await SharedPreferences.getInstance();
-      await prefs.clear();
+      await prefs.remove('auth_token');
+      await prefs.remove('vehicle_submitted');
 
-      if (context.mounted) {
+      // if (context.mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
             builder: (context) => const RiderSignupSelectionScreen(),
           ),
           (route) => false,
         );
-      }
+      // }
     } catch (e) {
       AppLogger.log('Error during logout: $e');
       if (context.mounted) {
