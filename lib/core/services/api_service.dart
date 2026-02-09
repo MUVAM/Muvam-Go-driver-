@@ -70,6 +70,7 @@ class ApiService {
     String otp,
   ) async {
     try {
+      AppLogger.log('=== VERIFY OTP DEBUG ===');
       AppLogger.log('Phone: $phoneNumber');
       AppLogger.log('OTP: $otp');
       AppLogger.log('URL: $baseUrl${UrlConstants.verifyOtp}');
@@ -88,18 +89,88 @@ class ApiService {
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        AppLogger.log('SUCCESS: OTP verified');
+        AppLogger.log('✅ SUCCESS: OTP verified');
+
+        // Save token to SharedPreferences
+        if (data['token'] != null) {
+          final tokenData = data['token'];
+          final prefs = await SharedPreferences.getInstance();
+
+          if (tokenData is Map<String, dynamic>) {
+            // Save access token
+            final accessToken = tokenData['access_token'];
+            if (accessToken != null) {
+              await prefs.setString('auth_token', accessToken);
+              AppLogger.log('✅ Access token saved successfully');
+            }
+
+            // Save refresh token
+            final refreshToken = tokenData['refresh_token'];
+            if (refreshToken != null) {
+              await prefs.setString('refresh_token', refreshToken);
+              AppLogger.log('✅ Refresh token saved successfully');
+            }
+
+            // Save token expiry
+            final expiresIn = tokenData['expires_in'];
+            if (expiresIn != null) {
+              final expiryTime =
+                  DateTime.now().millisecondsSinceEpoch + (expiresIn * 1000);
+              await prefs.setString('token_expiry', expiryTime.toString());
+              AppLogger.log('✅ Token expiry saved successfully');
+            }
+          }
+        }
+
+        // Save vehicle_submitted status
+        final prefs = await SharedPreferences.getInstance();
+        final vehicleSubmitted = data['vehicle_submitted'] ?? false;
+        await prefs.setBool('vehicle_submitted', vehicleSubmitted);
+        AppLogger.log('✅ Vehicle submitted status saved: $vehicleSubmitted');
+
+        // Save user data
+        if (data['user'] != null) {
+          final user = data['user'];
+
+          if (user['ID'] != null) {
+            await prefs.setString('user_id', user['ID'].toString());
+          }
+          if (user['first_name'] != null) {
+            await prefs.setString('first_name', user['first_name'].toString());
+          }
+          if (user['last_name'] != null) {
+            await prefs.setString('last_name', user['last_name'].toString());
+          }
+          if (user['Email'] != null) {
+            await prefs.setString('email', user['Email'].toString());
+          }
+          if (user['phone'] != null) {
+            await prefs.setString('phone', user['phone'].toString());
+          }
+          if (user['profile_photo'] != null) {
+            await prefs.setString(
+              'profile_photo',
+              user['profile_photo'].toString(),
+            );
+          }
+          if (user['Role'] != null) {
+            await prefs.setString('user_role', user['Role'].toString());
+          }
+          AppLogger.log('✅ User data saved successfully');
+        }
+
         return {'success': true, 'data': data};
       } else {
-        AppLogger.log('ERROR: OTP verification failed');
+        AppLogger.log('❌ ERROR: OTP verification failed');
         final error = jsonDecode(response.body);
         return {
           'success': false,
           'message': error['message'] ?? error['error'] ?? 'Invalid OTP',
         };
       }
-    } catch (e) {
-      AppLogger.log('VERIFY OTP ERROR: $e');
+    } catch (e, stackTrace) {
+      AppLogger.log('❌ VERIFY OTP ERROR: $e');
+      AppLogger.log('Stack trace: $stackTrace');
       return {'success': false, 'message': 'Network error: $e'};
     } finally {
       AppLogger.log('=== END VERIFY OTP DEBUG ===\n');
@@ -538,14 +609,21 @@ class ApiService {
     }
   }
 
-  // Upload verification documents
+  // Upload verification documents (Driver License only)
   static Future<Map<String, dynamic>> uploadVerificationDocuments({
-    required File driverLicense,
-    required File vehicleRegistration,
-    required File insurance,
+    required File driverLicenseFile,
+    required String driverLicenseNumber,
     required String token,
   }) async {
     try {
+      AppLogger.log(
+        '=== UPLOAD VERIFICATION DOCUMENTS (DRIVER LICENSE) DEBUG ===',
+      );
+      AppLogger.log('URL: $baseUrl/users/verification');
+      AppLogger.log('Token: ${token.substring(0, 20)}...');
+      AppLogger.log('Driver License Number: $driverLicenseNumber');
+      AppLogger.log('Driver License File Path: ${driverLicenseFile.path}');
+
       var request = http.MultipartRequest(
         'POST',
         Uri.parse('$baseUrl/users/verification'),
@@ -553,27 +631,21 @@ class ApiService {
 
       request.headers['Authorization'] = 'Bearer $token';
 
+      // Add driver license number as a field
+      request.fields['driver_license'] = driverLicenseNumber;
+
+      // Add driver license file
       request.files.add(
         await http.MultipartFile.fromPath(
           'driver_license_file',
-          driverLicense.path,
+          driverLicenseFile.path,
         ),
       );
 
-      request.files.add(
-        await http.MultipartFile.fromPath(
-          'vehicle_registration_file',
-          vehicleRegistration.path,
-        ),
-      );
-
-      request.files.add(
-        await http.MultipartFile.fromPath('insurrance_file', insurance.path),
-      );
-
-      AppLogger.log('=== UPLOAD DOCUMENTS DEBUG ===');
-      AppLogger.log('URL: $baseUrl/users/verification');
-      AppLogger.log('Token: $token');
+      AppLogger.log('Request fields: ${request.fields}');
+      AppLogger.log('Request headers: ${request.headers}');
+      AppLogger.log('Files added to request: ${request.files.length}');
+      AppLogger.log('Sending verification request...');
 
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
@@ -582,15 +654,20 @@ class ApiService {
       AppLogger.log('Response Body verification: $responseBody');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
+        AppLogger.log('✅ Driver license verification successful');
         final data = jsonDecode(responseBody);
         return {'success': true, 'data': data};
       } else if (response.statusCode == 413) {
+        AppLogger.log('❌ 413 Request Entity Too Large');
         return {
           'success': false,
           'message':
-              'Files are too large. Please select smaller images (max 2MB each) and try again.',
+              'Driver license file is too large. Please select a smaller image (max 2MB).',
         };
       } else {
+        AppLogger.log(
+          '❌ Verification upload failed with status: ${response.statusCode}',
+        );
         try {
           final error = jsonDecode(responseBody);
           return {
@@ -604,11 +681,12 @@ class ApiService {
           };
         }
       }
-    } catch (e) {
-      AppLogger.log('UPLOAD ERROR: $e');
+    } catch (e, stackTrace) {
+      AppLogger.log('❌ UPLOAD VERIFICATION ERROR: $e');
+      AppLogger.log('Stack trace: $stackTrace');
       return {'success': false, 'message': 'Network error: $e'};
     } finally {
-      AppLogger.log('=== END UPLOAD DOCUMENTS DEBUG ===\n');
+      AppLogger.log('=== END UPLOAD VERIFICATION DOCUMENTS DEBUG ===\n');
     }
   }
 

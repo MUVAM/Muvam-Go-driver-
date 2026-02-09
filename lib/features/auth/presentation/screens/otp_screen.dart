@@ -15,6 +15,7 @@ import 'package:pinput/pinput.dart';
 import 'dart:async';
 import 'package:muvam_rider/core/services/api_service.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/upload_document_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'create_account_screen.dart';
 
 class OtpScreen extends StatefulWidget {
@@ -77,8 +78,13 @@ class _OtpScreenState extends State<OtpScreen> {
     setState(() => _isLoading = false);
 
     if (success) {
+      AppLogger.log('\n🔐 ========== POST-OTP VERIFICATION FLOW ==========');
+
       final userRole = authProvider.verifyOtpResponse?['user']?['Role'];
+      AppLogger.log('📋 User Role: $userRole');
+
       if (userRole != null && userRole != 'driver') {
+        AppLogger.log('❌ Invalid role: User is not a driver');
         CustomFlushbar.showError(
           context: context,
           message:
@@ -88,6 +94,9 @@ class _OtpScreenState extends State<OtpScreen> {
       }
 
       if (authProvider.isNewUser) {
+        AppLogger.log(
+          '🆕 New user detected - navigating to Create Account Screen',
+        );
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -98,53 +107,60 @@ class _OtpScreenState extends State<OtpScreen> {
           ),
         );
       } else {
-AppLogger.log("THIS IS THE RERSPONSE ${authProvider.verifyOtpResponse.toString()}");        // Check if vehicle documents are submitted
-        final vehicleSubmitted = 
-            authProvider.verifyOtpResponse?['user']?['vehicle_submitted'] ?? 
-            authProvider.verifyOtpResponse?['vehicle_submitted'] ?? 
-            false;
-            
-        if (vehicleSubmitted == true) {
+        AppLogger.log('👤 Existing user - checking authentication status');
+
+        // Get token and vehicle_submitted from SharedPreferences
+        final prefs = await SharedPreferences.getInstance();
+        final token = prefs.getString('auth_token');
+        final vehicleSubmitted = prefs.getBool('vehicle_submitted') ?? false;
+
+        AppLogger.log('🔑 Token exists: ${token != null}');
+        AppLogger.log('🚗 Vehicle submitted: $vehicleSubmitted');
+
+        // Both conditions must be met to access the main app
+        if (token != null && vehicleSubmitted == true) {
+          AppLogger.log('✅ Both conditions met - navigating to Main App');
+          AppLogger.log('========== AUTHENTICATION SUCCESSFUL ==========\n');
+
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => MainNavigationScreen()),
             (route) => false,
           );
         } else {
-          // Get token to pass to KycVerificationScreen
-          final token = await ApiService.getToken();
-          if (token != null) {
-            // Extract user data from the response
-            final userData = authProvider.verifyOtpResponse?['user'];
-            
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                
-                // TestKyc(title: "",
-                  
-                // )
-                
-                 KycVerificationPage(
-                  firstName: userData?['first_name'],
-                  lastName: userData?['last_name'],
-                  email: userData?['Email'],
-                  phone: widget.phoneNumber,
-                  dob: userData?['date_of_birth'],
-                ),
-              ),
-            );
-          } else {
-             // Fallback if token not found (should be rare as login just succeeded)
-             CustomFlushbar.showError(
-               context: context,
-               message: 'Authentication error. Please try again.',
-             );
+          AppLogger.log('⚠️ Conditions not met:');
+          if (token == null) {
+            AppLogger.log('  ❌ Token is missing');
           }
+          if (vehicleSubmitted == false) {
+            AppLogger.log('  ❌ Vehicle not submitted');
+          }
+
+          AppLogger.log('📋 Navigating to KYC Verification Page');
+
+          // Extract user data from the response
+          final userData = authProvider.verifyOtpResponse?['user'];
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => KycVerificationPage(
+                firstName: userData?['first_name'],
+                lastName: userData?['last_name'],
+                email: userData?['Email'],
+                phone: widget.phoneNumber,
+                dob: userData?['date_of_birth'],
+              ),
+            ),
+          );
+
+          AppLogger.log(
+            '========== REDIRECTED TO KYC VERIFICATION ==========\n',
+          );
         }
       }
     } else {
+      AppLogger.log('❌ OTP verification failed');
       CustomFlushbar.showError(
         context: context,
         message: authProvider.errorMessage ?? 'Invalid OTP',

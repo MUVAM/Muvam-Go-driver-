@@ -45,7 +45,7 @@ class AccountTextField extends StatelessWidget {
                   controller: controller,
                   readOnly: isDateField,
                   obscureText: isPassword,
-                  textAlign: TextAlign.center,
+                  textAlign: TextAlign.left,
                   style: ConstTextStyles.inputText,
                   textCapitalization: TextCapitalization.words,
                   textAlignVertical: TextAlignVertical.center,

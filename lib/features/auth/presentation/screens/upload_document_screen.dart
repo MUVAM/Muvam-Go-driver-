@@ -16,6 +16,7 @@ import 'package:muvam_rider/features/auth/presentation/screens/vehicle_photos_sc
 
 import 'package:muvam_rider/core/services/api_service.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/document_verification_success_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class KycVerificationScreen extends StatefulWidget {
   final String token;
@@ -67,9 +68,7 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
   Future<void> _navigateToInsuranceScreen() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const VehicleInsuranceScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const VehicleInsuranceScreen()),
     );
     if (result != null && result is File) {
       setState(() {
@@ -95,9 +94,7 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
   Future<void> _navigateToVehiclePhotosScreen() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const VehiclePhotosScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const VehiclePhotosScreen()),
     );
     if (result != null && result is List<File>) {
       setState(() {
@@ -107,9 +104,22 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
   }
 
   Future<void> _uploadDocuments() async {
+    AppLogger.log('\n🚀 ========== UPLOAD DOCUMENTS BUTTON TAPPED ==========');
+    AppLogger.log(
+      '📋 Current Screen: Upload Documents Screen (KycVerificationScreen)',
+    );
+    AppLogger.log('📋 Step 1: Validating uploaded documents...');
+
     if (vehicleRegistration == null ||
         insurance == null ||
         vehiclePhotos.length < 3) {
+      AppLogger.log('❌ Validation failed: Missing required documents');
+      AppLogger.log(
+        'Vehicle Registration: ${vehicleRegistration != null ? "✅" : "❌"}',
+      );
+      AppLogger.log('Insurance: ${insurance != null ? "✅" : "❌"}');
+      AppLogger.log('Vehicle Photos: ${vehiclePhotos.length}/3');
+
       CustomFlushbar.showInfo(
         context: context,
         message: 'Please upload all required documents',
@@ -117,9 +127,25 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
       return;
     }
 
+    AppLogger.log('✅ All documents validated successfully');
+    AppLogger.log('📝 Vehicle Registration: ${vehicleRegistration!.path}');
+    AppLogger.log('📝 Insurance: ${insurance!.path}');
+    AppLogger.log('📝 Vehicle Photos: ${vehiclePhotos.length} photos');
+
     setState(() => _isLoading = true);
 
     try {
+      AppLogger.log('\n📋 Step 2: Calling registerVehicle endpoint...');
+      AppLogger.log('🌐 Endpoint: /rides/vehicle');
+      AppLogger.log('📤 Uploading vehicle information and documents...');
+      AppLogger.log('📦 Car Make: ${widget.carMake}');
+      AppLogger.log('📦 Car Model: ${widget.carModel}');
+      AppLogger.log('📦 Car Year: ${widget.carYear}');
+      AppLogger.log('📦 Seats: ${widget.carSeats}');
+      AppLogger.log('📦 License Plate: ${widget.licensePlate}');
+      AppLogger.log('📦 Color: ${widget.carColor}');
+      AppLogger.log('📦 AC Enabled: ${widget.isAcEnabled}');
+
       final result = await ApiService.registerVehicle(
         make: widget.carMake,
         modelType: widget.carModel,
@@ -135,9 +161,28 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
         ac: widget.isAcEnabled,
       );
 
-      if (!mounted) return;
+      AppLogger.log('\n📥 Vehicle Registration API Response received');
+      AppLogger.log('Response: $result');
+
+      if (!mounted) {
+        AppLogger.log('⚠️ Widget unmounted, stopping flow');
+        return;
+      }
 
       if (result['success'] == true) {
+        AppLogger.log('✅ Vehicle registration SUCCESSFUL!');
+
+        // Update vehicle_submitted status in SharedPreferences
+        AppLogger.log(
+          '💾 Saving vehicle_submitted status to SharedPreferences...',
+        );
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('vehicle_submitted', true);
+        AppLogger.log('✅ vehicle_submitted status saved: true');
+
+        AppLogger.log('\n📋 Step 3: Navigating to Success Screen...');
+        AppLogger.log('🎯 Next screen: DocumentVerificationSuccessScreen');
+
         // Navigate to success screen
         Navigator.pushReplacement(
           context,
@@ -145,18 +190,34 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
             builder: (context) => const DocumentVerificationSuccessScreen(),
           ),
         );
+
+        AppLogger.log('✅ Navigation to Success Screen successful');
+        AppLogger.log(
+          '========== VEHICLE REGISTRATION FLOW COMPLETE ==========\n',
+        );
       } else {
+        AppLogger.log('❌ Vehicle registration FAILED');
         String errorMessage = result['message'] ?? 'Registration failed';
-        if (errorMessage.contains('413') || errorMessage.contains('Too Large')) {
+        if (errorMessage.contains('413') ||
+            errorMessage.contains('Too Large')) {
           errorMessage = 'Images are too large. Please select smaller images.';
         }
+        AppLogger.log('Error message: $errorMessage');
+
         CustomFlushbar.showError(context: context, message: errorMessage);
       }
-    } catch (e) {
-      CustomFlushbar.showError(context: context, message: 'Error: $e');
+    } catch (e, stackTrace) {
+      AppLogger.log('❌ CRITICAL ERROR in upload documents flow');
+      AppLogger.log('Error: $e');
+      AppLogger.log('Stack trace: $stackTrace');
+
+      if (mounted) {
+        CustomFlushbar.showError(context: context, message: 'Error: $e');
+      }
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
+        AppLogger.log('🔄 Loading state reset');
       }
     }
   }

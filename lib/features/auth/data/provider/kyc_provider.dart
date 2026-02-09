@@ -22,9 +22,8 @@ class KycProvider with ChangeNotifier {
   }
 
   Future<bool> uploadDocuments({
-    required File driverLicense,
-    required File vehicleRegistration,
-    required File insurance,
+    required File driverLicenseFile,
+    required String driverLicenseNumber,
     required String token,
   }) async {
     _setLoading(true);
@@ -32,9 +31,8 @@ class KycProvider with ChangeNotifier {
 
     try {
       final result = await ApiService.uploadVerificationDocuments(
-        driverLicense: driverLicense,
-        vehicleRegistration: vehicleRegistration,
-        insurance: insurance,
+        driverLicenseFile: driverLicenseFile,
+        driverLicenseNumber: driverLicenseNumber,
         token: token,
       );
 
