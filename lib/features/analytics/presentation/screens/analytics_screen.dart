@@ -246,6 +246,7 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
                             children: [
                               _buildMainTab('Overview', 0),
                               Container(
+                                margin: EdgeInsets.symmetric(vertical: 7.h),
                                 width: 0.5.w,
                                 height: 36.h,
                                 color: Theme.of(context).dividerColor,
@@ -304,8 +305,8 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
               text,
               style: TextStyle(
                 fontFamily: 'Inter',
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w500,
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w600,
                 color: isSelected ? Colors.white : Color(0xFFB1B1B1),
               ),
             ),
@@ -333,8 +334,8 @@ class AnalyticsScreenState extends State<AnalyticsScreen> {
               text,
               style: TextStyle(
                 fontFamily: 'Inter',
-                fontSize: 12.sp,
-                fontWeight: FontWeight.w500,
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w600,
                 color: isSelected ? Colors.white : Color(0xFFB1B1B1),
               ),
             ),

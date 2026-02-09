@@ -50,17 +50,9 @@ class ActivitiesScreenState extends State<ActivitiesScreen> {
               child: Row(
                 children: [
                   _buildTabItem('Orders', 0),
-                  Container(
-                    width: 0.5.w,
-                    height: 28.h,
-                    color: Theme.of(context).dividerColor,
-                  ),
+                  _buildDivider(0), // Divider between Orders and Active
                   _buildTabItem('Active', 1),
-                  Container(
-                    width: 0.5.w,
-                    height: 28.h,
-                    color: Theme.of(context).dividerColor,
-                  ),
+                  _buildDivider(1), // Divider between Active and History
                   _buildTabItem('History', 2),
                 ],
               ),
@@ -78,6 +70,23 @@ class ActivitiesScreenState extends State<ActivitiesScreen> {
     );
   }
 
+  Widget _buildDivider(int dividerIndex) {
+    // Hide divider if the tab before it (dividerIndex) or after it (dividerIndex + 1) is selected
+    final bool shouldHide =
+        _selectedTabIndex == dividerIndex ||
+        _selectedTabIndex == dividerIndex + 1;
+
+    return Opacity(
+      opacity: shouldHide ? 0.0 : 1.0,
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: 7.h),
+        width: 0.5.w,
+        height: 18.h,
+        color: Theme.of(context).dividerColor,
+      ),
+    );
+  }
+
   Widget _buildTabItem(String text, int index) {
     final isSelected = _selectedTabIndex == index;
     return Expanded(
@@ -89,9 +98,6 @@ class ActivitiesScreenState extends State<ActivitiesScreen> {
           decoration: BoxDecoration(
             color: isSelected ? Colors.white : Colors.transparent,
             borderRadius: BorderRadius.circular(7.r),
-            border: isSelected
-                ? Border.all(color: Theme.of(context).dividerColor, width: 0.5)
-                : null,
           ),
           child: Center(
             child: Text(
