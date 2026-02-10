@@ -17,6 +17,7 @@ import 'package:muvam_rider/features/referral/presentation/screens/referral_scre
 import 'package:muvam_rider/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:muvam_rider/features/support/presentation/screens/faq_screen.dart';
 import 'package:muvam_rider/features/support/presentation/screens/about_us_screen.dart';
+import 'package:muvam_rider/shared/presentation/screens/onboarding_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'drawer_item_widget.dart';
@@ -422,7 +423,7 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
       // if (context.mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
-            builder: (context) => const RiderSignupSelectionScreen(),
+            builder: (context) => const OnboardingScreen(),
           ),
           (route) => false,
         );
@@ -432,7 +433,7 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
       if (context.mounted) {
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
-            builder: (context) => const RiderSignupSelectionScreen(),
+            builder: (context) => const OnboardingScreen(),
           ),
           (route) => false,
         );

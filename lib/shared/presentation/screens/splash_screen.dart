@@ -135,9 +135,13 @@ class _SplashScreenState extends State<SplashScreen>
     AppLogger.log('📱 First time user: $isFirstTime');
 
     if (isFirstTime) {
-      AppLogger.log('🆕 First-time user detected');
+
+      // AppLogger.log('🆕 First-time user detected');
+      
       await _markAppAsOpened();
-      AppLogger.log('📋 Navigating to Rider Selection Screen');
+
+      // AppLogger.log('📋 Navigating to Rider Selection Screen');
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(

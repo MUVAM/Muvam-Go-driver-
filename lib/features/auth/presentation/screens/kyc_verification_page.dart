@@ -51,7 +51,7 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
           context: context,
           message: result['message'] ?? 'Verification cancelled',
         );
-        // _handleSuccess();
+        _handleSuccess();
 
         return;
       }
@@ -90,7 +90,7 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
           context: context,
           message: 'Verification failed or cancelled. Please try again.',
         );
-        // _handleSuccess();
+        _handleSuccess();
       }
     });
   }

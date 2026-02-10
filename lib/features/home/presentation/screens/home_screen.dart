@@ -35,6 +35,7 @@ import 'package:muvam_rider/features/home/presentation/widgets/driver_app_drawer
 import 'package:muvam_rider/features/home/presentation/widgets/ride_info_widget.dart';
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
 import 'package:muvam_rider/features/trips/presentation/screen/history_completed_screen.dart';
+import 'package:muvam_rider/shared/presentation/screens/onboarding_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -227,7 +228,7 @@ class _HomeScreenState extends State<HomeScreen> {
       AppLogger.log('🔒 Session expired, redirecting to login...');
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => RiderSignupSelectionScreen()),
+        MaterialPageRoute(builder: (context) => OnboardingScreen()),
         (route) => false,
       );
       return;
@@ -481,7 +482,7 @@ class _HomeScreenState extends State<HomeScreen> {
         timer.cancel();
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => RiderSignupSelectionScreen()),
+          MaterialPageRoute(builder: (context) => OnboardingScreen()),
           (route) => false,
         );
       }
@@ -608,7 +609,7 @@ class _HomeScreenState extends State<HomeScreen> {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(
-              builder: (context) => RiderSignupSelectionScreen(),
+              builder: (context) => OnboardingScreen(),
             ),
             (route) => false,
           );
