@@ -4699,12 +4699,13 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
       }
     }
 
-    return Column(
+    return Column(                      mainAxisSize: MainAxisSize.min,
+
       children: [
         if (  _rideStatus != 'completed')
           
          Align(alignment:Alignment.topRight,
-           child: Container(margin: EdgeInsets.only(right:5.w),
+           child: Container(margin: EdgeInsets.only(right:20.w, bottom:20.h),
              child: GestureDetector(
                   onTap: _openGoogleMaps,
                   child: Container(
