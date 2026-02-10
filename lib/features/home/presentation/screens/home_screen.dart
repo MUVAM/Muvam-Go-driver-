@@ -608,9 +608,7 @@ class _HomeScreenState extends State<HomeScreen> {
         if (mounted) {
           Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(
-              builder: (context) => OnboardingScreen(),
-            ),
+            MaterialPageRoute(builder: (context) => OnboardingScreen()),
             (route) => false,
           );
         }
@@ -1365,69 +1363,7 @@ class _HomeScreenState extends State<HomeScreen> {
               _buildRideRequestSheet(),
 
             // Navigation widget positioned on top of the ride sheet
-            if (_activeRide != null && _activeRide!['Status'] != 'completed')
-              Positioned(
-                bottom: 450.h, // Position it above the bottom sheet
-                right: 20.w,
-                child: GestureDetector(
-                  onTap: _openGoogleMaps,
-                  child: Container(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 12.w,
-                      vertical: 8.h,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Color(ConstColors.mainColor).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8.r),
-                      border: Border.all(
-                        color: Color(ConstColors.mainColor),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.navigation,
-                          color: Color(ConstColors.mainColor),
-                          size: 20.sp,
-                        ),
-                        SizedBox(width: 8.w),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              'Navigation',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12.sp,
-                                color: Color(ConstColors.mainColor),
-                              ),
-                            ),
-                            Text(
-                              'Open in map',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontWeight: FontWeight.w400,
-                                fontSize: 10.sp,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(width: 4.w),
-                        Icon(
-                          Icons.arrow_forward_ios,
-                          color: Color(ConstColors.mainColor),
-                          size: 12.sp,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+
             // Full-screen incoming call overlay
           ],
         ),
@@ -3891,48 +3827,58 @@ class _HomeScreenState extends State<HomeScreen> {
                 // ETA Timer and "New Order" Text (Right)
                 Row(
                   children: [
-                    Stack(
-                      children: [
-                        Container(
-                          width: 60.w,
-                          height: 60.h,
-                          decoration: BoxDecoration(
-                            color: Color(ConstColors.mainColor),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                eta.replaceAll(' min', ''),
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.w600,
+                    SizedBox(
+                      width: 60.w,
+                      height: 60.h,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Inner circle with ETA time
+                          Container(
+                            width: 60.w,
+                            height: 60.h,
+                            decoration: BoxDecoration(
+                              color: Color(ConstColors.mainColor),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  eta.replaceAll(' min', ''),
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                'min',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10.sp,
-                                  fontWeight: FontWeight.w400,
+                                Text(
+                                  'min',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 10.sp,
+                                    fontWeight: FontWeight.w400,
+                                  ),
                                 ),
+                              ],
+                            ),
+                          ),
+                          // Rotating white arc indicator
+                          Container(
+                            margin: EdgeInsets.all(8),
+                            width: 60.w,
+                            height: 60.h,
+                            child: CircularProgressIndicator(
+                              // value: 0.25, // Shows only a quarter arc
+                              strokeWidth: 2.0,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
                               ),
-                            ],
+                              backgroundColor: Colors.transparent,
+                            ),
                           ),
-                        ),
-                        Positioned(
-                          top: 0,
-                          left: 11.w,
-                          child: Image.asset(
-                            'assets/images/whiteline.png',
-                            width: 20.w,
-                            height: 20.h,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     SizedBox(width: 15.w),
                     Text(
@@ -4671,57 +4617,6 @@ class _HomeScreenState extends State<HomeScreen> {
       );
     }
   }
-
-  Future<void> _openGoogleMaps() async {
-    try {
-      if (_activeRide == null) {
-        CustomFlushbar.showError(context: context, message: 'No active ride');
-        return;
-      }
-
-      // Determine which location to navigate to based on ride status
-      String? destinationAddress;
-      final rideStatus = _activeRide!['Status'] ?? 'accepted';
-
-      if (rideStatus == 'started') {
-        // If ride has started, navigate to destination
-        destinationAddress = _activeRide!['DestAddress'];
-      } else {
-        // If ride not started (accepted or arrived), navigate to pickup
-        destinationAddress = _activeRide!['PickupAddress'];
-      }
-
-      if (destinationAddress == null || destinationAddress.isEmpty) {
-        CustomFlushbar.showError(
-          context: context,
-          message: 'Location address not available',
-        );
-        return;
-      }
-
-      // Create Google Maps URL with the destination address
-      final encodedAddress = Uri.encodeComponent(destinationAddress);
-      final url =
-          'https://www.google.com/maps/search/?api=1&query=$encodedAddress';
-
-      final uri = Uri.parse(url);
-
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri, mode: LaunchMode.externalApplication);
-      } else {
-        CustomFlushbar.showError(
-          context: context,
-          message: 'Could not open Google Maps',
-        );
-      }
-    } catch (e) {
-      AppLogger.log('Error opening Google Maps: $e');
-      CustomFlushbar.showError(
-        context: context,
-        message: 'Failed to open Google Maps',
-      );
-    }
-  }
 }
 
 class _RideAcceptedSheet extends StatefulWidget {
@@ -4758,230 +4653,346 @@ class _RideAcceptedSheetState extends State<_RideAcceptedSheet> {
     final passengerPhone = passenger['phone'] ?? '';
     final String passengerID = (passenger['ID'] ?? 1).toString();
 
-    return Container(
-      padding: EdgeInsets.all(20.w),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
-      ),
-      child: Stack(
-        children: [
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 69.w,
-                height: 5.h,
-                margin: EdgeInsets.only(bottom: 20.h),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(2.5.r),
-                ),
-              ),
-              if (_rideStatus == 'completed')
-                _buildCompletedContent(passengerName)
-              else
-                _buildActiveRideContent(
-                  passenger,
-                  tip,
-                  waitFee,
-                  passengerID,
-                  passengerName,
-                  passengerPhone,
-                ),
-              if (_rideStatus == 'started')
-                Column(
-                  children: [
-                    Container(
-                      width: 353.w,
-                      height: 48.h,
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(25.r),
-                      ),
-                      child: Stack(
-                        children: [
-                          Positioned(
-                            left: 4.w + (_sliderValue * (353.w - 40.w)),
-                            top: 8.h,
-                            child: GestureDetector(
-                              onPanUpdate: (details) {
-                                setState(() {
-                                  _sliderValue =
-                                      ((details.localPosition.dx - 4.w) /
-                                              (353.w - 40.w))
-                                          .clamp(0.0, 1.0);
-                                });
-                              },
-                              onPanEnd: (details) {
-                                if (_sliderValue >= 0.8) {
-                                  _completeRide();
-                                } else {
-                                  setState(() {
-                                    _sliderValue = 0.0;
-                                  });
-                                }
-                              },
-                              child: Container(
-                                margin: EdgeInsets.only(right: 10.w),
-                                width: 32.w,
-                                height: 32.h,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.arrow_forward_ios,
-                                  size: 16.sp,
-                                  color: Colors.red,
-                                ),
-                              ),
-                            ),
-                          ),
-                          Center(
-                            child: Text(
-                              _isCompleted ? 'Trip ended' : 'End trip',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+    Future<void> _openGoogleMaps() async {
+      try {
+        // Determine which location to navigate to based on ride status
+        String? destinationAddress;
+        final rideStatus = _rideStatus ?? 'accepted';
+
+        if (rideStatus == 'started') {
+          // If ride has started, navigate to destination
+          destinationAddress = widget.ride['DestAddress'];
+        } else {
+          // If ride not started (accepted or arrived), navigate to pickup
+          destinationAddress = widget.ride['PickupAddress'];
+        }
+
+        if (destinationAddress == null || destinationAddress.isEmpty) {
+          CustomFlushbar.showError(
+            context: context,
+            message: 'Location address not available',
+          );
+          return;
+        }
+
+        // Create Google Maps URL with the destination address
+        final encodedAddress = Uri.encodeComponent(destinationAddress);
+        final url =
+            'https://www.google.com/maps/search/?api=1&query=$encodedAddress';
+
+        final uri = Uri.parse(url);
+
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } else {
+          CustomFlushbar.showError(
+            context: context,
+            message: 'Could not open Google Maps',
+          );
+        }
+      } catch (e) {
+        AppLogger.log('Error opening Google Maps: $e');
+        CustomFlushbar.showError(
+          context: context,
+          message: 'Failed to open Google Maps',
+        );
+      }
+    }
+
+    return Column(
+      children: [
+        if (  _rideStatus != 'completed')
+          
+         Align(alignment:Alignment.topRight,
+           child: Container(margin: EdgeInsets.only(right:5.w),
+             child: GestureDetector(
+                  onTap: _openGoogleMaps,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 8.h),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(8.r),
+                      // border: Border.all(
+                      //   color: Color(ConstColors.mainColor),
+                      //   width: 1,
+                      // ),
                     ),
-                    SizedBox(height: 10.h),
-                    GestureDetector(
-                      onTap: () => _handleEmergencySOS(),
-                      child: Text(
-                        'Emergency Situation?',
-                        style: TextStyle(
-                          color: Color(ConstColors.mainColor),
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w500,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.navigation,
+                          color: Colors.black,
+                          size: 20.sp,
                         ),
-                      ),
-                    ),
-                  ],
-                )
-              else
-                Column(
-                  children: [
-                    Container(
-                      width: 353.w,
-                      height: 48.h,
-                      decoration: BoxDecoration(
-                        color: _showGreenSlider
-                            ? Color(ConstColors.mainColor)
-                            : (_rideStatus == 'arrived' && !_showGreenSlider
-                                  ? Color(0xFFB1B1B1)
-                                  : Color(0xFFB1B1B1)),
-                        borderRadius: BorderRadius.circular(25.r),
-                      ),
-                      child: Stack(
-                        children: [
-                          Positioned(
-                            left: 4.w + (_sliderValue * (353.w - 40.w)),
-                            top: 8.h,
-                            child: GestureDetector(
-                              onPanUpdate: (details) {
-                                setState(() {
-                                  _sliderValue =
-                                      ((details.localPosition.dx - 4.w) /
-                                              (353.w - 40.w))
-                                          .clamp(0.0, 1.0);
-                                });
-                              },
-                              onPanEnd: (details) {
-                                if (_sliderValue >= 0.8) {
-                                  if (_rideStatus == 'arrived') {
-                                    _startRide();
-                                  } else {
-                                    _markAsArrived(int.parse(passengerID));
-                                  }
-                                } else {
-                                  setState(() {
-                                    _sliderValue = 0.0;
-                                  });
-                                }
-                              },
-                              child: Container(
-                                margin: EdgeInsets.only(
-                                  left: 10.w,
-                                  right: 10.w,
-                                ),
-                                width: 32.w,
-                                height: 32.h,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  Icons.arrow_forward_ios,
-                                  size: 16.sp,
-                                  color: _showGreenSlider
-                                      ? Color(ConstColors.mainColor)
-                                      : Color(0xFFB1B1B1),
-                                ),
-                              ),
-                            ),
-                          ),
-                          Center(
-                            child: Text(
-                              _showGreenSlider
-                                  ? 'Arrived!'
-                                  : (_rideStatus == 'arrived'
-                                        ? (_isStarted
-                                              ? 'Ride started'
-                                              : 'Swipe to start')
-                                        : 'Slide to mark as arrived'),
+                        SizedBox(width: 8.w),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Navigation',
                               style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w600,
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w700,
+                                fontSize: 12.sp,
+                                color: Colors.black,
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (_rideStatus != 'started' && _rideStatus != 'completed')
-                      Column(
-                        children: [
-                          SizedBox(height: 20.h),
-                          GestureDetector(
-                            onTap: _showCancelDialog,
-                            child: Container(
-                              width: 353.w,
-                              height: 47.h,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(8.r),
-                                border: Border.all(color: Colors.red, width: 1),
+                            Text(
+                              'Open in map',
+                              style: TextStyle(
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w400,
+                                fontSize: 10.sp,
+                                color: Colors.grey[600],
                               ),
-                              padding: EdgeInsets.all(10.w),
-                              child: Center(
+                            ),
+                          ],
+                        ),
+                        SizedBox(width: 4.w),
+                        Icon(
+                          Icons.arrow_forward_ios,
+                          color: Colors.black,
+                          size: 12.sp,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+           ),
+         ),
+          
+        Container(
+          padding: EdgeInsets.all(20.w),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+          ),
+          child: Stack(
+            children: [
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 69.w,
+                    height: 5.h,
+                    margin: EdgeInsets.only(bottom: 20.h),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade300,
+                      borderRadius: BorderRadius.circular(2.5.r),
+                    ),
+                  ),
+                  if (_rideStatus == 'completed')
+                    _buildCompletedContent(passengerName)
+                  else
+                    _buildActiveRideContent(
+                      passenger,
+                      tip,
+                      waitFee,
+                      passengerID,
+                      passengerName,
+                      passengerPhone,
+                    ),
+                  if (_rideStatus == 'started')
+                    Column(
+                      children: [
+                        Container(
+                          width: 353.w,
+                          height: 48.h,
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(25.r),
+                          ),
+                          child: Stack(
+                            children: [
+                              Positioned(
+                                left: 4.w + (_sliderValue * (353.w - 40.w)),
+                                top: 8.h,
+                                child: GestureDetector(
+                                  onPanUpdate: (details) {
+                                    setState(() {
+                                      _sliderValue =
+                                          ((details.localPosition.dx - 4.w) /
+                                                  (353.w - 40.w))
+                                              .clamp(0.0, 1.0);
+                                    });
+                                  },
+                                  onPanEnd: (details) {
+                                    if (_sliderValue >= 0.8) {
+                                      _completeRide();
+                                    } else {
+                                      setState(() {
+                                        _sliderValue = 0.0;
+                                      });
+                                    }
+                                  },
+                                  child: Container(
+                                    margin: EdgeInsets.only(right: 10.w),
+                                    width: 32.w,
+                                    height: 32.h,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 16.sp,
+                                      color: Colors.red,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Center(
                                 child: Text(
-                                  'Cancel ride',
+                                  _isCompleted ? 'Trip ended' : 'End trip',
                                   style: TextStyle(
-                                    color: Colors.red,
+                                    color: Colors.white,
                                     fontSize: 16.sp,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
                               ),
+                            ],
+                          ),
+                        ),
+                        SizedBox(height: 10.h),
+                        GestureDetector(
+                          onTap: () => _handleEmergencySOS(),
+                          child: Text(
+                            'Emergency Situation?',
+                            style: TextStyle(
+                              color: Color(ConstColors.mainColor),
+                              fontSize: 14.sp,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
-                        ],
-                      ),
-                  ],
-                ),
-              SizedBox(height: 20.h),
+                        ),
+                      ],
+                    )
+                  else
+                    Column(
+                      children: [
+                        Container(
+                          width: 353.w,
+                          height: 48.h,
+                          decoration: BoxDecoration(
+                            color: _showGreenSlider
+                                ? Color(ConstColors.mainColor)
+                                : (_rideStatus == 'arrived' && !_showGreenSlider
+                                      ? Color(0xFFB1B1B1)
+                                      : Color(0xFFB1B1B1)),
+                            borderRadius: BorderRadius.circular(25.r),
+                          ),
+                          child: Stack(
+                            children: [
+                              Positioned(
+                                left: 4.w + (_sliderValue * (353.w - 40.w)),
+                                top: 8.h,
+                                child: GestureDetector(
+                                  onPanUpdate: (details) {
+                                    setState(() {
+                                      _sliderValue =
+                                          ((details.localPosition.dx - 4.w) /
+                                                  (353.w - 40.w))
+                                              .clamp(0.0, 1.0);
+                                    });
+                                  },
+                                  onPanEnd: (details) {
+                                    if (_sliderValue >= 0.8) {
+                                      if (_rideStatus == 'arrived') {
+                                        _startRide();
+                                      } else {
+                                        _markAsArrived(int.parse(passengerID));
+                                      }
+                                    } else {
+                                      setState(() {
+                                        _sliderValue = 0.0;
+                                      });
+                                    }
+                                  },
+                                  child: Container(
+                                    margin: EdgeInsets.only(
+                                      left: 10.w,
+                                      right: 10.w,
+                                    ),
+                                    width: 32.w,
+                                    height: 32.h,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 16.sp,
+                                      color: _showGreenSlider
+                                          ? Color(ConstColors.mainColor)
+                                          : Color(0xFFB1B1B1),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Center(
+                                child: Text(
+                                  _showGreenSlider
+                                      ? 'Arrived!'
+                                      : (_rideStatus == 'arrived'
+                                            ? (_isStarted
+                                                  ? 'Ride started'
+                                                  : 'Swipe to start')
+                                            : 'Slide to mark as arrived'),
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (_rideStatus != 'started' &&
+                            _rideStatus != 'completed')
+                          Column(
+                            children: [
+                              SizedBox(height: 20.h),
+                              GestureDetector(
+                                onTap: _showCancelDialog,
+                                child: Container(
+                                  width: 353.w,
+                                  height: 47.h,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(8.r),
+                                    border: Border.all(
+                                      color: Colors.red,
+                                      width: 1,
+                                    ),
+                                  ),
+                                  padding: EdgeInsets.all(10.w),
+                                  child: Center(
+                                    child: Text(
+                                      'Cancel ride',
+                                      style: TextStyle(
+                                        color: Colors.red,
+                                        fontSize: 16.sp,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+                  SizedBox(height: 20.h),
+                ],
+              ),
             ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
