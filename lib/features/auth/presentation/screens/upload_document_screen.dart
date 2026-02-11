@@ -249,7 +249,7 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
                       ),
                       const Spacer(),
                       Text(
-                        'Upload Documents',
+                        'Required Information',
                         style: TextStyle(
                           fontFamily: ConstFonts.inter,
                           fontWeight: FontWeight.w700,
@@ -261,7 +261,7 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
                     ],
                   ),
                   Text(
-                    'Please Submit the following documents to \nverify your vehicle',
+                    'Here are the information needed to \nbe a verified driver',
                     style: TextStyle(
                       fontFamily: ConstFonts.inter,
                       fontWeight: FontWeight.w400,
