@@ -16,7 +16,7 @@ class ActiveTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return Consumer<RequestProvider>(
       builder: (context, provider, child) {
-        if (provider.isLoading) {
+        if (provider.isLoading && !provider.hasData) {
           return Center(
             child: CircularProgressIndicator(
               color: Color(ConstColors.mainColor),
@@ -24,7 +24,7 @@ class ActiveTab extends StatelessWidget {
           );
         }
 
-        if (provider.errorMessage != null) {
+        if (provider.errorMessage != null && !provider.hasData) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -32,13 +32,14 @@ class ActiveTab extends StatelessWidget {
                 Icon(Icons.error_outline, size: 48.sp, color: Colors.red),
                 SizedBox(height: 16.h),
                 Text(
-                  'Failed to load rides',
+                  provider.errorMessage ?? 'Failed to load rides',
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w500,
                     color: Theme.of(context).textTheme.bodyMedium?.color,
                   ),
+                  textAlign: TextAlign.center,
                 ),
                 SizedBox(height: 8.h),
                 TextButton(
@@ -55,6 +56,7 @@ class ActiveTab extends StatelessWidget {
         if (activeRides.isEmpty) {
           return Center(
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 SizedBox(height: 100.h),
@@ -65,7 +67,7 @@ class ActiveTab extends StatelessWidget {
                 ),
                 SizedBox(height: 16.h),
                 Text(
-                  'Just chilling for now. Book a ride \nwhen you’re ready',
+                  "Just chilling for now. Book a ride \nwhen you're ready",
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 14.sp,
@@ -74,25 +76,37 @@ class ActiveTab extends StatelessWidget {
                   ),
                   textAlign: TextAlign.center,
                 ),
+                if (provider.isRefreshing) ...[
+                  SizedBox(height: 16.h),
+                  SizedBox(
+                    width: 20.w,
+                    height: 20.h,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Color(ConstColors.mainColor),
+                    ),
+                  ),
+                ],
               ],
             ),
           );
         }
 
-        return Column(
-          children: activeRides.map((ride) {
-            // Parse the datetime string
+        return ListView.builder(
+          shrinkWrap: true,
+          itemCount: activeRides.length,
+          itemBuilder: (context, index) {
+            final ride = activeRides[index];
             final dateTime = DateTime.parse(
               ride.scheduledAt ?? ride.createdAt,
             ).toLocal();
 
-            // Format time: 8:30pm
             final timeFormat = DateFormat('h:mma');
             final formattedTime = timeFormat.format(dateTime).toLowerCase();
 
-            // Format date: Jan 26, 2026
             final dateFormat = DateFormat('MMM d, yyyy');
             final formattedDate = dateFormat.format(dateTime);
+
             return Padding(
               padding: EdgeInsets.only(bottom: 15.h),
               child: TripCard(
@@ -109,7 +123,7 @@ class ActiveTab extends StatelessWidget {
                 isActive: true,
               ),
             );
-          }).toList(),
+          },
         );
       },
     );

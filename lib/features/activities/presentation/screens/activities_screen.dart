@@ -13,21 +13,42 @@ class ActivitiesScreen extends StatefulWidget {
   ActivitiesScreenState createState() => ActivitiesScreenState();
 }
 
-class ActivitiesScreenState extends State<ActivitiesScreen> {
+class ActivitiesScreenState extends State<ActivitiesScreen>
+    with WidgetsBindingObserver {
   int _selectedTabIndex = 0;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<RequestProvider>().startAutoRefresh();
+      context.read<RequestProvider>().startPolling();
     });
   }
 
   @override
   void dispose() {
-    context.read<RequestProvider>().stopAutoRefresh();
+    WidgetsBinding.instance.removeObserver(this);
+    context.read<RequestProvider>().stopPolling();
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final provider = Provider.of<RequestProvider>(context, listen: false);
+
+    switch (state) {
+      case AppLifecycleState.resumed:
+        provider.resumePolling();
+        break;
+      case AppLifecycleState.paused:
+        provider.pausePolling();
+        break;
+      case AppLifecycleState.inactive:
+      case AppLifecycleState.detached:
+      case AppLifecycleState.hidden:
+        break;
+    }
   }
 
   @override
@@ -50,16 +71,16 @@ class ActivitiesScreenState extends State<ActivitiesScreen> {
               child: Row(
                 children: [
                   _buildTabItem('Orders', 0),
-                  _buildDivider(0), // Divider between Orders and Active
+                  _buildDivider(0),
                   _buildTabItem('Active', 1),
-                  _buildDivider(1), // Divider between Active and History
+                  _buildDivider(1),
                   _buildTabItem('History', 2),
                 ],
               ),
             ),
           ),
           Positioned(
-            top: 140.h,
+            top: 110.h,
             left: 20.w,
             right: 20.w,
             bottom: 20.h,
@@ -71,7 +92,6 @@ class ActivitiesScreenState extends State<ActivitiesScreen> {
   }
 
   Widget _buildDivider(int dividerIndex) {
-    // Hide divider if the tab before it (dividerIndex) or after it (dividerIndex + 1) is selected
     final bool shouldHide =
         _selectedTabIndex == dividerIndex ||
         _selectedTabIndex == dividerIndex + 1;
