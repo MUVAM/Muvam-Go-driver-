@@ -23,10 +23,12 @@ class RequestService {
       return {'success': false, 'message': 'No authentication token'};
     }
 
+    // Build request body - only include status
     final requestBody = <String, dynamic>{};
     if (status != null) requestBody['status'] = status;
-    if (limit != null) requestBody['limit'] = limit;
-    if (offset != null) requestBody['offset'] = offset;
+    // Uncomment if pagination is needed later
+    // if (limit != null) requestBody['limit'] = limit;
+    // if (offset != null) requestBody['offset'] = offset;
 
     AppLogger.log('FETCHING RIDES');
     AppLogger.log('URL: ${UrlConstants.baseUrl}${UrlConstants.rides}');
@@ -47,7 +49,7 @@ class RequestService {
 
       AppLogger.log('Response Status: ${response.statusCode}');
       AppLogger.log('Response Headers: ${response.headers}');
-      AppLogger.log('Response bodyyy: ${response.body}');
+      AppLogger.log('Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);

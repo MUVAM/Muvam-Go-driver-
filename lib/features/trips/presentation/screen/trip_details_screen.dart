@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/features/activities/data/providers/request_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -18,7 +20,10 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<RequestProvider>().fetchRideDetails(widget.rideId);
+      final provider = context.read<RequestProvider>();
+      if (provider.selectedRide?.id != widget.rideId) {
+        provider.fetchRideDetails(widget.rideId);
+      }
     });
   }
 
@@ -29,19 +34,14 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
       body: SafeArea(
         child: Consumer<RequestProvider>(
           builder: (context, provider, child) {
-            if (provider.isLoadingDetails) {
-              return Center(
-                child: CircularProgressIndicator(
-                  color: Theme.of(context).primaryColor,
-                ),
-              );
-            }
-
-            if (provider.selectedRide == null) {
-              return Center(child: Text('Ride not found'));
-            }
-
-            final ride = provider.selectedRide!;
+            final ride =
+                provider.selectedRide ??
+                provider.prebookedRides.firstWhere(
+                  (r) => r.id == widget.rideId,
+                  orElse: () => provider.prebookedRides.isNotEmpty
+                      ? provider.prebookedRides.first
+                      : null as dynamic,
+                );
 
             return Padding(
               padding: EdgeInsets.all(20.w),
@@ -74,142 +74,113 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                     ),
                   ),
                   SizedBox(height: 30.h),
-                  Container(
-                    padding: EdgeInsets.all(15.w),
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade50,
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    child: Column(
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 6.w,
-                              height: 6.h,
-                              decoration: BoxDecoration(
-                                color: Color(ConstColors.mainColor),
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            SizedBox(width: 10.w),
-                            Text(
-                              'Pick Up',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w500,
-                                height: 1.0,
-                                letterSpacing: -0.32,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 5.h),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Padding(
-                            padding: EdgeInsets.only(left: 16.w),
-                            child: Text(
-                              ride.pickupAddress,
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.w600,
-                                height: 1.0,
-                                letterSpacing: -0.32,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: 15.h),
-                        Divider(thickness: 1, color: Colors.grey.shade300),
-                        SizedBox(height: 15.h),
-                        Row(
-                          children: [
-                            Container(
-                              width: 6.w,
-                              height: 6.h,
-                              decoration: BoxDecoration(
-                                color: Colors.red,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            SizedBox(width: 10.w),
-                            Text(
-                              'Destination',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w500,
-                                height: 1.0,
-                                letterSpacing: -0.32,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: 5.h),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Padding(
-                            padding: EdgeInsets.only(left: 16.w),
-                            child: Text(
-                              ride.destAddress,
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.w600,
-                                height: 1.0,
-                                letterSpacing: -0.32,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 20.h),
-                  Divider(thickness: 1, color: Colors.grey.shade300),
-                  SizedBox(height: 20.h),
                   Row(
                     children: [
+                      Container(
+                        width: 8.w,
+                        height: 8.h,
+                        decoration: BoxDecoration(
+                          color: Color(ConstColors.mainColor),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
                       Text(
-                        'Date',
+                        'Pick up',
                         style: TextStyle(
                           fontFamily: 'Inter',
                           fontSize: 12.sp,
-                          fontWeight: FontWeight.w500,
-                          height: 1.0,
-                          letterSpacing: -0.32,
-                          color: Colors.black,
+                          fontWeight: FontWeight.w400,
+                          color: Color(0xFF9E9E9E),
                         ),
                       ),
                     ],
                   ),
-                  SizedBox(height: 5.h),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      provider.formatDateTime(
-                        ride.scheduledAt ?? ride.createdAt,
+                  SizedBox(height: 8.h),
+                  Text(
+                    ride.pickupAddress,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                      height: 1.3,
+                      color: Colors.black,
+                    ),
+                  ),
+                  SizedBox(height: 15.h),
+                  Row(
+                    children: [
+                      SvgPicture.asset(
+                        ConstImages.lineArrow,
+                        width: 24.w,
+                        height: 24.h,
                       ),
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w600,
-                        height: 1.0,
-                        letterSpacing: -0.32,
-                        color: Colors.black,
+                      SizedBox(width: 8.w),
+                      Expanded(
+                        child: Divider(
+                          thickness: 1,
+                          color: Colors.grey.shade300,
+                        ),
                       ),
+                    ],
+                  ),
+                  SizedBox(height: 15.h),
+                  Row(
+                    children: [
+                      Container(
+                        width: 8.w,
+                        height: 8.h,
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      SizedBox(width: 8.w),
+                      Text(
+                        'Destination',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 12.sp,
+                          fontWeight: FontWeight.w400,
+                          color: Color(0xFF9E9E9E),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    ride.destAddress,
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                      height: 1.3,
+                      color: Colors.black,
                     ),
                   ),
                   SizedBox(height: 20.h),
+                  Text(
+                    'When',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 12.sp,
+                      fontWeight: FontWeight.w400,
+                      color: Color(0xFF9E9E9E),
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    provider.formatDateTime(ride.scheduledAt ?? ride.createdAt),
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black,
+                    ),
+                  ),
+                  SizedBox(height: 10.h),
                   Divider(thickness: 1, color: Colors.grey.shade300),
-                  SizedBox(height: 20.h),
+                  SizedBox(height: 10.h),
                   Row(
                     children: [
                       Expanded(
@@ -217,25 +188,21 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Payment Method',
+                              'Payment method',
                               style: TextStyle(
                                 fontFamily: 'Inter',
                                 fontSize: 12.sp,
-                                fontWeight: FontWeight.w500,
-                                height: 1.0,
-                                letterSpacing: -0.32,
-                                color: Colors.black,
+                                fontWeight: FontWeight.w400,
+                                color: Color(0xFF9E9E9E),
                               ),
                             ),
-                            SizedBox(height: 5.h),
+                            SizedBox(height: 8.h),
                             Text(
                               ride.paymentMethod,
                               style: TextStyle(
                                 fontFamily: 'Inter',
-                                fontSize: 14.sp,
+                                fontSize: 16.sp,
                                 fontWeight: FontWeight.w600,
-                                height: 1.0,
-                                letterSpacing: -0.32,
                                 color: Colors.black,
                               ),
                             ),
@@ -257,21 +224,17 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                               style: TextStyle(
                                 fontFamily: 'Inter',
                                 fontSize: 12.sp,
-                                fontWeight: FontWeight.w500,
-                                height: 1.0,
-                                letterSpacing: -0.32,
-                                color: Colors.black,
+                                fontWeight: FontWeight.w400,
+                                color: Color(0xFF9E9E9E),
                               ),
                             ),
-                            SizedBox(height: 5.h),
+                            SizedBox(height: 8.h),
                             Text(
                               ride.vehicleType,
                               style: TextStyle(
                                 fontFamily: 'Inter',
-                                fontSize: 14.sp,
+                                fontSize: 16.sp,
                                 fontWeight: FontWeight.w600,
-                                height: 1.0,
-                                letterSpacing: -0.32,
                                 color: Colors.black,
                               ),
                             ),
@@ -280,36 +243,26 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
                       ),
                     ],
                   ),
-                  SizedBox(height: 20.h),
+                  SizedBox(height: 10.h),
                   Divider(thickness: 1, color: Colors.grey.shade300),
-                  SizedBox(height: 20.h),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Price',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w500,
-                            height: 1.0,
-                            letterSpacing: -0.32,
-                            color: Colors.black,
-                          ),
-                        ),
-                        SizedBox(height: 5.h),
-                        Text(
-                          provider.formatPrice(ride.price),
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ],
+                  SizedBox(height: 10.h),
+                  Text(
+                    'Price',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 16.sp,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFF9E9E9E),
+                    ),
+                  ),
+                  SizedBox(height: 8.h),
+                  Text(
+                    provider.formatPrice(ride.price),
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 24.sp,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.black,
                     ),
                   ),
                 ],
