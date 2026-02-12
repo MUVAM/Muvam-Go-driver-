@@ -3,9 +3,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
+import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_selection_screen.dart';
 import 'package:muvam_rider/features/home/presentation/screens/main_navigation_screen.dart';
 import 'package:muvam_rider/shared/presentation/screens/onboarding_screen.dart';
+import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -33,7 +35,6 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
 
-    // Car animation controller
     _carController = AnimationController(
       duration: const Duration(seconds: 4),
       vsync: this,
@@ -44,7 +45,6 @@ class _SplashScreenState extends State<SplashScreen>
       end: const Offset(-1.5, 0),
     ).animate(CurvedAnimation(parent: _carController, curve: Curves.easeInOut));
 
-    // Text animation controller
     _textController = AnimationController(
       duration: const Duration(milliseconds: 1500),
       vsync: this,
@@ -60,41 +60,28 @@ class _SplashScreenState extends State<SplashScreen>
       end: 1.0,
     ).animate(CurvedAnimation(parent: _textController, curve: Curves.easeIn));
 
-    // Circle position animation controller (moves from bottom to center)
     _circlePositionController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
 
     _circlePositionAnimation =
-        Tween<Offset>(
-          begin: const Offset(0, 5), // Start from bottom
-          end: Offset.zero, // Move to center
-        ).animate(
+        Tween<Offset>(begin: const Offset(0, 5), end: Offset.zero).animate(
           CurvedAnimation(
             parent: _circlePositionController,
             curve: Curves.easeInOut,
           ),
         );
 
-    // Circle expand animation controller (expands to fill screen)
     _circleExpandController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
 
-    _circleScaleAnimation =
-        Tween<double>(
-          begin: 0.1, // Start small
-          end: 10.0, // Expand to fill screen
-        ).animate(
-          CurvedAnimation(
-            parent: _circleExpandController,
-            curve: Curves.easeInOut,
-          ),
-        );
+    _circleScaleAnimation = Tween<double>(begin: 0.1, end: 10.0).animate(
+      CurvedAnimation(parent: _circleExpandController, curve: Curves.easeInOut),
+    );
 
-    // Text color animation controller (changes from green to white)
     _textColorController = AnimationController(
       duration: const Duration(milliseconds: 500),
       vsync: this,
@@ -108,13 +95,10 @@ class _SplashScreenState extends State<SplashScreen>
           CurvedAnimation(parent: _textColorController, curve: Curves.easeIn),
         );
 
-    // Start car animation, then text animation, then circle animations
     _carController.forward().then((_) {
       _textController.forward().then((_) {
         Future.delayed(const Duration(milliseconds: 500), () {
-          // Start circle position animation
           _circlePositionController.forward().then((_) {
-            // Start circle expand and text color change simultaneously
             _circleExpandController.forward();
             _textColorController.forward().then((_) {
               Future.delayed(const Duration(milliseconds: 500), () {
@@ -128,19 +112,17 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _checkAuthAndNavigate() async {
-    AppLogger.log('\n🚀 ========== SPLASH SCREEN NAVIGATION CHECK ==========');
+    AppLogger.log(
+      '\n🚀 ========== SPLASH SCREEN NAVIGATION CHECK ==========',
+      tag: 'SPLASH',
+    );
 
-    // Check if this is the first time the user is opening the app
     final isFirstTime = await _isFirstTimeUser();
-    AppLogger.log('📱 First time user: $isFirstTime');
+    AppLogger.log('📱 First time user: $isFirstTime', tag: 'SPLASH');
 
     if (isFirstTime) {
-
-      // AppLogger.log('🆕 First-time user detected');
-      
       await _markAppAsOpened();
-
-      // AppLogger.log('📋 Navigating to Rider Selection Screen');
+      AppLogger.log('🆕 Navigating to Rider Selection Screen', tag: 'SPLASH');
 
       Navigator.pushReplacement(
         context,
@@ -149,28 +131,45 @@ class _SplashScreenState extends State<SplashScreen>
         ),
       );
     } else {
-      AppLogger.log('👤 Returning user - checking saved credentials');
+      AppLogger.log(
+        '👤 Returning user - checking authentication',
+        tag: 'SPLASH',
+      );
 
-      // Check for token and vehicle_submitted status
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+      // This will automatically refresh the token if needed
+      final isTokenValid = await authProvider.checkTokenValidity();
+
       final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
       final vehicleSubmitted = prefs.getBool('vehicle_submitted') ?? false;
 
-      AppLogger.log('🔑 Token exists: ${token != null}');
-      AppLogger.log('🚗 Vehicle submitted: $vehicleSubmitted');
+      AppLogger.log('🔑 Token valid: $isTokenValid', tag: 'SPLASH');
+      AppLogger.log('🚗 Vehicle submitted: $vehicleSubmitted', tag: 'SPLASH');
 
-      // Both must be true to go to main app
-      if (token != null && vehicleSubmitted == true) {
-        AppLogger.log('✅ Both conditions met - navigating to Main App');
-        AppLogger.log('========== AUTHENTICATION SUCCESSFUL ==========\n');
+      if (isTokenValid && vehicleSubmitted == true) {
+        AppLogger.log(
+          '✅ Both conditions met - navigating to Main App',
+          tag: 'SPLASH',
+        );
+        AppLogger.log(
+          '========== AUTHENTICATION SUCCESSFUL ==========\n',
+          tag: 'SPLASH',
+        );
 
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
         );
       } else {
-        AppLogger.log('❌ Conditions not met - navigating to Phone Login');
-        AppLogger.log('========== REDIRECTED TO LOGIN ==========\n');
+        AppLogger.log(
+          '❌ Conditions not met - navigating to Onboarding',
+          tag: 'SPLASH',
+        );
+        AppLogger.log(
+          '========== REDIRECTED TO LOGIN ==========\n',
+          tag: 'SPLASH',
+        );
 
         Navigator.pushReplacement(
           context,
@@ -206,7 +205,6 @@ class _SplashScreenState extends State<SplashScreen>
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Car animation
           Center(
             child: SlideTransition(
               position: _carSlideAnimation,
@@ -217,7 +215,6 @@ class _SplashScreenState extends State<SplashScreen>
               ),
             ),
           ),
-          // Green circle animation (behind text)
           Center(
             child: SlideTransition(
               position: _circlePositionAnimation,
@@ -234,7 +231,6 @@ class _SplashScreenState extends State<SplashScreen>
               ),
             ),
           ),
-          // Text animation with color change
           Center(
             child: FadeTransition(
               opacity: _textOpacityAnimation,

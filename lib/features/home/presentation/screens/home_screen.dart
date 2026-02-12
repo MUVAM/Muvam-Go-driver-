@@ -22,16 +22,13 @@ import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/activities/data/providers/request_provider.dart';
 import 'package:muvam_rider/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
-import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_selection_screen.dart';
 import 'package:muvam_rider/features/communication/data/models/chat_model.dart';
 import 'package:muvam_rider/features/communication/data/providers/chat_provider.dart';
-import 'package:muvam_rider/features/communication/presentation/screens/call_screen.dart';
 import 'package:muvam_rider/features/communication/presentation/screens/chat_screen.dart';
 import 'package:muvam_rider/features/communication/presentation/widgets/chat_notification_service.dart';
 import 'package:muvam_rider/features/earnings/data/provider/wallet_provider.dart';
 import 'package:muvam_rider/features/home/data/provider/driver_provider.dart';
 import 'package:muvam_rider/features/home/presentation/screens/ride_accepted_sheet.dart';
-
 import 'package:muvam_rider/features/home/presentation/widgets/driver_app_drawer.dart';
 import 'package:muvam_rider/features/home/presentation/widgets/ride_info_widget.dart';
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
