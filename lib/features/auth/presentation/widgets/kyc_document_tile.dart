@@ -40,7 +40,7 @@ class KycDocumentTile extends StatelessWidget {
               height: 24.h,
               color: isUploaded
                   ? themeManager.getTextColor(context)
-                  : Color(0xFF808080),
+                  : Colors.black,
             ),
             SizedBox(width: 16.w),
             Expanded(
@@ -55,7 +55,7 @@ class KycDocumentTile extends StatelessWidget {
                       fontSize: 16.sp,
                       color: isUploaded
                           ? themeManager.getTextColor(context)
-                          : Color(0xFF808080),
+                          : Colors.black,
                     ),
                   ),
                   SizedBox(height: 8.h),

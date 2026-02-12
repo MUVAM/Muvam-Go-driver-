@@ -55,7 +55,6 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
   @override
   void initState() {
     super.initState();
-    // Listen for results when returning from upload screens
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkUploadStatus();
     });
@@ -74,10 +73,25 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
       setState(() {
         insurance = result;
       });
+      // Add delay to ensure camera is properly disposed before navigating
+      await Future.delayed(const Duration(milliseconds: 500));
+      // Automatically navigate to registration screen after insurance upload
+      if (mounted) {
+        _navigateToRegistrationScreen();
+      }
     }
   }
 
   Future<void> _navigateToRegistrationScreen() async {
+    // Check if insurance is uploaded first
+    if (insurance == null) {
+      CustomFlushbar.showInfo(
+        context: context,
+        message: 'Please upload vehicle insurance first',
+      );
+      return;
+    }
+
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -88,10 +102,32 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
       setState(() {
         vehicleRegistration = result;
       });
+      // Add delay to ensure camera is properly disposed before navigating
+      await Future.delayed(const Duration(milliseconds: 500));
+      // Automatically navigate to vehicle photos screen after registration upload
+      if (mounted) {
+        _navigateToVehiclePhotosScreen();
+      }
     }
   }
 
   Future<void> _navigateToVehiclePhotosScreen() async {
+    // Check if previous documents are uploaded first
+    if (insurance == null) {
+      CustomFlushbar.showInfo(
+        context: context,
+        message: 'Please upload vehicle insurance first',
+      );
+      return;
+    }
+    if (vehicleRegistration == null) {
+      CustomFlushbar.showInfo(
+        context: context,
+        message: 'Please upload vehicle registration first',
+      );
+      return;
+    }
+
     final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const VehiclePhotosScreen()),
@@ -100,6 +136,7 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
       setState(() {
         vehiclePhotos = result;
       });
+      // Return to upload documents screen - user will manually tap upload button
     }
   }
 
@@ -249,7 +286,7 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
                       ),
                       const Spacer(),
                       Text(
-                        'Required Information',
+                        'Upload Documents',
                         style: TextStyle(
                           fontFamily: ConstFonts.inter,
                           fontWeight: FontWeight.w700,
@@ -261,7 +298,7 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
                     ],
                   ),
                   Text(
-                    'Here are the information needed to \nbe a verified driver',
+                    'Please Submit the following documents to \nverify your vehicle',
                     style: TextStyle(
                       fontFamily: ConstFonts.inter,
                       fontWeight: FontWeight.w400,
@@ -315,37 +352,56 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
                 ),
               ),
             ),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
-              child: Column(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    height: 48.h,
-                    decoration: BoxDecoration(
-                      color: const Color(ConstColors.mainColor),
-                      borderRadius: BorderRadius.circular(8.r),
-                    ),
-                    child: GestureDetector(
-                      onTap: _isLoading ? null : _uploadDocuments,
+            if (_isLoading)
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
+                child: Column(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      height: 48.h,
+                      decoration: BoxDecoration(
+                        color: const Color(ConstColors.mainColor),
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
                       child: Center(
-                        child: _isLoading
-                            ? CircularProgressIndicator(color: Colors.white)
-                            : Text(
-                                'Upload Documents',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
+                        child: CircularProgressIndicator(color: Colors.white),
                       ),
                     ),
-                  ),
-                  SizedBox(height: 20.h),
-                ],
+                    SizedBox(height: 20.h),
+                  ],
+                ),
+              )
+            else
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
+                child: Column(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      height: 48.h,
+                      decoration: BoxDecoration(
+                        color: const Color(ConstColors.mainColor),
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: GestureDetector(
+                        onTap: _isLoading ? null : _uploadDocuments,
+                        child: Center(
+                          child: Text(
+                            'Upload Documents',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16.sp,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    SizedBox(height: 20.h),
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),
