@@ -381,7 +381,14 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
                       width: double.infinity,
                       height: 48.h,
                       decoration: BoxDecoration(
-                        color: const Color(ConstColors.mainColor),
+                        // color: const Color(ConstColors.mainColor),
+                        color: _isLoading
+                            ? const Color(ConstColors.mainColor)
+                            : (insurance != null &&
+                                  vehicleRegistration != null &&
+                                  vehiclePhotos.length >= 3)
+                            ? const Color(ConstColors.mainColor)
+                            : Color(0xffB1B1B1),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: GestureDetector(
