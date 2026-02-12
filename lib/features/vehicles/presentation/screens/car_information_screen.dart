@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
+import 'package:muvam_rider/features/vehicles/data/provider/vehicle_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/text_styles.dart';
@@ -50,22 +51,41 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
   String? selectedAC;
   String acDisplayText = 'Select';
 
-  final List<String> carNames = ['Toyota', 'Honda', 'Ford', 'BMW', 'Mercedes'];
-  final List<String> carModels = ['Camry', 'Accord', 'Focus', 'X5', 'C-Class'];
-  final List<String> carYears = [
-    '2024',
-    '2023',
-    '2022',
-    '2021',
-    '2020',
-    '2019',
-  ];
   final List<String> seatOptions = ['2', '4', '5', '7', '8'];
   final List<String> acOptions = ['Yes', 'No'];
 
   @override
+  void initState() {
+    super.initState();
+    _loadVehicleData();
+  }
+
+  Future<void> _loadVehicleData() async {
+    AppLogger.log('🔄 Loading vehicle data...', tag: 'CAR_INFO');
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+
+    if (token != null) {
+      final vehicleProvider = Provider.of<VehicleProvider>(
+        context,
+        listen: false,
+      );
+      await vehicleProvider.fetchVehicleData(token);
+
+      if (mounted) {
+        setState(() {});
+      }
+    } else {
+      AppLogger.log('⚠️ No auth token found', tag: 'CAR_INFO');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final themeManager = Provider.of<ThemeManager>(context);
+    final vehicleProvider = Provider.of<VehicleProvider>(context);
+
     return Scaffold(
       backgroundColor: themeManager.getBackgroundColor(context),
       body: SafeArea(
@@ -131,7 +151,10 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
                         textColor: selectedCarName != null
                             ? Colors.black
                             : null,
-                        onTap: () => _showCarNameBottomSheet(themeManager),
+                        onTap: () => _showCarNameBottomSheet(
+                          themeManager,
+                          vehicleProvider,
+                        ),
                       ),
                       SizedBox(height: 20.h),
                       DropdownField(
@@ -140,7 +163,10 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
                         textColor: selectedCarModel != null
                             ? Colors.black
                             : null,
-                        onTap: () => _showCarModelBottomSheet(themeManager),
+                        onTap: () => _showCarModelBottomSheet(
+                          themeManager,
+                          vehicleProvider,
+                        ),
                       ),
                       SizedBox(height: 20.h),
                       DropdownField(
@@ -149,7 +175,10 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
                         textColor: selectedCarYear != null
                             ? Colors.black
                             : null,
-                        onTap: () => _showCarYearBottomSheet(themeManager),
+                        onTap: () => _showCarYearBottomSheet(
+                          themeManager,
+                          vehicleProvider,
+                        ),
                       ),
                       SizedBox(height: 20.h),
                       DropdownField(
@@ -184,7 +213,6 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
                         hintText: 'Enter your driver license number',
                       ),
                       SizedBox(height: 20.h),
-                      // Driver License Upload Section
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -309,12 +337,19 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
     );
   }
 
-  void _showCarNameBottomSheet(ThemeManager themeManager) {
+  void _showCarNameBottomSheet(
+    ThemeManager themeManager,
+    VehicleProvider vehicleProvider,
+  ) {
+    final options = vehicleProvider.carMakes.isNotEmpty
+        ? vehicleProvider.carMakes
+        : ['Toyota', 'Honda', 'Ford', 'BMW', 'Mercedes'];
+
     CustomBottomSheet.showSelectionBottomSheet(
       context: context,
       themeManager: themeManager,
       title: 'Select Car Name',
-      options: carNames,
+      options: options,
       selectedValue: selectedCarName,
       onSelected: (value) {
         setState(() {
@@ -325,12 +360,19 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
     );
   }
 
-  void _showCarModelBottomSheet(ThemeManager themeManager) {
+  void _showCarModelBottomSheet(
+    ThemeManager themeManager,
+    VehicleProvider vehicleProvider,
+  ) {
+    final options = vehicleProvider.carModels.isNotEmpty
+        ? vehicleProvider.carModels
+        : ['Camry', 'Accord', 'Focus', 'X5', 'C-Class'];
+
     CustomBottomSheet.showSelectionBottomSheet(
       context: context,
       themeManager: themeManager,
       title: 'Select Car Model',
-      options: carModels,
+      options: options,
       selectedValue: selectedCarModel,
       onSelected: (value) {
         setState(() {
@@ -341,12 +383,19 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
     );
   }
 
-  void _showCarYearBottomSheet(ThemeManager themeManager) {
+  void _showCarYearBottomSheet(
+    ThemeManager themeManager,
+    VehicleProvider vehicleProvider,
+  ) {
+    final options = vehicleProvider.carYears.isNotEmpty
+        ? vehicleProvider.carYears
+        : ['2024', '2023', '2022', '2021', '2020', '2019'];
+
     CustomBottomSheet.showSelectionBottomSheet(
       context: context,
       themeManager: themeManager,
       title: 'Select Car Year',
-      options: carYears,
+      options: options,
       selectedValue: selectedCarYear,
       onSelected: (value) {
         setState(() {
@@ -424,7 +473,6 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
     );
     AppLogger.log('📋 Step 1: Validating all required fields...');
 
-    // Validate all car information fields
     if (selectedCarName == null ||
         selectedCarModel == null ||
         selectedCarYear == null ||
@@ -440,7 +488,6 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
       return;
     }
 
-    // Validate driver license fields
     if (driverLicenseNumberController.text.isEmpty) {
       AppLogger.log('❌ Validation failed: Driver license number is empty');
       CustomFlushbar.showError(

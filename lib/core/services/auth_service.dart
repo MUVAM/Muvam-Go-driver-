@@ -76,6 +76,20 @@ class AuthService {
           if (expiresIn != null) {
             await _saveTokenExpiry(expiresIn);
           }
+
+          AppLogger.log('✅ Saved access_token: $accessToken', tag: 'AUTH');
+          AppLogger.log('✅ Saved refresh_token: $refreshToken', tag: 'AUTH');
+          AppLogger.log(
+            '⏰ Access token expires in: $expiresIn seconds (1 hour)',
+            tag: 'AUTH',
+          );
+
+          final expiryTime =
+              DateTime.now().millisecondsSinceEpoch + (expiresIn * 1000);
+          final expiryDate = DateTime.fromMillisecondsSinceEpoch(
+            expiryTime.toInt(),
+          );
+          AppLogger.log('📅 Token will expire at: $expiryDate', tag: 'AUTH');
         } else {
           // Old structure: token is a string
           await _saveToken(tokenData.toString());
@@ -134,10 +148,6 @@ class AuthService {
   Future<void> _saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_tokenKey, token);
-    await prefs.setString(
-      'last_login_time',
-      DateTime.now().millisecondsSinceEpoch.toString(),
-    );
   }
 
   Future<void> _saveRefreshToken(String refreshToken) async {
@@ -147,18 +157,68 @@ class AuthService {
 
   Future<void> _saveTokenExpiry(int expiresIn) async {
     final prefs = await SharedPreferences.getInstance();
+    // Access token expires in 1 hour (3600 seconds)
     final expiryTime =
         DateTime.now().millisecondsSinceEpoch + (expiresIn * 1000);
-    await prefs.setString(_tokenExpiryKey, expiryTime.toString());
+    await prefs.setInt(_tokenExpiryKey, expiryTime);
   }
 
   Future<void> saveToken(String token) async {
     await _saveToken(token);
+    // Default to 1 hour expiry if not provided
+    final expiryTime = DateTime.now().millisecondsSinceEpoch + (3600 * 1000);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_tokenExpiryKey, expiryTime);
   }
 
   Future<String?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_tokenKey);
+    final token = prefs.getString(_tokenKey);
+    final expiryTime = prefs.getInt(_tokenExpiryKey);
+
+    if (token == null) {
+      AppLogger.log('❌ No token found', tag: 'AUTH');
+      return null;
+    }
+
+    if (expiryTime != null) {
+      final currentTime = DateTime.now().millisecondsSinceEpoch;
+      final bufferTime = 5 * 60 * 1000; // 5 minutes before expiry
+
+      // Check if token has already expired
+      if (currentTime >= expiryTime) {
+        AppLogger.log(
+          '⚠️ Token has expired, attempting refresh...',
+          tag: 'AUTH',
+        );
+        final refreshed = await refreshToken();
+        if (refreshed) {
+          return await getToken();
+        } else {
+          AppLogger.log('❌ Token refresh failed, clearing tokens', tag: 'AUTH');
+          await clearToken();
+          return null;
+        }
+      }
+
+      // Check if token is expiring soon (within 5 minutes)
+      if (currentTime >= (expiryTime - bufferTime)) {
+        AppLogger.log('🔄 Token expiring soon, refreshing...', tag: 'AUTH');
+        final refreshed = await refreshToken();
+        if (refreshed) {
+          return await getToken();
+        }
+        // If refresh fails but token is still valid, continue using it
+      }
+
+      final remainingTime = (expiryTime - currentTime) / 1000 / 60;
+      AppLogger.log(
+        '✅ Token valid for: ${remainingTime.toStringAsFixed(1)} minutes',
+        tag: 'AUTH',
+      );
+    }
+
+    return token;
   }
 
   Future<String?> getRefreshToken() async {
@@ -166,11 +226,79 @@ class AuthService {
     return prefs.getString(_refreshTokenKey);
   }
 
+  Future<bool> refreshToken() async {
+    try {
+      final refreshToken = await getRefreshToken();
+
+      if (refreshToken == null) {
+        AppLogger.log('❌ No refresh token available', tag: 'AUTH');
+        return false;
+      }
+
+      AppLogger.log('🔄 Attempting to refresh token...', tag: 'AUTH');
+
+      final response = await http
+          .post(
+            Uri.parse('${UrlConstants.baseUrl}${UrlConstants.refreshToken}'),
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'refresh_token': refreshToken}),
+          )
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              throw Exception('Token refresh request timed out');
+            },
+          );
+
+      AppLogger.log(
+        '📡 Refresh response status: ${response.statusCode}',
+        tag: 'AUTH',
+      );
+      AppLogger.log('📄 Refresh response body: ${response.body}', tag: 'AUTH');
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+
+        if (responseData['token'] != null) {
+          final tokenData = responseData['token'];
+          if (tokenData is Map<String, dynamic>) {
+            final accessToken = tokenData['access_token'];
+            final newRefreshToken = tokenData['refresh_token'];
+            final expiresIn = tokenData['expires_in'];
+
+            if (accessToken != null) {
+              await _saveToken(accessToken);
+            }
+            if (newRefreshToken != null) {
+              await _saveRefreshToken(newRefreshToken);
+            }
+            if (expiresIn != null) {
+              await _saveTokenExpiry(expiresIn);
+            }
+
+            AppLogger.log('✅ Token refreshed successfully!', tag: 'AUTH');
+            return true;
+          }
+        }
+
+        AppLogger.log('❌ Invalid response structure', tag: 'AUTH');
+        return false;
+      } else {
+        AppLogger.log('❌ Token refresh failed: ${response.body}', tag: 'AUTH');
+        return false;
+      }
+    } catch (e) {
+      AppLogger.log('❌ Token refresh error: $e', tag: 'AUTH');
+      return false;
+    }
+  }
+
   Future<void> clearToken() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
     await prefs.remove(_refreshTokenKey);
     await prefs.remove(_tokenExpiryKey);
+    AppLogger.log('🗑️ All tokens cleared', tag: 'AUTH');
   }
 
   Future<Map<String, dynamic>> completeProfile(
@@ -208,42 +336,29 @@ class AuthService {
 
   Future<bool> isTokenValid() async {
     final token = await getToken();
-    return token != null && token.isNotEmpty;
+    final isValid = token != null;
+    AppLogger.log('🔐 Token validity check: $isValid', tag: 'AUTH');
+    return isValid;
   }
 
   Future<bool> isSessionExpired() async {
     final prefs = await SharedPreferences.getInstance();
-    final lastLoginString = prefs.getString('last_login_time');
-    if (lastLoginString == null) return true;
+    final expiryTime = prefs.getInt(_tokenExpiryKey);
 
-    final lastLogin = int.tryParse(lastLoginString) ?? 0;
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final hoursSinceLogin = (now - lastLogin) / (1000 * 60 * 60);
-    return hoursSinceLogin > 2; // 2 hours session
+    if (expiryTime != null) {
+      final currentTime = DateTime.now().millisecondsSinceEpoch;
+      return currentTime >= expiryTime;
+    }
+
+    return true;
   }
 
   Future<bool> isTokenExpired() async {
-    final prefs = await SharedPreferences.getInstance();
-    final expiryString = prefs.getString(_tokenExpiryKey);
-
-    if (expiryString == null) {
-      // If no expiry time is stored, fall back to session check
-      return await isSessionExpired();
-    }
-
-    final expiryTime = int.tryParse(expiryString) ?? 0;
-    final now = DateTime.now().millisecondsSinceEpoch;
-
-    // Consider token expired if less than 5 minutes remaining (300000 ms)
-    return now >= (expiryTime - 300000);
+    return await isSessionExpired();
   }
 
   Future<void> updateLastLoginTime() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(
-      'last_login_time',
-      DateTime.now().millisecondsSinceEpoch.toString(),
-    );
+    // This is now handled by token expiry
   }
 
   Future<void> _saveUserInfo({

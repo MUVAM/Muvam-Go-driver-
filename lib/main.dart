@@ -19,6 +19,7 @@ import 'package:muvam_rider/features/home/data/provider/driver_provider.dart';
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
 import 'package:muvam_rider/features/referral/data/providers/referral_provider.dart';
 import 'package:muvam_rider/core/services/global_call_service.dart';
+import 'package:muvam_rider/features/vehicles/data/provider/vehicle_provider.dart';
 import 'package:muvam_rider/shared/presentation/screens/splash_screen.dart';
 import 'package:provider/provider.dart';
 import 'core/constants/theme_manager.dart';
@@ -65,6 +66,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => EarningsProvider()),
         ChangeNotifierProvider(create: (_) => ReferralProvider()),
         ChangeNotifierProvider(create: (_) => DeleteAccountProvider()),
+        ChangeNotifierProvider(create: (_) => VehicleProvider()),
         // ChangeNotifierProvider(create: (_) => FCMProvider()),
       ],
       child: const MyApp(),

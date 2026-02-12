@@ -12,6 +12,7 @@ class UrlConstants {
   static const String resendOtp = "/otp/resend";
   static const String verifyOtp = "/otp/verify";
   static const String registerUser = "/users/register_driver";
+  static const String refreshToken = "/users/refreshToken";
   static const String completeProfile = "/users/profile/complete";
   static const String favouriteLocation = "/users/favouriteLocation";
   static const String updateLocation = "/users/location";
