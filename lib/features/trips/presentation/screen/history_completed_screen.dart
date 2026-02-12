@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:intl/intl.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/features/activities/data/providers/request_provider.dart';
@@ -25,6 +26,24 @@ class _HistoryCompletedScreenState extends State<HistoryCompletedScreen> {
         provider.fetchRideDetails(widget.rideId);
       }
     });
+  }
+
+  String _formatTime(String dateTimeStr) {
+    try {
+      final dateTime = DateTime.parse(dateTimeStr).toLocal();
+      return DateFormat('h:mm a').format(dateTime);
+    } catch (e) {
+      return '';
+    }
+  }
+
+  String _formatDate(String dateTimeStr) {
+    try {
+      final dateTime = DateTime.parse(dateTimeStr).toLocal();
+      return DateFormat('MMMM d, yyyy').format(dateTime);
+    } catch (e) {
+      return '';
+    }
   }
 
   @override
@@ -73,6 +92,25 @@ class _HistoryCompletedScreenState extends State<HistoryCompletedScreen> {
                       color: Colors.black,
                     ),
                   ),
+                  SizedBox(height: 12.h),
+                  Text(
+                    _formatTime(ride.createdAt),
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.black,
+                    ),
+                  ),
+                  Text(
+                    _formatDate(ride.createdAt),
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 18.sp,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.black,
+                    ),
+                  ),
                   SizedBox(height: 30.h),
                   Row(
                     children: [
@@ -93,7 +131,7 @@ class _HistoryCompletedScreenState extends State<HistoryCompletedScreen> {
                           fontWeight: FontWeight.w500,
                           height: 1.0,
                           letterSpacing: -0.32,
-                          color: Colors.black,
+                          color: Color(0xFFB1B1B1),
                         ),
                       ),
                     ],
@@ -156,7 +194,7 @@ class _HistoryCompletedScreenState extends State<HistoryCompletedScreen> {
                           fontWeight: FontWeight.w500,
                           height: 1.0,
                           letterSpacing: -0.32,
-                          color: Colors.black,
+                          color: Color(0xFFB1B1B1),
                         ),
                       ),
                     ],

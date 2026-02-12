@@ -14,6 +14,24 @@ class ActiveTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String formatTime(String dateTimeStr) {
+      try {
+        final dateTime = DateTime.parse(dateTimeStr).toLocal();
+        return DateFormat('h:mm a').format(dateTime);
+      } catch (e) {
+        return '';
+      }
+    }
+
+    String formatDate(String dateTimeStr) {
+      try {
+        final dateTime = DateTime.parse(dateTimeStr).toLocal();
+        return DateFormat('MMMM d, yyyy').format(dateTime);
+      } catch (e) {
+        return '';
+      }
+    }
+
     return Consumer<RequestProvider>(
       builder: (context, provider, child) {
         if (provider.isLoading && !provider.hasData) {
@@ -97,21 +115,11 @@ class ActiveTab extends StatelessWidget {
           itemCount: activeRides.length,
           itemBuilder: (context, index) {
             final ride = activeRides[index];
-            final dateTime = DateTime.parse(
-              ride.scheduledAt ?? ride.createdAt,
-            ).toLocal();
-
-            final timeFormat = DateFormat('h:mma');
-            final formattedTime = timeFormat.format(dateTime).toLowerCase();
-
-            final dateFormat = DateFormat('MMM d, yyyy');
-            final formattedDate = dateFormat.format(dateTime);
-
             return Padding(
               padding: EdgeInsets.only(bottom: 15.h),
               child: TripCard(
-                time: formattedTime,
-                date: formattedDate,
+                time: formatTime(ride.createdAt),
+                date: formatDate(ride.createdAt),
                 destination: ride.destAddress,
                 tripId: '#${ride.id}',
                 onTap: () => Navigator.push(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:intl/intl.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
@@ -89,6 +90,24 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
         context: context,
         message: 'Failed to open Google Maps',
       );
+    }
+  }
+
+  String formatTime(String dateTimeStr) {
+    try {
+      final dateTime = DateTime.parse(dateTimeStr).toLocal();
+      return DateFormat('h:mm a').format(dateTime);
+    } catch (e) {
+      return '';
+    }
+  }
+
+  String formatDate(String dateTimeStr) {
+    try {
+      final dateTime = DateTime.parse(dateTimeStr).toLocal();
+      return DateFormat('MMMM d, yyyy').format(dateTime);
+    } catch (e) {
+      return '';
     }
   }
 
@@ -248,123 +267,144 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
                     ),
                   ),
                   SizedBox(height: 8.h),
-                  Text(
-                    provider.formatDateTime(ride.scheduledAt ?? ride.createdAt),
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
-                  ),
-                  SizedBox(height: 10.h),
-                  Divider(thickness: 1, color: Colors.grey.shade300),
-                  SizedBox(height: 10.h),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Payment method',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w400,
-                                color: Color(0xFF9E9E9E),
-                              ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            formatTime(ride.createdAt),
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontWeight: FontWeight.w500,
+                              fontSize: 12.sp,
+                              color: Colors.black,
                             ),
-                            SizedBox(height: 8.h),
-                            Text(
-                              ride.paymentMethod,
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black,
-                              ),
+                          ),
+                          Text(
+                            formatDate(ride.createdAt),
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16.sp,
+                              height: 1.0,
+                              letterSpacing: -0.41,
+                              color: Colors.black,
                             ),
-                          ],
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 10.h),
+                      Divider(thickness: 1, color: Colors.grey.shade300),
+                      SizedBox(height: 10.h),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Payment method',
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 12.sp,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color(0xFF9E9E9E),
+                                  ),
+                                ),
+                                SizedBox(height: 8.h),
+                                Text(
+                                  ride.paymentMethod,
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Container(
+                            width: 1.w,
+                            height: 40.h,
+                            color: Colors.grey.shade300,
+                          ),
+                          SizedBox(width: 20.w),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Vehicle',
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 12.sp,
+                                    fontWeight: FontWeight.w400,
+                                    color: Color(0xFF9E9E9E),
+                                  ),
+                                ),
+                                SizedBox(height: 8.h),
+                                Text(
+                                  ride.vehicleType,
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 16.sp,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.black,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      SizedBox(height: 10.h),
+                      Divider(thickness: 1, color: Colors.grey.shade300),
+                      SizedBox(height: 10.h),
+                      Text(
+                        'Price',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 16.sp,
+                          fontWeight: FontWeight.w500,
+                          color: Color(0xFF9E9E9E),
                         ),
                       ),
-                      Container(
-                        width: 1.w,
-                        height: 40.h,
-                        color: Colors.grey.shade300,
-                      ),
-                      SizedBox(width: 20.w),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Vehicle',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w400,
-                                color: Color(0xFF9E9E9E),
-                              ),
-                            ),
-                            SizedBox(height: 8.h),
-                            Text(
-                              ride.vehicleType,
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ],
+                      SizedBox(height: 8.h),
+                      Text(
+                        provider.formatPrice(ride.price),
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 24.sp,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.black,
                         ),
                       ),
-                    ],
-                  ),
-                  SizedBox(height: 10.h),
-                  Divider(thickness: 1, color: Colors.grey.shade300),
-                  SizedBox(height: 10.h),
-                  Text(
-                    'Price',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w500,
-                      color: Color(0xFF9E9E9E),
-                    ),
-                  ),
-                  SizedBox(height: 8.h),
-                  Text(
-                    provider.formatPrice(ride.price),
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 24.sp,
-                      fontWeight: FontWeight.w700,
-                      color: Colors.black,
-                    ),
-                  ),
-                  Spacer(),
-                  GestureDetector(
-                    onTap: _openGoogleMaps,
-                    child: Container(
-                      width: double.infinity,
-                      height: 47.h,
-                      decoration: BoxDecoration(
-                        color: Color(ConstColors.mainColor),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: Center(
-                        child: Text(
-                          'View in map',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w600,
+                      Spacer(),
+                      GestureDetector(
+                        onTap: _openGoogleMaps,
+                        child: Container(
+                          width: double.infinity,
+                          height: 47.h,
+                          decoration: BoxDecoration(
+                            color: Color(ConstColors.mainColor),
+                            borderRadius: BorderRadius.circular(8.r),
+                          ),
+                          child: Center(
+                            child: Text(
+                              'View in map',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16.sp,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ),
