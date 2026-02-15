@@ -3905,44 +3905,53 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             SizedBox(height: 15.h),
-            Text(
-              passengerName,
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w600,
-                fontSize: 24.sp,
-                height: 1.0,
-                letterSpacing: -0.32,
-              ),
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-            ),
-            SizedBox(height: 8.h),
-            Text(
-              'Pickup: $pickupAddress',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w600,
-                fontSize: 16.sp,
-                height: 1.0,
-                letterSpacing: -0.32,
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                passengerName,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 24.sp,
+                  height: 1.0,
+                  letterSpacing: -0.32,
+                ),
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
               ),
             ),
-            SizedBox(height: 8.h),
-            Text(
-              'Destination: $destAddress',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w600,
-                fontSize: 16.sp,
-                height: 1.0,
-                letterSpacing: -0.32,
+            SizedBox(height: 15.h),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Pickup: $pickupAddress',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16.sp,
+                  height: 1.0,
+                  letterSpacing: -0.32,
+                ),
               ),
             ),
-            if (stopAddress.isNotEmpty)
+            SizedBox(height: 15.h),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Destination: $destAddress',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16.sp,
+                  height: 1.0,
+                  letterSpacing: -0.32,
+                ),
+              ),
+            ),
+            if (stopAddress.trim().isNotEmpty)
               Column(
                 children: [
-                  SizedBox(height: 8.h),
+                  SizedBox(height: 15.h),
                   Text(
                     'Stop: $stopAddress',
                     style: TextStyle(
@@ -3957,7 +3966,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             SizedBox(height: 15.h),
-            if (note.isNotEmpty)
+            if (note.trim().isNotEmpty)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -4617,4 +4626,3 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 }
-

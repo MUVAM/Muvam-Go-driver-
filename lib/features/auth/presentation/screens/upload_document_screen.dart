@@ -10,6 +10,7 @@ import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/fonts.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
 
+import 'package:muvam_rider/features/auth/presentation/screens/driver_license_screen.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/vehicle_insurance_screen.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/vehicle_registration_screen.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/vehicle_photos_screen.dart';
@@ -47,6 +48,7 @@ class KycVerificationScreen extends StatefulWidget {
 }
 
 class _KycVerificationScreenState extends State<KycVerificationScreen> {
+  File? driverLicense;
   File? insurance;
   File? vehicleRegistration;
   List<File> vehiclePhotos = [];
@@ -64,7 +66,46 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
     setState(() {});
   }
 
+  Future<void> _navigateToDriverLicenseScreen() async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DriverLicenseScreen(
+          token: widget.token,
+          carMake: widget.carMake,
+          carModel: widget.carModel,
+          carYear: widget.carYear,
+          carSeats: widget.carSeats,
+          licenseNumber: widget.licenseNumber,
+          licensePlate: widget.licensePlate,
+          carColor: widget.carColor,
+          isAcEnabled: widget.isAcEnabled,
+        ),
+      ),
+    );
+    if (result != null && result is File) {
+      setState(() {
+        driverLicense = result;
+      });
+      // Add delay to ensure proper state update
+      await Future.delayed(const Duration(milliseconds: 500));
+      // Automatically navigate to insurance screen after driver license upload
+      if (mounted) {
+        _navigateToInsuranceScreen();
+      }
+    }
+  }
+
   Future<void> _navigateToInsuranceScreen() async {
+    // Check if driver license is uploaded first
+    if (driverLicense == null) {
+      CustomFlushbar.showInfo(
+        context: context,
+        message: 'Please upload driver license first',
+      );
+      return;
+    }
+
     final result = await Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => const VehicleInsuranceScreen()),
@@ -83,7 +124,14 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
   }
 
   Future<void> _navigateToRegistrationScreen() async {
-    // Check if insurance is uploaded first
+    // Check if previous documents are uploaded first
+    if (driverLicense == null) {
+      CustomFlushbar.showInfo(
+        context: context,
+        message: 'Please upload driver license first',
+      );
+      return;
+    }
     if (insurance == null) {
       CustomFlushbar.showInfo(
         context: context,
@@ -113,6 +161,13 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
 
   Future<void> _navigateToVehiclePhotosScreen() async {
     // Check if previous documents are uploaded first
+    if (driverLicense == null) {
+      CustomFlushbar.showInfo(
+        context: context,
+        message: 'Please upload driver license first',
+      );
+      return;
+    }
     if (insurance == null) {
       CustomFlushbar.showInfo(
         context: context,
@@ -147,10 +202,12 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
     );
     AppLogger.log('📋 Step 1: Validating uploaded documents...');
 
-    if (vehicleRegistration == null ||
+    if (driverLicense == null ||
+        vehicleRegistration == null ||
         insurance == null ||
         vehiclePhotos.length < 3) {
       AppLogger.log('❌ Validation failed: Missing required documents');
+      AppLogger.log('Driver License: ${driverLicense != null ? "✅" : "❌"}');
       AppLogger.log(
         'Vehicle Registration: ${vehicleRegistration != null ? "✅" : "❌"}',
       );
@@ -318,6 +375,16 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
                   child: Column(
                     children: [
                       KycDocumentTile(
+                        icon: ConstImages.driversLicense,
+                        title: 'Drivers License',
+                        subtitle:
+                            'Provide an up-to-date vehicle registration documents to verify ownership and eligibility to operate on the platform',
+                        isUploaded: driverLicense != null,
+                        onTap: _navigateToDriverLicenseScreen,
+                        themeManager: themeManager,
+                      ),
+                      Divider(height: 1.h, color: Colors.grey.shade300),
+                      KycDocumentTile(
                         icon: ConstImages.streamlineSolar,
                         title: 'Vehicle Insurance',
                         subtitle:
@@ -384,7 +451,8 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
                         // color: const Color(ConstColors.mainColor),
                         color: _isLoading
                             ? const Color(ConstColors.mainColor)
-                            : (insurance != null &&
+                            : (driverLicense != null &&
+                                  insurance != null &&
                                   vehicleRegistration != null &&
                                   vehiclePhotos.length >= 3)
                             ? const Color(ConstColors.mainColor)

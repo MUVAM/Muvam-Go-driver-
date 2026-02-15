@@ -1,3 +1,4 @@
+import 'package:another_flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
@@ -45,6 +46,44 @@ class _MyCarsScreenState extends State<MyCarsScreen> {
       });
     } else {
       setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> _setPrimaryVehicle(dynamic id) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final token = prefs.getString('auth_token');
+    // final token = await TokenManager.getToken();
+    if (token == null) return;
+
+    final response = await ApiService.setPrimaryVehicle(id, token);
+    if (response['success']) {
+      // Show success message
+      Flushbar(
+        title: "Success",
+        message: "Successfully set this vehicle as your default",
+        duration: Duration(seconds: 3),
+        backgroundColor: Colors.green,
+        margin: EdgeInsets.all(8),
+        borderRadius: BorderRadius.circular(8),
+        flushbarPosition: FlushbarPosition.TOP,
+      ).show(context);
+
+      // Reload vehicles to reflect the updated default status
+      await _loadVehicles();
+    } else {
+      // Show error message
+      Flushbar(
+        title: "Error",
+        message:
+            response['message'] ??
+            "Failed to set default vehicle. Please try again.",
+        duration: Duration(seconds: 3),
+        backgroundColor: Colors.red,
+        margin: EdgeInsets.all(8),
+        borderRadius: BorderRadius.circular(8),
+        flushbarPosition: FlushbarPosition.TOP,
+      ).show(context);
     }
   }
 
@@ -108,6 +147,71 @@ class _MyCarsScreenState extends State<MyCarsScreen> {
                     return GestureDetector(
                       onTap: () {
                         setState(() => selectedVehicle = vehicle);
+                      },
+
+                      onLongPress: () async {
+                        // Show confirmation dialog
+                        final confirmed = await showDialog<bool>(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12.r),
+                              ),
+                              title: Text(
+                                'Set Default Vehicle',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 18.sp,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.black,
+                                ),
+                              ),
+                              content: Text(
+                                'Do you want to set "${vehicle.displayName}" as your default vehicle?',
+                                style: TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontSize: 14.sp,
+                                  fontWeight: FontWeight.w400,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(false),
+                                  child: Text(
+                                    'Cancel',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 14.sp,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
+                                ),
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.of(context).pop(true),
+                                  child: Text(
+                                    'Confirm',
+                                    style: TextStyle(
+                                      fontFamily: 'Inter',
+                                      fontSize: 14.sp,
+                                      fontWeight: FontWeight.w600,
+                                      color: Color(ConstColors.mainColor),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+
+                        // If user confirmed, set as primary vehicle
+                        if (confirmed == true) {
+                          _setPrimaryVehicle(vehicle.id);
+                        }
                       },
                       child: Container(
                         padding: EdgeInsets.symmetric(vertical: 12.h),

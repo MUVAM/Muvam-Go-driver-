@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/utils/currency_formatter.dart';
+import 'package:muvam_rider/features/communication/presentation/screens/call_screen.dart';
+import 'package:muvam_rider/features/communication/presentation/screens/chat_screen.dart';
 
 class RideSheetContent {
   static Widget buildActiveRideContent({
@@ -33,28 +35,25 @@ class RideSheetContent {
           ),
         ),
         SizedBox(height: 15.h),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Center(
-                child: Text(
-                  'Extra(tip): ₦$tip',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
-                    fontSize: 16.sp,
-                    height: 1.0,
-                    letterSpacing: -0.32,
-                    color: Colors.grey,
-                  ),
+        Center(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Extra(tip): ₦$tip',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  fontWeight: FontWeight.w500,
+                  fontSize: 16.sp,
+                  height: 1.0,
+                  letterSpacing: -0.32,
+                  color: Colors.grey,
                 ),
               ),
-            ),
-            Container(width: 1.w, height: 20.h, color: Colors.grey.shade300),
-            SizedBox(width: 10.w),
-            Expanded(
-              child: Text(
+              SizedBox(width: 8.w), // Add spacing before divider
+              Container(width: 1.w, height: 20.h, color: Colors.grey.shade300),
+              SizedBox(width: 8.w),
+              Text(
                 'Wait: ₦$waitFee',
                 style: TextStyle(
                   fontFamily: 'Inter',
@@ -65,8 +64,8 @@ class RideSheetContent {
                   color: Colors.grey,
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         SizedBox(height: 20.h),
         if (rideStatus != 'started') ...[
@@ -93,19 +92,20 @@ class RideSheetContent {
               letterSpacing: -0.32,
             ),
           ),
-          SizedBox(height: 15.h),
+          if (ride['StopAddress'].trim().isNotEmpty) SizedBox(height: 15.h),
         ],
         // Destination aligned to the left
-        Text(
-          'Stop: ${ride['StopAddress'] ?? ride['stopAddress']}',
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontWeight: FontWeight.w600,
-            fontSize: 24.sp,
-            height: 1.0,
-            letterSpacing: -0.32,
+        if (ride['StopAddress'].trim().isNotEmpty)
+          Text(
+            'Stop: ${ride['StopAddress'] ?? ride['stopAddress']}',
+            style: TextStyle(
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w600,
+              fontSize: 24.sp,
+              height: 1.0,
+              letterSpacing: -0.32,
+            ),
           ),
-        ),
         SizedBox(height: 15.h),
         Text(
           'Destination: ${ride['DestAddress'] ?? 'Unknown destination'}',
@@ -120,38 +120,39 @@ class RideSheetContent {
         SizedBox(height: 15.h),
         Divider(color: Color(0xffB1B1B1)),
         SizedBox(height: 15.h),
-        Column(
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'Note:',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w600,
-                  fontSize: 24.sp,
-                  height: 1.0,
-                  letterSpacing: -0.32,
+        if (ride['Note'].trim().isNotEmpty)
+          Column(
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Note:',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w600,
+                    fontSize: 24.sp,
+                    height: 1.0,
+                    letterSpacing: -0.32,
+                  ),
                 ),
               ),
-            ),
-            Container(
-              width: 331.w,
-              child: Text(
-                maxLines: 2,
-                '${ride['note'] ?? ride['Note'] ?? 'No note provided'}',
-                style: TextStyle(
-                  overflow: TextOverflow.ellipsis,
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w400,
-                  fontSize: 14.sp,
-                  height: 1.0,
-                  letterSpacing: -0.32,
+              Container(
+                width: 331.w,
+                child: Text(
+                  maxLines: 2,
+                  '${ride['note'] ?? ride['Note'] ?? 'No note provided'}',
+                  style: TextStyle(
+                    overflow: TextOverflow.ellipsis,
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w400,
+                    fontSize: 14.sp,
+                    height: 1.0,
+                    letterSpacing: -0.32,
+                  ),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
         Container(
           width: 353.w,
           height: 42.h,
@@ -186,17 +187,17 @@ class RideSheetContent {
                   onTap: () {
                     // Navigate to ChatScreen
                     // You'll need to import and use your ChatScreen here
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder: (context) => ChatScreen(
-                    //       driverName: passengerName,
-                    //       driverId: passengerID,
-                    //       rideId: ride['ID'],
-                    //       driverPhone: passengerPhone,
-                    //     ),
-                    //   ),
-                    // );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChatScreen(
+                          driverName: passengerName,
+                          driverId: passengerID,
+                          rideId: ride['ID'],
+                          driverPhone: passengerPhone,
+                        ),
+                      ),
+                    );
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -226,15 +227,15 @@ class RideSheetContent {
                   onTap: () {
                     // Navigate to CallScreen
                     // You'll need to import and use your CallScreen here
-                    // Navigator.push(
-                    //   context,
-                    //   MaterialPageRoute(
-                    //     builder: (context) => CallScreen(
-                    //       driverName: passengerName,
-                    //       rideId: ride['ID'],
-                    //     ),
-                    //   ),
-                    // );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => CallScreen(
+                          driverName: passengerName,
+                          rideId: ride['ID'],
+                        ),
+                      ),
+                    );
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,

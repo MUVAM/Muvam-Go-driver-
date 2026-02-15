@@ -1154,6 +1154,32 @@ class ApiService {
     }
   }
 
+
+
+ static Future<Map<String, dynamic>> setPrimaryVehicle(dynamic id, String token) async {
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/rides/vehicle/$id'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = jsonDecode(response.body);
+        return {'success': true, 'data': data};
+      } else {
+        final error = jsonDecode(response.body);
+        return {
+          'success': false,
+          'message': error['message'] ?? 'Failed to get vehicles',
+        };
+      }
+    } catch (e) {
+      return {'success': false, 'message': 'Network error: $e'};
+    }
+  }
   // Get user ratings
   static Future<Map<String, dynamic>> getUserRatings(
     String token,

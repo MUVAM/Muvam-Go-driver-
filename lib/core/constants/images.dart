@@ -48,6 +48,7 @@ class ConstImages {
   static const String chevronBack = 'assets/svg/chevron-back.svg';
   static const String backChevron = 'assets/svg/back-chevron.svg';
   static const String basilDocument = 'assets/svg/basil_document.svg';
+  static const String driversLicense = 'assets/svg/driverlicensee.svg';
   static const String streamlineSolar = 'assets/svg/Streamline Solar.svg';
   static const String tablerCamera = 'assets/svg/tabler_camera.svg';
   static const String arrowLeftAlt = 'assets/svg/arrow_left_alt.svg';
