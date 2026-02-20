@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/services/call_service.dart';
+import 'package:muvam_rider/core/services/connectivity_service.dart';
 import 'package:muvam_rider/core/services/fcm_token_service.dart';
 import 'package:muvam_rider/core/services/enhanced_notification_service.dart';
 import 'package:muvam_rider/core/services/websocket_service.dart';
@@ -20,10 +21,12 @@ import 'package:muvam_rider/features/profile/data/providers/profile_provider.dar
 import 'package:muvam_rider/features/referral/data/providers/referral_provider.dart';
 import 'package:muvam_rider/core/services/global_call_service.dart';
 import 'package:muvam_rider/features/vehicles/data/provider/vehicle_provider.dart';
+import 'package:muvam_rider/shared/presentation/screens/network_banner.dart';
 import 'package:muvam_rider/shared/presentation/screens/splash_screen.dart';
+import 'package:muvam_rider/shared/provider/connectivity_provider.dart';
 import 'package:provider/provider.dart';
 import 'core/constants/theme_manager.dart';
-import 'core/services/connectivity_service.dart';
+
 import 'core/utils/app_logger.dart';
 
 Future<void> main() async {
@@ -35,8 +38,6 @@ Future<void> main() async {
     AppLogger.log('Firebase initialized successfully', tag: 'FIREBASE');
     await FCMTokenService.initializeFCM();
     EnhancedNotificationService.initEnhancedNotifications();
-    // Register FCM background message handler
-    // FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
     AppLogger.log('FCM background handler registered', tag: 'FIREBASE');
   } catch (e) {
     AppLogger.error(
@@ -54,6 +55,11 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
+        // ── NEW: ConnectivityProvider must be first so everything below
+        //         can read it if needed ──────────────────────────────────
+        ChangeNotifierProvider(create: (_) => ConnectivityProvider()),
+
+        // ──────────────────────────────────────────────────────────────
         ChangeNotifierProvider(create: (context) => ThemeManager()),
         ChangeNotifierProvider(create: (context) => AuthProvider()),
         ChangeNotifierProvider.value(value: chatProvider),
@@ -67,7 +73,6 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => ReferralProvider()),
         ChangeNotifierProvider(create: (_) => DeleteAccountProvider()),
         ChangeNotifierProvider(create: (_) => VehicleProvider()),
-        // ChangeNotifierProvider(create: (_) => FCMProvider()),
       ],
       child: const MyApp(),
     ),
@@ -224,15 +229,6 @@ class _MyAppState extends State<MyApp> {
     AppLogger.log('GlobalCallService initialized', tag: 'APP_INIT');
   }
 
-  // Future<void> _initializeFCM() async {
-  //   try {
-  //     EnhancedNotificationService.initEnhancedNotifications();
-  //     AppLogger.log('FCM service initialized in MyApp', tag: 'MAIN');
-  //   } catch (e) {
-  //     AppLogger.error('Error initializing FCM in MyApp', error: e, tag: 'MAIN');
-  //   }
-  // }
-
   @override
   void dispose() {
     GlobalCallService.instance.dispose();
@@ -257,11 +253,13 @@ class _MyAppState extends State<MyApp> {
               themeMode: themeManager.isDarkMode
                   ? ThemeMode.dark
                   : ThemeMode.light,
-              home: const ConnectivityWrapper(child: SplashScreen()),
-              routes: {
-                '/home': (context) =>
-                    SplashScreen(), // Replace with your actual home screen
-              },
+              // ── NEW: NetworkBanner wraps the whole app so the offline
+              //         strip appears above every screen automatically ───
+              home: NetworkBanner(
+                child: ConnectivityWrapper(child: SplashScreen()),
+              ),
+              // ────────────────────────────────────────────────────────
+              routes: {'/home': (context) => SplashScreen()},
             );
           },
         );
@@ -269,6 +267,10 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
+
+// ── ConnectivityWrapper ────────────────────────────────────────────────────
+// Unchanged in structure — now delegates to the new ConnectivityService
+// which reads ConnectivityProvider from the widget tree.
 
 class ConnectivityWrapper extends StatefulWidget {
   final Widget child;
