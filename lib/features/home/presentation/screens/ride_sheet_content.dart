@@ -144,8 +144,8 @@ class RideSheetContent {
                   style: TextStyle(
                     overflow: TextOverflow.ellipsis,
                     fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
-                    fontSize: 14.sp,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 24.sp,
                     height: 1.0,
                     letterSpacing: -0.32,
                   ),

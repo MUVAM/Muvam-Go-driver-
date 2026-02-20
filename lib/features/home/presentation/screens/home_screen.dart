@@ -3928,7 +3928,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w600,
-                  fontSize: 16.sp,
+                  fontSize: 24.sp,
                   height: 1.0,
                   letterSpacing: -0.32,
                 ),
@@ -3942,41 +3942,55 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(
                   fontFamily: 'Inter',
                   fontWeight: FontWeight.w600,
-                  fontSize: 16.sp,
+                  fontSize: 24.sp,
                   height: 1.0,
                   letterSpacing: -0.32,
                 ),
               ),
             ),
             if (stopAddress.trim().isNotEmpty)
-              Column(
-                children: [
-                  SizedBox(height: 15.h),
-                  Text(
-                    'Stop: $stopAddress',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w500,
-                      fontSize: 14.sp,
-                      height: 1.0,
-                      letterSpacing: -0.32,
-                      color: Colors.grey[600],
-                    ),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  'Stop: $stopAddress',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w600,
+                    fontSize: 24.sp,
+                    height: 1.0,
+                    letterSpacing: -0.32,
                   ),
-                ],
+                ),
               ),
+
             SizedBox(height: 15.h),
             if (note.trim().isNotEmpty)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Note: $note',
-                    style: TextStyle(fontFamily: 'Inter', fontSize: 14.sp),
-                  ),
-                  SizedBox(height: 15.h),
-                ],
+              Align(
+                alignment: Alignment.centerLeft,
+
+                child: Column(
+                  children: [
+                    Text(
+                      'Note:',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 18.sp,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      '$note',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        fontSize: 14.sp,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
+                ),
               ),
+            SizedBox(height: 15.h),
+
             Container(
               width: 353.w,
               height: 42.h,
