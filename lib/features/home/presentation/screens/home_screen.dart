@@ -3948,6 +3948,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
+            SizedBox(height: 15.h),
             if (stopAddress.trim().isNotEmpty)
               Align(
                 alignment: Alignment.centerLeft,
@@ -3970,12 +3971,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 child: Column(
                   children: [
-                    Text(
-                      'Note:',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w500,
+                    Align(
+                      alignment: Alignment.topLeft,
+                      child: Text(
+                        'Note:',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 24.sp,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                     Text(
