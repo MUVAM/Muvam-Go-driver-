@@ -36,6 +36,7 @@ import 'package:muvam_rider/features/trips/presentation/screen/history_completed
 import 'package:muvam_rider/shared/presentation/screens/onboarding_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -56,6 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController fromController = TextEditingController();
   final TextEditingController toController = TextEditingController();
   final TextEditingController noteController = TextEditingController();
+  final PanelController _panelController = PanelController();
   DateTime selectedDate = DateTime.now();
   TimeOfDay selectedTime = TimeOfDay.now();
   int? selectedCancelReason;
@@ -194,9 +196,17 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<WalletProvider>().fetchWalletSummary();
       context.read<RequestProvider>().startAutoRefresh();
+      final screenHeight = MediaQuery.of(context).size.height;
+      final targetPosition =
+          (screenHeight * 0.42 - 80.h) / (screenHeight * 0.85 - 80.h);
+      _panelController.animatePanelToPosition(
+        targetPosition.clamp(0.0, 1.0),
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
     });
 
-    _webSocketService = WebSocketService.instance; // Get singleton instance
+    _webSocketService = WebSocketService.instance;
 
     _initializeServices();
   }
@@ -1163,27 +1173,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 right: 0,
                 child: Center(child: _buildStopMarkerWidget()),
               ),
-            // Bottom sheet
-            DraggableScrollableSheet(
-              initialChildSize: 0.42,
-              minChildSize: 0.15,
-              maxChildSize: 0.85,
-              snap: true,
-              snapSizes: [0.15, 0.42, 0.85],
-              builder: (BuildContext context, ScrollController scrollController) {
+            SlidingUpPanel(
+              controller: _panelController,
+              minHeight: 80.h,
+              maxHeight: MediaQuery.of(context).size.height * 0.85,
+              panelSnapping: false,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+              color: themeManager.getCardColor(context),
+              panelBuilder: (ScrollController scrollController) {
                 return Container(
                   decoration: BoxDecoration(
                     color: themeManager.getCardColor(context),
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(20.r),
-                      topRight: Radius.circular(20.r),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(20.r),
                     ),
                   ),
                   child: ListView(
                     controller: scrollController,
                     padding: EdgeInsets.zero,
                     children: [
-                      // Drag handle
                       Center(
                         child: Container(
                           width: 69.w,
@@ -1195,12 +1203,10 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                       ),
-                      // Content with padding
                       Padding(
                         padding: EdgeInsets.symmetric(horizontal: 20.w),
                         child: Column(
                           children: [
-                            // Refer and earn banner
                             Container(
                               width: 353.w,
                               height: 50.h,
@@ -1266,44 +1272,37 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             SizedBox(height: 20.h),
-                            // Earnings sections
                             _buildEarningsSection(
                               'Today\'s earning',
                               '₦${_earningsData['total_earnings']}',
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => AnalyticsScreen(),
-                                  ),
-                                );
-                              },
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AnalyticsScreen(),
+                                ),
+                              ),
                             ),
                             Divider(color: Color(0xFFE0E0E0), thickness: 1),
                             _buildEarningsSection(
                               'Today\'s rides',
                               '${_earningsData['total_rides']}',
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => AnalyticsScreen(),
-                                  ),
-                                );
-                              },
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AnalyticsScreen(),
+                                ),
+                              ),
                             ),
                             Divider(color: Color(0xFFE0E0E0), thickness: 1),
                             _buildEarningsSection(
                               'Total ride completed',
                               '${_earningsData['total_rides_completed']}',
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => AnalyticsScreen(),
-                                  ),
-                                );
-                              },
+                              onTap: () => Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => AnalyticsScreen(),
+                                ),
+                              ),
                             ),
                             SizedBox(height: 20.h),
                           ],
