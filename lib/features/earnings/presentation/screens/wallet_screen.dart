@@ -22,7 +22,22 @@ class WalletScreenState extends State<WalletScreen> {
   final List<String> tabs = ['Weekly', 'Monthly', 'All'];
 
   String selectedFilter = 'All';
-  final List<String> filterOptions = ['All', 'Credit', 'Debit'];
+  final List<String> filterOptions = [
+    'All',
+    'Tip',
+    'Commission',
+    'Ride Earning',
+    'Withdrawal',
+  ];
+
+  // Maps display label → backend type value
+  final Map<String, String> filterTypeMap = {
+    'All': 'all',
+    'Tip': 'tip',
+    'Commission': 'commission',
+    'Ride Earning': 'ride_earning',
+    'Withdrawal': 'withdrawal',
+  };
 
   @override
   void initState() {
@@ -30,6 +45,33 @@ class WalletScreenState extends State<WalletScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<WalletProvider>().fetchWalletSummary();
     });
+  }
+
+  bool _isInCurrentWeek(String createdAt) {
+    try {
+      final dt = DateTime.parse(createdAt).toLocal();
+      final now = DateTime.now();
+      final startOfWeek = now.subtract(Duration(days: now.weekday - 1));
+      final start = DateTime(
+        startOfWeek.year,
+        startOfWeek.month,
+        startOfWeek.day,
+      );
+      final end = start.add(const Duration(days: 7));
+      return dt.isAfter(start) && dt.isBefore(end);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  bool _isInCurrentMonth(String createdAt) {
+    try {
+      final dt = DateTime.parse(createdAt).toLocal();
+      final now = DateTime.now();
+      return dt.year == now.year && dt.month == now.month;
+    } catch (_) {
+      return false;
+    }
   }
 
   @override
@@ -41,7 +83,7 @@ class WalletScreenState extends State<WalletScreen> {
         child: Consumer<WalletProvider>(
           builder: (context, walletProvider, child) {
             if (walletProvider.isLoading) {
-              return Center(child: CircularProgressIndicator.adaptive());
+              return const Center(child: CircularProgressIndicator.adaptive());
             }
 
             final walletSummary = walletProvider.walletSummary;
@@ -68,7 +110,7 @@ class WalletScreenState extends State<WalletScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(ConstColors.mainColor),
                       ),
-                      child: Text('Retry'),
+                      child: const Text('Retry'),
                     ),
                   ],
                 ),
@@ -80,6 +122,7 @@ class WalletScreenState extends State<WalletScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Header
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -125,14 +168,10 @@ class WalletScreenState extends State<WalletScreen> {
                   SizedBox(height: 20.h),
                   Row(
                     children: tabs.asMap().entries.map((entry) {
-                      int index = entry.key;
-                      String tab = entry.value;
+                      final index = entry.key;
+                      final tab = entry.value;
                       return GestureDetector(
-                        onTap: () {
-                          setState(() {
-                            selectedTab = index;
-                          });
-                        },
+                        onTap: () => setState(() => selectedTab = index),
                         child: Container(
                           width: 75.w,
                           height: 25.h,
@@ -187,7 +226,7 @@ class WalletScreenState extends State<WalletScreen> {
                         ),
                       ),
                       Container(
-                        width: 100.w,
+                        width: 120.w,
                         height: 24.h,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
@@ -223,9 +262,7 @@ class WalletScreenState extends State<WalletScreen> {
                             }).toList(),
                             onChanged: (newValue) {
                               if (newValue != null) {
-                                setState(() {
-                                  selectedFilter = newValue;
-                                });
+                                setState(() => selectedFilter = newValue);
                               }
                             },
                           ),
@@ -237,62 +274,69 @@ class WalletScreenState extends State<WalletScreen> {
                   Expanded(
                     child: Builder(
                       builder: (context) {
+                        final typeFilter =
+                            filterTypeMap[selectedFilter] ?? 'all';
+
                         final filteredTransactions = walletSummary.transactions
                             .where((t) {
-                              if (selectedFilter == 'All') return true;
-                              if (selectedFilter == 'Credit')
-                                return t.type == 'credit';
-                              if (selectedFilter == 'Debit')
-                                return t.type == 'debit';
+                              if (selectedTab == 0 &&
+                                  !_isInCurrentWeek(t.createdAt))
+                                return false;
+                              if (selectedTab == 1 &&
+                                  !_isInCurrentMonth(t.createdAt))
+                                return false;
+
+                              if (typeFilter != 'all' && t.type != typeFilter)
+                                return false;
+
                               return true;
                             })
                             .toList();
 
-                        return filteredTransactions.isEmpty
-                            ? Center(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.receipt_long_outlined,
-                                      size: 48.sp,
-                                      color: Colors.grey.shade300,
-                                    ),
-                                    SizedBox(height: 16.h),
-                                    Text(
-                                      'No transactions yet',
-                                      style: TextStyle(
-                                        fontFamily: 'Inter',
-                                        fontSize: 14.sp,
-                                        color: Colors.grey,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              )
-                            : ListView.separated(
-                                itemCount: filteredTransactions.length,
-                                separatorBuilder: (context, index) => Divider(
-                                  thickness: 1,
+                        if (filteredTransactions.isEmpty) {
+                          return Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.receipt_long_outlined,
+                                  size: 48.sp,
                                   color: Colors.grey.shade300,
                                 ),
-                                itemBuilder: (context, index) {
-                                  final transaction =
-                                      filteredTransactions[index];
-                                  final isCredit = transaction.type == 'credit';
-                                  return TransactionItem(
-                                    amount: transaction.description,
-                                    dateTime: walletProvider.formatDateTime(
-                                      transaction.createdAt,
-                                    ),
-                                    status:
-                                        '${isCredit ? '+' : '-'}${walletProvider.formatAmount(transaction.amount)}',
-                                    statusColor: themeManager.getTextColor(
-                                      context,
-                                    ),
-                                  );
-                                },
-                              );
+                                SizedBox(height: 16.h),
+                                Text(
+                                  'No transactions yet',
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontSize: 14.sp,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+
+                        return ListView.separated(
+                          itemCount: filteredTransactions.length,
+                          separatorBuilder: (context, index) => Divider(
+                            thickness: 1,
+                            color: Colors.grey.shade200,
+                          ),
+                          itemBuilder: (context, index) {
+                            final transaction = filteredTransactions[index];
+                            return TransactionItem(
+                              description: transaction.description,
+                              dateTime: walletProvider.formatDateTime(
+                                transaction.createdAt,
+                              ),
+                              formattedAmount: walletProvider.formatAmount(
+                                transaction.amount,
+                              ),
+                              type: transaction.type,
+                            );
+                          },
+                        );
                       },
                     ),
                   ),

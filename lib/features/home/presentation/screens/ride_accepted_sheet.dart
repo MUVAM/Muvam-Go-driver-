@@ -1,44 +1,13 @@
 import 'dart:async';
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:http/http.dart' as http;
 import 'package:muvam_rider/core/constants/colors.dart';
-import 'package:muvam_rider/core/constants/images.dart';
-import 'package:muvam_rider/core/constants/text_styles.dart';
-import 'package:muvam_rider/core/constants/theme_manager.dart';
-import 'package:muvam_rider/core/constants/url_constants.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
-import 'package:muvam_rider/core/services/call_service.dart';
-import 'package:muvam_rider/core/services/location_service.dart';
-import 'package:muvam_rider/core/services/ride_tracking_service.dart';
 import 'package:muvam_rider/core/services/unified_notifiation_service.dart';
-import 'package:muvam_rider/core/services/websocket_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
-import 'package:muvam_rider/features/activities/data/providers/request_provider.dart';
-import 'package:muvam_rider/features/analytics/presentation/screens/analytics_screen.dart';
-import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
-import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_selection_screen.dart';
-import 'package:muvam_rider/features/communication/data/models/chat_model.dart';
-import 'package:muvam_rider/features/communication/data/providers/chat_provider.dart';
-import 'package:muvam_rider/features/communication/presentation/screens/call_screen.dart';
-import 'package:muvam_rider/features/communication/presentation/screens/chat_screen.dart';
-import 'package:muvam_rider/features/communication/presentation/widgets/chat_notification_service.dart';
-import 'package:muvam_rider/features/earnings/data/provider/wallet_provider.dart';
-import 'package:muvam_rider/features/home/data/provider/driver_provider.dart';
-import 'package:muvam_rider/features/home/presentation/screens/ride_accepted_sheet.dart';
 import 'package:muvam_rider/features/home/presentation/screens/ride_sheet_content.dart';
-
-import 'package:muvam_rider/features/home/presentation/widgets/driver_app_drawer.dart';
-import 'package:muvam_rider/features/home/presentation/widgets/ride_info_widget.dart';
-import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
-import 'package:muvam_rider/features/trips/presentation/screen/history_completed_screen.dart';
-import 'package:muvam_rider/shared/presentation/screens/onboarding_screen.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -48,6 +17,7 @@ class RideAcceptedSheet extends StatefulWidget {
   final Function(Map<String, dynamic>) onRideStatusChanged;
 
   const RideAcceptedSheet({
+    super.key,
     required this.ride,
     required this.acceptedData,
     required this.onRideStatusChanged,
@@ -640,17 +610,28 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
     try {
       AppLogger.log('🚨 Emergency SOS button tapped', tag: 'SOS');
 
-      final rideId = widget.ride['ID'];
+      // ✅ FIX 1: Safely parse rideId regardless of whether it's int or String
+      final rawRideId = widget.ride['ID'];
+      final int? rideId = rawRideId is int
+          ? rawRideId
+          : int.tryParse(rawRideId?.toString() ?? '');
+
+      if (rideId == null) {
+        AppLogger.log('❌ Invalid ride ID: $rawRideId', tag: 'SOS');
+        if (!mounted) return;
+        CustomFlushbar.showError(
+          context: context,
+          message: 'Invalid ride ID. Please try again.',
+        );
+        return;
+      }
 
       // Get current location
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
 
-      // Convert to POINT format
       final location = 'POINT(${position.longitude} ${position.latitude})';
-
-      // Get location address
       final locationAddress =
           'Lat: ${position.latitude}, Lng: ${position.longitude}';
 
@@ -658,11 +639,11 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
       AppLogger.log('📍 SOS Address: $locationAddress', tag: 'SOS');
       AppLogger.log('🚗 SOS Ride ID: $rideId', tag: 'SOS');
 
-      // Get auth token
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
 
       if (token == null) {
+        if (!mounted) return;
         CustomFlushbar.showError(
           context: context,
           message: 'Authentication error. Please login again.',
@@ -670,23 +651,27 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
         return;
       }
 
-      // Show loading indicator
+      // ✅ FIX 2: mounted check before showing flushbar after async gap
+      if (!mounted) return;
       CustomFlushbar.showInfo(
         context: context,
         message: 'Sending emergency alert...',
       );
 
-      // Send SOS alert
       final result = await ApiService.sendSOS(
         token: token,
         location: location,
         locationAddress: locationAddress,
-        rideId: rideId,
+        rideId: rideId, // ✅ now guaranteed to be int
       );
+
+      AppLogger.log('SOS Result: $result', tag: 'SOS');
+
+      // ✅ FIX 3: mounted check before showing dialog after async gap
+      if (!mounted) return;
 
       if (result['success'] == true) {
         AppLogger.log('✅ SOS alert sent successfully', tag: 'SOS');
-        // Show success dialog
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -696,7 +681,7 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
                 children: [
                   Icon(Icons.check_circle, color: Colors.green, size: 28.sp),
                   SizedBox(width: 10.w),
-                  Text('SOS Alert Sent'),
+                  const Text('SOS Alert Sent'),
                 ],
               ),
               content: Text(
@@ -720,21 +705,22 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
           },
         );
       } else {
-        AppLogger.log(
-          '❌ Failed to send SOS alert: ${result['message']}',
-          tag: 'SOS',
-        );
-        // Show error dialog
+        AppLogger.log('❌ Failed to send SOS: ${result['message']}', tag: 'SOS');
         showDialog(
           context: context,
           barrierDismissible: false,
+
           builder: (BuildContext context) {
             return AlertDialog(
+              backgroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               title: Row(
                 children: [
                   Icon(Icons.error, color: Colors.red, size: 28.sp),
                   SizedBox(width: 10.w),
-                  Text('Alert Failed'),
+                  const Text('Alert Failed'),
                 ],
               ),
               content: Text(
@@ -761,17 +747,21 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
       }
     } catch (e) {
       AppLogger.log('❌ Error handling emergency SOS: $e', tag: 'SOS');
-      // Show error dialog
+      if (!mounted) return;
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (BuildContext context) {
           return AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             title: Row(
               children: [
                 Icon(Icons.error, color: Colors.red, size: 28.sp),
                 SizedBox(width: 10.w),
-                Text('Error'),
+                const Text('Error'),
               ],
             ),
             content: Text(
