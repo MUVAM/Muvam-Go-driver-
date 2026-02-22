@@ -267,8 +267,10 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
                     ),
                   ),
                   SizedBox(height: 8.h),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  SizedBox(height: 8.h),
+                  // ✅ FIXED: was Row, changed to Column
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -382,29 +384,29 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
                           color: Colors.black,
                         ),
                       ),
-                      Spacer(),
-                      GestureDetector(
-                        onTap: _openGoogleMaps,
-                        child: Container(
-                          width: double.infinity,
-                          height: 47.h,
-                          decoration: BoxDecoration(
-                            color: Color(ConstColors.mainColor),
-                            borderRadius: BorderRadius.circular(8.r),
-                          ),
-                          child: Center(
-                            child: Text(
-                              'View in map',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16.sp,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
+                    ],
+                  ),
+                  Spacer(),
+                  GestureDetector(
+                    onTap: _openGoogleMaps,
+                    child: Container(
+                      width: double.infinity,
+                      height: 47.h,
+                      decoration: BoxDecoration(
+                        color: Color(ConstColors.mainColor),
+                        borderRadius: BorderRadius.circular(8.r),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'View in map',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16.sp,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ),
