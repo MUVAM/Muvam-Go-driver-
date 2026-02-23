@@ -136,23 +136,26 @@ class RideSheetContent {
                   ),
                 ),
               ),
-              Container(
-                width: 331.w,
-                child: Text(
-                  maxLines: 2,
-                  '${ride['note'] ?? ride['Note'] ?? 'No note provided'}',
-                  style: TextStyle(
-                    overflow: TextOverflow.ellipsis,
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
-                    fontSize: 18.sp,
-                    height: 1.0,
-                    letterSpacing: -0.32,
+              Align(alignment:Alignment.centerLeft,
+                child: Container(
+                  width: 331.w,
+                  child: Text(
+                    maxLines: 2,
+                    '${ride['note'] ?? ride['Note'] ?? 'No note provided'}',
+                    style: TextStyle(
+                      overflow: TextOverflow.ellipsis,
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w400,
+                      fontSize: 18.sp,
+                      height: 1.0,
+                      letterSpacing: -0.32,
+                    ),
                   ),
                 ),
               ),
             ],
           ),
+          SizedBox(height:15.h),
         Container(
           width: 353.w,
           height: 42.h,
