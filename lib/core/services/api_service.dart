@@ -1154,9 +1154,10 @@ class ApiService {
     }
   }
 
-
-
- static Future<Map<String, dynamic>> setPrimaryVehicle(dynamic id, String token) async {
+  static Future<Map<String, dynamic>> setPrimaryVehicle(
+    dynamic id,
+    String token,
+  ) async {
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/rides/vehicle/$id'),
@@ -1180,6 +1181,7 @@ class ApiService {
       return {'success': false, 'message': 'Network error: $e'};
     }
   }
+
   // Get user ratings
   static Future<Map<String, dynamic>> getUserRatings(
     String token,
@@ -1244,7 +1246,7 @@ class ApiService {
         'ride_id': rideId,
       };
 
-      AppLogger.log('Request Body: ${jsonEncode(requestBody)}', tag: 'SOS');
+      AppLogger.log('Request Body sos: ${jsonEncode(requestBody)}', tag: 'SOS');
 
       final response = await http.post(
         Uri.parse(endpoint),
@@ -1256,7 +1258,7 @@ class ApiService {
       );
 
       AppLogger.log('Response Status: ${response.statusCode}', tag: 'SOS');
-      AppLogger.log('Response Body: ${response.body}', tag: 'SOS');
+      AppLogger.log('Response Bodysss: ${response.body}', tag: 'SOS');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
@@ -1267,7 +1269,8 @@ class ApiService {
         final error = jsonDecode(response.body);
         return {
           'success': false,
-          'message': error['message'] ?? 'Failed to send SOS alert',
+          'message':
+              error['error'] ?? error['message'] ?? 'Failed to send SOS alert',
         };
       }
     } catch (e) {

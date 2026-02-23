@@ -4,37 +4,59 @@ import 'package:provider/provider.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
 
 class TransactionItem extends StatelessWidget {
-  final String amount;
+  final String description;
   final String dateTime;
-  final String status;
-  final Color statusColor;
+  final String formattedAmount;
+  final String type;
 
   const TransactionItem({
     super.key,
-    required this.amount,
+    required this.description,
     required this.dateTime,
-    required this.status,
-    required this.statusColor,
+    required this.formattedAmount,
+    required this.type,
   });
+
+  Color _getAmountColor() {
+    switch (type) {
+      case 'withdrawal':
+        return const Color(0xFFE53935);
+      case 'tip':
+        return const Color(0xFF1E88E5);
+      case 'commission':
+        return const Color(0xFFF57C00);
+      case 'ride_earning':
+        return const Color(0xFF43A047);
+      default:
+        return const Color(0xFF43A047);
+    }
+  }
+
+  String _getSign() {
+    return type == 'withdrawal' ? '-' : '+';
+  }
 
   @override
   Widget build(BuildContext context) {
     final themeManager = Provider.of<ThemeManager>(context);
+    final amountColor = _getAmountColor();
+
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: EdgeInsets.symmetric(vertical: 8.h),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Text(
-                amount,
+                description,
                 style: TextStyle(
                   fontFamily: 'Inter',
-                  fontSize: 16.sp,
+                  fontSize: 14.sp,
                   fontWeight: FontWeight.w600,
-                  height: 1.0,
+                  height: 1.2,
                   letterSpacing: -0.32,
                   color: themeManager.getTextColor(context),
                 ),
@@ -44,22 +66,22 @@ class TransactionItem extends StatelessWidget {
                 dateTime,
                 style: TextStyle(
                   fontFamily: 'Inter',
-                  fontSize: 12.sp,
-                  fontWeight: FontWeight.w500,
+                  fontSize: 11.sp,
+                  fontWeight: FontWeight.w400,
                   height: 1.0,
-                  letterSpacing: -0.32,
+                  letterSpacing: -0.2,
                   color: themeManager.getSecondaryTextColor(context),
                 ),
               ),
             ],
           ),
           Text(
-            status,
+            '${_getSign()}$formattedAmount',
             style: TextStyle(
               fontFamily: 'Inter',
               fontSize: 14.sp,
-              fontWeight: FontWeight.w500,
-              color: statusColor,
+              fontWeight: FontWeight.w600,
+              color: amountColor,
             ),
           ),
         ],

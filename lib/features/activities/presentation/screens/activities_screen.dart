@@ -84,7 +84,7 @@ class ActivitiesScreenState extends State<ActivitiesScreen>
             left: 20.w,
             right: 20.w,
             bottom: 20.h,
-            child: SingleChildScrollView(child: _getCurrentTabContent()),
+            child: _getCurrentTabContent(),
           ),
         ],
       ),

@@ -46,7 +46,7 @@ class WalletSummaryResponse {
             ? VirtualAccountInfo.fromJson(json['virtual_account'])
             : null,
         transactions:
-            (json['transactions'] as List<dynamic>?)
+            (json['recent_transactions'] as List<dynamic>?)
                 ?.map((t) => TransactionData.fromJson(t))
                 .toList() ??
             [],

@@ -21,7 +21,7 @@ class WalletService {
         if (token != null) 'Authorization': 'Bearer $token',
       },
     );
-    AppLogger.log('response===:${response.body}');
+    AppLogger.log('response wallet===:${response.body}');
 
     if (response.statusCode == 200) {
       AppLogger.log('response++++++:${response.body}');
