@@ -24,7 +24,7 @@ class RideSheetContent {
         // Price centered
         Center(
           child: Text(
-            '₦${CurrencyFormatter.format(ride['Price'].toString())}',
+            '₦${CurrencyFormatter.format(ride['Price'].toStringAsFixed(1))}',
             style: TextStyle(
               fontFamily: 'Inter',
               fontWeight: FontWeight.w700,
@@ -299,7 +299,7 @@ class RideSheetContent {
         // Price centered
         Center(
           child: Text(
-            '₦${ride['Price']}',
+            '₦${ride['Price'].toStringAsFixed(1)}',
             style: TextStyle(
               fontFamily: 'Inter',
               fontWeight: FontWeight.w700,

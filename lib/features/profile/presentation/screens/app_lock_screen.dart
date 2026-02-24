@@ -240,61 +240,61 @@ class _AppLockScreenState extends State<AppLockScreen> {
                     ),
                   ),
                   SizedBox(height: 20.h),
-                  if (_isBiometricEnabled) ...[
-                    Container(
-                      padding: EdgeInsets.all(16.w),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12.r),
-                        border: Border.all(
-                          color: Colors.grey.shade200,
-                          width: 1,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 10,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Automatically Lock In',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black,
-                            ),
-                          ),
-                          SizedBox(height: 16.h),
-                          LockRadioOption(
-                            title: 'Immediately when leaving the app',
-                            value: 'immediately',
-                            selectedValue: _lockTiming,
-                            onTap: _setLockTiming,
-                          ),
-                          Divider(color: Colors.grey.shade200, height: 1),
-                          LockRadioOption(
-                            title: 'After 1 minute',
-                            value: '1_minute',
-                            selectedValue: _lockTiming,
-                            onTap: _setLockTiming,
-                          ),
-                          Divider(color: Colors.grey.shade200, height: 1),
-                          LockRadioOption(
-                            title: 'After 30 minutes',
-                            value: '30_minutes',
-                            selectedValue: _lockTiming,
-                            onTap: _setLockTiming,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
+                  // if (_isBiometricEnabled) ...[
+                  //   Container(
+                  //     padding: EdgeInsets.all(16.w),
+                  //     decoration: BoxDecoration(
+                  //       color: Colors.white,
+                  //       borderRadius: BorderRadius.circular(12.r),
+                  //       border: Border.all(
+                  //         color: Colors.grey.shade200,
+                  //         width: 1,
+                  //       ),
+                  //       boxShadow: [
+                  //         BoxShadow(
+                  //           color: Colors.black.withOpacity(0.05),
+                  //           blurRadius: 10,
+                  //           offset: Offset(0, 2),
+                  //         ),
+                  //       ],
+                  //     ),
+                  //     child: Column(
+                  //       crossAxisAlignment: CrossAxisAlignment.start,
+                  //       children: [
+                  //         Text(
+                  //           'Automatically Lock In',
+                  //           style: TextStyle(
+                  //             fontFamily: 'Inter',
+                  //             fontSize: 16.sp,
+                  //             fontWeight: FontWeight.w600,
+                  //             color: Colors.black,
+                  //           ),
+                  //         ),
+                  //         SizedBox(height: 16.h),
+                  //         LockRadioOption(
+                  //           title: 'Immediately when leaving the app',
+                  //           value: 'immediately',
+                  //           selectedValue: _lockTiming,
+                  //           onTap: _setLockTiming,
+                  //         ),
+                  //         Divider(color: Colors.grey.shade200, height: 1),
+                  //         LockRadioOption(
+                  //           title: 'After 1 minute',
+                  //           value: '1_minute',
+                  //           selectedValue: _lockTiming,
+                  //           onTap: _setLockTiming,
+                  //         ),
+                  //         Divider(color: Colors.grey.shade200, height: 1),
+                  //         LockRadioOption(
+                  //           title: 'After 30 minutes',
+                  //           value: '30_minutes',
+                  //           selectedValue: _lockTiming,
+                  //           onTap: _setLockTiming,
+                  //         ),
+                  //       ],
+                  //     ),
+                  //   ),
+                  // ],
                   SizedBox(height: 20.h),
                   if (!_canCheckBiometrics || _availableBiometrics.isEmpty)
                     Container(

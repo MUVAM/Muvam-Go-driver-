@@ -49,36 +49,43 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
 
   Future<void> _startBiometricScan() async {
     if (_isScanning) return;
-    
+
     setState(() {
       _isScanning = true;
     });
 
     try {
-      // Perform actual biometric authentication
+      // Use a different reason depending on whether this is a login gate or setup
+      final reason = widget.isLoginScreen
+          ? 'Authenticate to access Muvam'
+          : 'Place your finger on the sensor to set up biometric authentication';
+
       final authenticated = await _biometricService.authenticate(
-        reason: 'Place your finger on the sensor to set up biometric authentication',
+        reason: reason,
         biometricOnly: false,
       );
 
       if (authenticated) {
-        // Trigger haptic feedback on successful authentication
         await HapticFeedback.heavyImpact();
-        
+
         if (mounted) {
           setState(() {
             _scanComplete = true;
             _isScanning = false;
           });
+
+          // For the login flow, proceed immediately without requiring "Done" tap
+          if (widget.isLoginScreen) {
+            widget.onComplete();
+          }
         }
       } else {
-        // Authentication failed, reset to allow retry
+        // Authentication failed — retry after a short delay
         if (mounted) {
           setState(() {
             _isScanning = false;
           });
-          
-          // Optionally retry after a short delay
+
           await Future.delayed(const Duration(milliseconds: 1000));
           if (mounted && !_scanComplete) {
             _startBiometricScan();
@@ -86,7 +93,6 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
         }
       }
     } catch (e) {
-      // Handle any errors
       if (mounted) {
         setState(() {
           _isScanning = false;
@@ -96,7 +102,6 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
   }
 
   void _proceedToAuthentication() {
-    // Call the completion callback and navigate back with success
     widget.onComplete();
   }
 
@@ -113,7 +118,7 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Spacer(),
-              
+
               // Title
               Text(
                 isFaceID ? 'Place your face' : 'Place your finger',
@@ -127,9 +132,9 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              
+
               SizedBox(height: 16.h),
-              
+
               // Subtitle
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -148,9 +153,9 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
                   textAlign: TextAlign.center,
                 ),
               ),
-              
+
               SizedBox(height: 60.h),
-              
+
               // Fingerprint/Face Image
               AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
@@ -165,8 +170,8 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
                             color: _scanComplete
                                 ? Colors.green
                                 : _isScanning
-                                    ? Color(ConstColors.mainColor)
-                                    : Colors.grey.shade400,
+                                ? Color(ConstColors.mainColor)
+                                : Colors.grey.shade400,
                             width: 4,
                           ),
                         ),
@@ -189,9 +194,9 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
                         fit: BoxFit.contain,
                       ),
               ),
-              
+
               SizedBox(height: 60.h),
-              
+
               // Done Button (only show when scan is complete)
               if (_scanComplete)
                 GestureDetector(
@@ -215,7 +220,7 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
                     ),
                   ),
                 ),
-              
+
               const Spacer(),
             ],
           ),

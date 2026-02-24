@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
+import 'package:muvam_rider/core/services/biometric_auth_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
+import 'package:muvam_rider/features/auth/presentation/screens/biometric_setup_screen.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_selection_screen.dart';
 import 'package:muvam_rider/features/home/presentation/screens/main_navigation_screen.dart';
 import 'package:muvam_rider/shared/presentation/screens/onboarding_screen.dart';
@@ -149,18 +151,36 @@ class _SplashScreenState extends State<SplashScreen>
 
       if (isTokenValid && vehicleSubmitted == true) {
         AppLogger.log(
-          '✅ Both conditions met - navigating to Main App',
-          tag: 'SPLASH',
-        );
-        AppLogger.log(
-          '========== AUTHENTICATION SUCCESSFUL ==========\n',
+          '✅ Both conditions met - checking biometric lock',
           tag: 'SPLASH',
         );
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
-        );
+        // Check if biometric lock is enabled; if so, prompt the user
+        final biometricService = BiometricAuthService();
+        final isBiometricEnabled = await biometricService.isBiometricEnabled();
+
+        if (isBiometricEnabled) {
+          AppLogger.log(
+            '🔒 Biometric lock enabled - prompting user',
+            tag: 'SPLASH',
+          );
+          _promptBiometricAndNavigate(biometricService);
+        } else {
+          AppLogger.log(
+            '🔓 Biometric lock not enabled - navigating to Main App',
+            tag: 'SPLASH',
+          );
+          AppLogger.log(
+            '========== AUTHENTICATION SUCCESSFUL ==========\n',
+            tag: 'SPLASH',
+          );
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const MainNavigationScreen(),
+            ),
+          );
+        }
       } else {
         AppLogger.log(
           '❌ Conditions not met - navigating to Onboarding',
@@ -177,6 +197,30 @@ class _SplashScreenState extends State<SplashScreen>
         );
       }
     }
+  }
+
+  /// Shows the biometric prompt. Navigates to the app on success,
+  /// or keeps the user on the biometric screen if they fail/cancel.
+  void _promptBiometricAndNavigate(BiometricAuthService biometricService) {
+    if (!mounted) return;
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => BiometricSetupScreen(
+          isLoginScreen: true,
+          onComplete: () {
+            // User successfully authenticated — go to main app
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const MainNavigationScreen(),
+              ),
+              (route) => false,
+            );
+          },
+        ),
+      ),
+    );
   }
 
   Future<bool> _isFirstTimeUser() async {

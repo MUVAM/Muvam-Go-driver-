@@ -242,9 +242,11 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
     ThemeManager themeManager,
     VehicleProvider vehicleProvider,
   ) {
-    final options = vehicleProvider.carMakes.isNotEmpty
-        ? vehicleProvider.carMakes
-        : ['Toyota', 'Honda', 'Ford', 'BMW', 'Mercedes'];
+    final options =
+        //  vehicleProvider.carMakes.isNotEmpty
+        //     ? vehicleProvider.carMakes
+        //     :
+        ['Toyota', 'Honda', 'Ford', 'BMW', 'Mercedes'];
 
     CustomBottomSheet.showSelectionBottomSheet(
       context: context,
@@ -265,9 +267,11 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
     ThemeManager themeManager,
     VehicleProvider vehicleProvider,
   ) {
-    final options = vehicleProvider.carModels.isNotEmpty
-        ? vehicleProvider.carModels
-        : ['Camry', 'Accord', 'Focus', 'X5', 'C-Class'];
+    final options =
+        // vehicleProvider.carModels.isNotEmpty
+        //     ? vehicleProvider.carModels
+        //     :
+        ['Camry', 'Accord', 'Focus', 'X5', 'C-Class'];
 
     CustomBottomSheet.showSelectionBottomSheet(
       context: context,
@@ -288,9 +292,11 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
     ThemeManager themeManager,
     VehicleProvider vehicleProvider,
   ) {
-    final options = vehicleProvider.carYears.isNotEmpty
-        ? vehicleProvider.carYears
-        : ['2024', '2023', '2022', '2021', '2020', '2019'];
+    final options =
+        // vehicleProvider.carYears.isNotEmpty
+        //     ? vehicleProvider.carYears
+        //     :
+        ['2024', '2023', '2022', '2021', '2020', '2019'];
 
     CustomBottomSheet.showSelectionBottomSheet(
       context: context,

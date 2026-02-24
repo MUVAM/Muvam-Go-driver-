@@ -233,13 +233,20 @@ class _HomeScreenState extends State<HomeScreen> {
     final isExpired = await authProvider.isSessionExpired();
 
     if (isExpired) {
-      AppLogger.log('🔒 Session expired, redirecting to login...');
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(builder: (context) => OnboardingScreen()),
-        (route) => false,
-      );
-      return;
+      AppLogger.log('🔒 Session expired, attempting token refresh...');
+      final refreshed = await authProvider.refreshToken();
+      if (!refreshed) {
+        AppLogger.log('❌ Token refresh failed, redirecting to login...');
+        if (mounted) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => OnboardingScreen()),
+            (route) => false,
+          );
+        }
+        return;
+      }
+      AppLogger.log('✅ Token refreshed successfully, continuing...');
     }
 
     // Fetch user profile
@@ -487,12 +494,23 @@ class _HomeScreenState extends State<HomeScreen> {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final isExpired = await authProvider.isSessionExpired();
       if (isExpired) {
-        timer.cancel();
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => OnboardingScreen()),
-          (route) => false,
+        AppLogger.log(
+          '🔒 Session expired in timer, attempting token refresh...',
         );
+        final refreshed = await authProvider.refreshToken();
+        if (!refreshed) {
+          AppLogger.log('❌ Token refresh failed, redirecting to login...');
+          timer.cancel();
+          if (mounted) {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (context) => OnboardingScreen()),
+              (route) => false,
+            );
+          }
+        } else {
+          AppLogger.log('✅ Token refreshed silently from session timer.');
+        }
       }
     });
   }
@@ -584,10 +602,24 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /// Handles invalid token by logging out and navigating to login screen
+  /// Handles invalid/expired token: first tries to refresh, only logs out if refresh fails.
   Future<void> _handleInvalidToken() async {
     try {
-      AppLogger.log('🚪 Handling invalid token - logging out user');
+      AppLogger.log('🔄 Invalid token detected - attempting refresh...');
+
+      final authProvider = Provider.of<AuthProvider>(context, listen: false);
+      final refreshed = await authProvider.refreshToken();
+
+      if (refreshed) {
+        AppLogger.log(
+          '✅ Token refreshed successfully after invalid token detection.',
+        );
+        // Token refreshed — no need to log out, continue normally
+        return;
+      }
+
+      // Refresh failed — log the user out
+      AppLogger.log('❌ Token refresh failed - logging out user');
 
       // Cancel all timers
       _rideCheckTimer?.cancel();
@@ -603,14 +635,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
       AppLogger.log('✅ User data cleared');
 
-      // Show message to user
+      // Show message to user and navigate to login
       if (mounted) {
         CustomFlushbar.showError(
           context: context,
           message: 'Session expired. Please login again.',
         );
 
-        // Navigate to login screen
         await Future.delayed(Duration(seconds: 1));
 
         if (mounted) {
@@ -657,7 +688,7 @@ class _HomeScreenState extends State<HomeScreen> {
         // Transform WebSocket data to expected format for ride sheet
         final transformedRide = {
           'ID': rideId,
-          'Price': rideData['Price']?.toString() ?? '0',
+          'Price': rideData['Price']?.toStringAsFixed(1) ?? '0',
           'PickupAddress': rideData['PickupAddress'] ?? 'Unknown pickup',
           'DestAddress': rideData['DestAddress'] ?? 'Unknown destination',
           'StopAddress': rideData['StopAddress'] ?? '',
@@ -4297,7 +4328,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 SizedBox(height: 10.h),
                 Text(
-                  '₦${ride['Price']}',
+                  '₦${ride['Price'].toStringAsFixed(1)}',
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w700,

@@ -94,11 +94,29 @@ class ApiService {
 
         final prefs = await SharedPreferences.getInstance();
 
-        // Save access token from token.access_token
-        if (data['token'] != null && data['token']['access_token'] != null) {
-          final accessToken = data['token']['access_token'];
-          await prefs.setString('auth_token', accessToken);
-          AppLogger.log('✅ Access token saved');
+        // Save token data (access_token, refresh_token, expiry)
+        if (data['token'] != null) {
+          final tokenData = data['token'];
+          if (tokenData is Map<String, dynamic>) {
+            final accessToken = tokenData['access_token'];
+            final refreshToken = tokenData['refresh_token'];
+            final expiresIn = tokenData['expires_in'];
+
+            if (accessToken != null) {
+              await prefs.setString('auth_token', accessToken);
+              AppLogger.log('✅ Access token saved');
+            }
+            if (refreshToken != null) {
+              await prefs.setString('refresh_token', refreshToken);
+              AppLogger.log('✅ Refresh token saved');
+            }
+            if (expiresIn != null) {
+              final expiryTime =
+                  DateTime.now().millisecondsSinceEpoch + (expiresIn * 1000);
+              await prefs.setInt('token_expiry', expiryTime.toInt());
+              AppLogger.log('✅ Token expiry saved');
+            }
+          }
         }
 
         // Save vehicle_submitted status directly from response
@@ -1146,7 +1164,7 @@ class ApiService {
         final error = jsonDecode(response.body);
         return {
           'success': false,
-          'message': error['message'] ?? 'Failed to get vehicles',
+          'message': error['message'] ?? '${response.body}',
         };
       }
     } catch (e) {
@@ -1174,7 +1192,7 @@ class ApiService {
         final error = jsonDecode(response.body);
         return {
           'success': false,
-          'message': error['message'] ?? 'Failed to get vehicles',
+          'message': error['message'] ?? '${response.body}',
         };
       }
     } catch (e) {
