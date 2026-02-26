@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
@@ -453,21 +454,44 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _startRideChecking() {
     // Setup WebSocket ride request listener
-    _webSocketService.onRideRequest = (rideData) {
-      //📨 Received ride request via WebSocket: $rideData');
+    // _webSocketService.onRideRequest = (rideData) {
+    //   //📨 Received ride request via WebSocket: $rideData');
+    //   final driverProvider = Provider.of<DriverProvider>(
+    //     context,
+    //     listen: false,
+    //   );
+    //   if (driverProvider.isOnline && !_hasActiveRequest && mounted) {
+    //     setState(() {
+    //       _nearbyRides = [rideData];
+    //       _currentRideIndex = 0;
+    //       _hasActiveRequest = true;
+    //       _rideRequestETA = '...'; // loading state
+    //     });
+    //     _fetchAndSetRideETA(rideData); // fetch real ETA
+    //   }
+    // };
+_webSocketService.onRideRequest = (rideData) {
+      AppLogger.log('📨 onRideRequest fired, calling _fetchAndSetRideETA');
       final driverProvider = Provider.of<DriverProvider>(
         context,
         listen: false,
       );
       if (driverProvider.isOnline && !_hasActiveRequest && mounted) {
+        final data = rideData['data'] ?? rideData;
+        AppLogger.log('📨 data keys for ETA: ${data.keys.toList()}');
         setState(() {
           _nearbyRides = [rideData];
           _currentRideIndex = 0;
           _hasActiveRequest = true;
+          _rideRequestETA = '...';
         });
+        _fetchAndSetRideETA(data);
+      } else {
+        AppLogger.log(
+          '⚠️ onRideRequest skipped: isOnline=${driverProvider.isOnline}, hasActiveRequest=$_hasActiveRequest, mounted=$mounted',
+        );
       }
     };
-
     // Check nearby rides every 15 seconds (fallback for missed WebSocket messages)
     _rideCheckTimer = Timer.periodic(Duration(seconds: 15), (timer) {
       final driverProvider = Provider.of<DriverProvider>(
@@ -597,6 +621,7 @@ class _HomeScreenState extends State<HomeScreen> {
             _currentRideIndex = 0;
             _hasActiveRequest = true;
           });
+          _fetchAndSetRideETA(transformedRides[0]); // fetch real ETA
         }
       }
     }
@@ -880,68 +905,215 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  String _calculateETA(Map<String, dynamic> ride) {
-    // The driver's current location is tracked in _currentLocation.
-    // Extract the pickup coordinates from the ride data so we can compute
-    // the real distance — and therefore a real ETA — to the passenger.
+  // String _calculateETA(Map<String, dynamic> ride) {
+  //   // The driver's current location is tracked in _currentLocation.
+  //   // Extract the pickup coordinates from the ride data so we can compute
+  //   // the real distance — and therefore a real ETA — to the passenger.
 
+  //   try {
+  //     final rideData = ride['data'] ?? ride;
+
+  //     double? pickupLat;
+  //     double? pickupLng;
+
+  //     // Try to extract lat/lng from the WKB POINT string (e.g. "POINT(3.123 6.456)")
+  //     final pickupLocationRaw =
+  //         rideData['PickupLocation'] ?? rideData['pickup_location'];
+
+  //     if (pickupLocationRaw != null) {
+  //       final pointStr = pickupLocationRaw.toString();
+  //       final match = RegExp(
+  //         r'POINT\(([^\s]+)\s+([^\)]+)\)',
+  //       ).firstMatch(pointStr);
+  //       if (match != null) {
+  //         pickupLng = double.tryParse(match.group(1) ?? '');
+  //         pickupLat = double.tryParse(match.group(2) ?? '');
+  //       }
+  //     }
+
+  //     // Fallback: separate lat/lng fields
+  //     pickupLat ??= double.tryParse(
+  //       (rideData['PickupLat'] ?? rideData['pickup_lat'] ?? '').toString(),
+  //     );
+  //     pickupLng ??= double.tryParse(
+  //       (rideData['PickupLng'] ?? rideData['pickup_lng'] ?? '').toString(),
+  //     );
+
+  //     if (pickupLat == null ||
+  //         pickupLng == null ||
+  //         pickupLat == 0.0 ||
+  //         pickupLng == 0.0) {
+  //       AppLogger.log(
+  //         '⚠️ ETA: No valid pickup coordinates found, showing placeholder',
+  //       );
+  //       return '--';
+  //     }
+
+  //     // Calculate distance in metres between driver and pickup
+  //     final distanceMeters = Geolocator.distanceBetween(
+  //       _currentLocation.latitude,
+  //       _currentLocation.longitude,
+  //       pickupLat,
+  //       pickupLng,
+  //     );
+
+  //     // Assume city speed of 30 km/h
+  //     final distanceKm = distanceMeters / 1000;
+  //     final timeMinutes = ((distanceKm / 30) * 60).round();
+
+  //     if (timeMinutes < 1) return '< 1 min';
+  //     if (timeMinutes == 1) return '1 min';
+  //     return '$timeMinutes mins';
+  //   } catch (e) {
+  //     //❌ ETA calculation error: $e');
+  //     return '--';
+  //   }
+  // }
+  String _rideRequestETA = '--';
+Future<void> _fetchAndSetRideETA(Map<String, dynamic> rideData) async {
     try {
-      final rideData = ride['data'] ?? ride;
+      AppLogger.log('🚀 _fetchAndSetRideETA CALLED');
+      AppLogger.log('📦 rideData keys: ${rideData.keys.toList()}');
+      AppLogger.log('📦 full rideData: $rideData');
+
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+      AppLogger.log(
+        '📍 Driver position: ${position.latitude}, ${position.longitude}',
+      );
 
       double? pickupLat;
       double? pickupLng;
 
-      // Try to extract lat/lng from the WKB POINT string (e.g. "POINT(3.123 6.456)")
       final pickupLocationRaw =
           rideData['PickupLocation'] ?? rideData['pickup_location'];
+      AppLogger.log('🔍 pickupLocationRaw: $pickupLocationRaw');
+      AppLogger.log(
+        '🔍 pickupLocationRaw type: ${pickupLocationRaw?.runtimeType}',
+      );
 
       if (pickupLocationRaw != null) {
-        final pointStr = pickupLocationRaw.toString();
-        final match = RegExp(
-          r'POINT\(([^\s]+)\s+([^\)]+)\)',
-        ).firstMatch(pointStr);
-        if (match != null) {
-          pickupLng = double.tryParse(match.group(1) ?? '');
-          pickupLat = double.tryParse(match.group(2) ?? '');
+        final hexStr = pickupLocationRaw.toString();
+        AppLogger.log('🔍 hex string: "$hexStr"');
+        AppLogger.log('🔍 hex length: ${hexStr.length}');
+
+        final coords = _parseWKBHex(hexStr);
+        AppLogger.log('🔍 parsed coords: $coords');
+
+        if (coords != null) {
+          pickupLat = coords['lat'];
+          pickupLng = coords['lng'];
+          AppLogger.log('✅ pickupLat=$pickupLat, pickupLng=$pickupLng');
+        } else {
+          AppLogger.log('❌ _parseWKBHex returned null');
         }
+      } else {
+        AppLogger.log('❌ pickupLocationRaw is null — checking fallback fields');
+        AppLogger.log('   PickupLat field: ${rideData['PickupLat']}');
+        AppLogger.log('   PickupLng field: ${rideData['PickupLng']}');
+        AppLogger.log('   pickup_lat field: ${rideData['pickup_lat']}');
+        AppLogger.log('   pickup_lng field: ${rideData['pickup_lng']}');
+
+        pickupLat = (rideData['PickupLat'] ?? rideData['pickup_lat'])
+            ?.toDouble();
+        pickupLng = (rideData['PickupLng'] ?? rideData['pickup_lng'])
+            ?.toDouble();
+        AppLogger.log('   Fallback lat=$pickupLat, lng=$pickupLng');
       }
 
-      // Fallback: separate lat/lng fields
-      pickupLat ??= double.tryParse(
-        (rideData['PickupLat'] ?? rideData['pickup_lat'] ?? '').toString(),
-      );
-      pickupLng ??= double.tryParse(
-        (rideData['PickupLng'] ?? rideData['pickup_lng'] ?? '').toString(),
-      );
-
-      if (pickupLat == null ||
-          pickupLng == null ||
-          pickupLat == 0.0 ||
-          pickupLng == 0.0) {
-        AppLogger.log(
-          '⚠️ ETA: No valid pickup coordinates found, showing placeholder',
-        );
-        return '--';
+      if (pickupLat == null || pickupLng == null) {
+        AppLogger.log('❌ FINAL: coords still null, setting ETA to --');
+        if (mounted) setState(() => _rideRequestETA = '--');
+        return;
       }
 
-      // Calculate distance in metres between driver and pickup
       final distanceMeters = Geolocator.distanceBetween(
-        _currentLocation.latitude,
-        _currentLocation.longitude,
+        position.latitude,
+        position.longitude,
         pickupLat,
         pickupLng,
       );
+      AppLogger.log('📏 distance: ${distanceMeters.toStringAsFixed(1)}m');
 
-      // Assume city speed of 30 km/h
-      final distanceKm = distanceMeters / 1000;
-      final timeMinutes = ((distanceKm / 30) * 60).round();
+      final minutes = ((distanceMeters / 1000 / 30) * 60).round();
+      AppLogger.log('⏱️ minutes: $minutes');
 
-      if (timeMinutes < 1) return '< 1 min';
-      if (timeMinutes == 1) return '1 min';
-      return '$timeMinutes mins';
+      final eta = minutes < 1 ? '<1' : '$minutes';
+      AppLogger.log('✅ FINAL ETA: $eta');
+
+      if (mounted) {
+        setState(() => _rideRequestETA = eta);
+        AppLogger.log('✅ setState called with _rideRequestETA = $eta');
+      } else {
+        AppLogger.log('❌ Widget not mounted, cannot setState');
+      }
+    } catch (e, stack) {
+      AppLogger.log('❌ EXCEPTION in _fetchAndSetRideETA: $e');
+      AppLogger.log('❌ Stack: $stack');
+      if (mounted) setState(() => _rideRequestETA = '--');
+    }
+  }
+ Map<String, double>? _parseWKBHex(String hex) {
+    try {
+      AppLogger.log('🔬 _parseWKBHex input: "$hex" (len=${hex.length})');
+
+      if (hex.length < 50) {
+        AppLogger.log('❌ hex too short: ${hex.length} < 50');
+        return null;
+      }
+
+      final byteOrderHex = hex.substring(0, 2);
+      final byteOrder = int.parse(byteOrderHex, radix: 16);
+      final isLittleEndian = byteOrder == 1;
+      AppLogger.log('🔬 byteOrder=$byteOrder, isLittleEndian=$isLittleEndian');
+
+      final lngHex = hex.substring(18, 34);
+      final latHex = hex.substring(34, 50);
+      AppLogger.log('🔬 lngHex=$lngHex');
+      AppLogger.log('🔬 latHex=$latHex');
+
+      final lng = _hexToDouble(lngHex, isLittleEndian);
+      final lat = _hexToDouble(latHex, isLittleEndian);
+      AppLogger.log('🔬 decoded lng=$lng, lat=$lat');
+
+      if (lat == null || lng == null) {
+        AppLogger.log('❌ lat or lng is null after decode');
+        return null;
+      }
+
+      return {'lat': lat, 'lng': lng};
     } catch (e) {
-      //❌ ETA calculation error: $e');
-      return '--';
+      AppLogger.log('❌ _parseWKBHex exception: $e');
+      return null;
+    }
+  }
+  /// Converts 16-char hex string to a IEEE 754 double.
+  double? _hexToDouble(String hex, bool isLittleEndian) {
+    try {
+      if (hex.length != 16) return null;
+
+      // Convert hex pairs to bytes
+      final bytes = List<int>.generate(8, (i) {
+        return int.parse(hex.substring(i * 2, i * 2 + 2), radix: 16);
+      });
+
+      // Reverse bytes if little-endian
+      if (isLittleEndian) bytes.reversed.toList().asMap().forEach((i, v) {});
+      final ordered = isLittleEndian ? bytes.reversed.toList() : bytes;
+
+      // Reconstruct the 64-bit integer
+      int bits = 0;
+      for (final byte in ordered) {
+        bits = (bits << 8) | byte;
+      }
+
+      // Interpret as IEEE 754 double
+      final byteData = ByteData(8);
+      byteData.setInt64(0, bits);
+      return byteData.getFloat64(0);
+    } catch (e) {
+      return null;
     }
   }
 
@@ -3856,7 +4028,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final price = rideData['Price']?.toString() ?? '0';
     final serviceType = rideData['ServiceType'] ?? 'taxi';
     final vehicleType = rideData['VehicleType'] ?? 'regular';
-    final eta = _calculateETA(rideData);
+    // final eta = _calculateETA(rideData);
 
     return Positioned(
       bottom: 0,
@@ -3933,15 +4105,23 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
+                                // Text(
+                                //   // Strip ' mins' / ' min' / '< ' to show just the number
+                                //   eta == '--'
+                                //       ? '--'
+                                //       : eta.startsWith('<')
+                                //       ? '<1'
+                                //       : eta
+                                //             .replaceAll(' mins', '')
+                                //             .replaceAll(' min', ''),
+                                //   style: TextStyle(
+                                //     color: Colors.white,
+                                //     fontSize: 16.sp,
+                                //     fontWeight: FontWeight.w600,
+                                //   ),
+                                // ),
                                 Text(
-                                  // Strip ' mins' / ' min' / '< ' to show just the number
-                                  eta == '--'
-                                      ? '--'
-                                      : eta.startsWith('<')
-                                      ? '<1'
-                                      : eta
-                                            .replaceAll(' mins', '')
-                                            .replaceAll(' min', ''),
+                                  _rideRequestETA,
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 16.sp,
