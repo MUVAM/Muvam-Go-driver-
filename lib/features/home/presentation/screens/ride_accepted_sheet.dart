@@ -38,7 +38,7 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
   @override
   Widget build(BuildContext context) {
     final passenger = widget.ride['Passenger'] ?? {};
-    AppLogger.log('DEBUG Passenger data: $passenger');
+    //DEBUG Passenger data: $passenger');
     final tip = widget.acceptedData['tip'] ?? 0;
     final waitFee = widget.acceptedData['wait_fee'] ?? 0;
     final passengerName =
@@ -84,7 +84,7 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
           );
         }
       } catch (e) {
-        AppLogger.log('Error opening Google Maps: $e');
+        //Error opening Google Maps: $e');
         CustomFlushbar.showError(
           context: context,
           message: 'Failed to open Google Maps',
@@ -419,7 +419,7 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
 
     if (token != null) {
       final result = await ApiService.arriveRide(token, widget.ride['ID']);
-      AppLogger.log('ARRIVE RIDE RESPONSE: $result');
+      //ARRIVE RIDE RESPONSE: $result');
 
       if (result['success'] == true) {
         setState(() {
@@ -436,9 +436,9 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
             messageText: "Your Driver Has Arrived at Pickup Location",
             chatRoomId: widget.ride['ID'].toString(),
           );
-          AppLogger.log('✅ Driver arrived notification sent to passenger $ID');
+          //✅ Driver arrived notification sent to passenger $ID');
         } catch (e) {
-          AppLogger.log('❌ Failed to send driver arrived notification: $e');
+          //❌ Failed to send driver arrived notification: $e');
         }
 
         await Future.delayed(Duration(milliseconds: 800));
@@ -465,7 +465,7 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
 
   //   if (token != null) {
   //     final result = await ApiService.startRide(token, widget.ride['ID']);
-  //     AppLogger.log('START RIDE RESPONSE: $result');
+  //     //START RIDE RESPONSE: $result');
 
   //     if (result['success'] == true) {
   //       setState(() {
@@ -501,7 +501,7 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
 
     if (token != null) {
       final result = await ApiService.startRide(token, widget.ride['ID']);
-      AppLogger.log('START RIDE RESPONSE: $result');
+      //START RIDE RESPONSE: $result');
 
       if (result['success'] == true) {
         setState(() {
@@ -523,7 +523,7 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
               '✅ Ride started notification sent to passenger $passengerId',
             );
           } catch (e) {
-            AppLogger.log('❌ Failed to send ride started notification: $e');
+            //❌ Failed to send ride started notification: $e');
           }
         }
 
@@ -549,17 +549,17 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
   }
 
   Future<void> _completeRide() async {
-    AppLogger.log('=== COMPLETE RIDE CALLED ===');
+    //=== COMPLETE RIDE CALLED ===');
 
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
 
     if (token != null) {
       final result = await ApiService.completeRide(token, widget.ride['ID']);
-      AppLogger.log('COMPLETE RIDE API RESPONSE: $result');
+      //COMPLETE RIDE API RESPONSE: $result');
 
       if (result['success'] == true) {
-        AppLogger.log('Ride completed successfully');
+        //Ride completed successfully');
 
         final updatedRide = Map<String, dynamic>.from(widget.ride);
         updatedRide['Status'] = 'completed';
@@ -583,7 +583,7 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
               '✅ Ride completed notification sent to passenger $passengerId',
             );
           } catch (e) {
-            AppLogger.log('❌ Failed to send ride completed notification: $e');
+            //❌ Failed to send ride completed notification: $e');
           }
         }
 
@@ -592,9 +592,9 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
         // Update parent state - this will trigger the callback which shows the completion sheet
         widget.onRideStatusChanged(updatedRide);
 
-        AppLogger.log('State updated and callback called');
+        //State updated and callback called');
       } else {
-        AppLogger.log('Failed to complete ride: ${result['message']}');
+        //Failed to complete ride: ${result['message']}');
         setState(() {
           _sliderValue = 0.0;
         });
@@ -608,7 +608,7 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
 
   Future<void> _handleEmergencySOS() async {
     try {
-      AppLogger.log('🚨 Emergency SOS button tapped', tag: 'SOS');
+      //🚨 Emergency SOS button tapped', tag: 'SOS');
 
       // ✅ FIX 1: Safely parse rideId regardless of whether it's int or String
       final rawRideId = widget.ride['ID'];
@@ -617,7 +617,7 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
           : int.tryParse(rawRideId?.toString() ?? '');
 
       if (rideId == null) {
-        AppLogger.log('❌ Invalid ride ID: $rawRideId', tag: 'SOS');
+        //❌ Invalid ride ID: $rawRideId', tag: 'SOS');
         if (!mounted) return;
         CustomFlushbar.showError(
           context: context,
@@ -635,9 +635,9 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
       final locationAddress =
           'Lat: ${position.latitude}, Lng: ${position.longitude}';
 
-      AppLogger.log('📍 SOS Location: $location', tag: 'SOS');
-      AppLogger.log('📍 SOS Address: $locationAddress', tag: 'SOS');
-      AppLogger.log('🚗 SOS Ride ID: $rideId', tag: 'SOS');
+      //📍 SOS Location: $location', tag: 'SOS');
+      //📍 SOS Address: $locationAddress', tag: 'SOS');
+      //🚗 SOS Ride ID: $rideId', tag: 'SOS');
 
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
@@ -665,13 +665,13 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
         rideId: rideId, // ✅ now guaranteed to be int
       );
 
-      AppLogger.log('SOS Result: $result', tag: 'SOS');
+      //SOS Result: $result', tag: 'SOS');
 
       // ✅ FIX 3: mounted check before showing dialog after async gap
       if (!mounted) return;
 
       if (result['success'] == true) {
-        AppLogger.log('✅ SOS alert sent successfully', tag: 'SOS');
+        //✅ SOS alert sent successfully', tag: 'SOS');
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -705,7 +705,7 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
           },
         );
       } else {
-        AppLogger.log('❌ Failed to send SOS: ${result['message']}', tag: 'SOS');
+        //❌ Failed to send SOS: ${result['message']}', tag: 'SOS');
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -746,7 +746,7 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
         );
       }
     } catch (e) {
-      AppLogger.log('❌ Error handling emergency SOS: $e', tag: 'SOS');
+      //❌ Error handling emergency SOS: $e', tag: 'SOS');
       if (!mounted) return;
       showDialog(
         context: context,

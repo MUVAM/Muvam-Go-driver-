@@ -24,7 +24,7 @@ class GlobalCallService {
 
   void initialize(GlobalKey<NavigatorState> navigatorKey) {
     _navigatorKey = navigatorKey;
-    AppLogger.log('GlobalCallService initialized', tag: 'GLOBAL_CALL');
+    //GlobalCallService initialized', tag: 'GLOBAL_CALL');
   }
 
   Future<void> showIncomingCall({
@@ -33,13 +33,13 @@ class GlobalCallService {
     required Function(int sessionId) onReject,
   }) async {
     if (_navigatorKey == null || _navigatorKey!.currentState == null) {
-      AppLogger.log('Navigator key not initialized', tag: 'GLOBAL_CALL');
+      //Navigator key not initialized', tag: 'GLOBAL_CALL');
       return;
     }
 
     final overlayState = _navigatorKey!.currentState!.overlay;
     if (overlayState == null) {
-      AppLogger.log('Overlay state not available', tag: 'GLOBAL_CALL');
+      //Overlay state not available', tag: 'GLOBAL_CALL');
       return;
     }
 
@@ -48,7 +48,7 @@ class GlobalCallService {
     _currentCallData = callData;
     _pendingMessages.clear();
 
-    AppLogger.log('Showing global incoming call overlay', tag: 'GLOBAL_CALL');
+    //Showing global incoming call overlay', tag: 'GLOBAL_CALL');
 
     await _playRingtone();
 
@@ -86,7 +86,7 @@ class GlobalCallService {
         volume: 1.0,
       );
     } catch (e) {
-      AppLogger.log('Failed to play system ringtone: $e');
+      //Failed to play system ringtone: $e');
     }
   }
 
@@ -106,7 +106,7 @@ class GlobalCallService {
 
     WakelockPlus.disable();
 
-    AppLogger.log('Incoming call overlay hidden', tag: 'GLOBAL_CALL');
+    //Incoming call overlay hidden', tag: 'GLOBAL_CALL');
   }
 
   void addPendingMessage(Map<String, dynamic> message) {

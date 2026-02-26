@@ -76,10 +76,10 @@ Future<Map<String, dynamic>> initiateCall(int rideId) async {
           sessionId: _currentSessionId!,
           callerImage: null,
         );
-        AppLogger.log('✅ Call notification sent to passenger $recipientIdStr');
+        //✅ Call notification sent to passenger $recipientIdStr');
       }
     } catch (e) {
-      AppLogger.log('❌ Failed to send call notification: $e');
+      //❌ Failed to send call notification: $e');
     }
     
     // ... rest of code ...
@@ -168,7 +168,7 @@ To handle the notification tap and navigate to `IncomingCallScreen`, you need to
 ```dart
 // Handle notification tap when app is in background/terminated
 FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-  AppLogger.log('📱 Notification tapped: ${message.data}');
+  //📱 Notification tapped: ${message.data}');
   
   if (message.data['type'] == 'incoming_call') {
     final callerName = message.data['caller_name'] ?? 'Unknown';
@@ -199,7 +199,7 @@ FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
 
 // Handle notification when app is in foreground
 FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-  AppLogger.log('📨 Foreground message: ${message.data}');
+  //📨 Foreground message: ${message.data}');
   
   if (message.data['type'] == 'incoming_call') {
     // Show IncomingCallScreen immediately
@@ -265,9 +265,9 @@ All notification sending is wrapped in try-catch to prevent call initiation from
 ```dart
 try {
   await UnifiedNotificationService.sendCallNotification(...);
-  AppLogger.log('✅ Call notification sent');
+  //✅ Call notification sent');
 } catch (e) {
-  AppLogger.log('❌ Failed to send call notification: $e');
+  //❌ Failed to send call notification: $e');
   // Call continues even if notification fails
 }
 ```

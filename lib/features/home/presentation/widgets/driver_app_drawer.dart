@@ -421,20 +421,16 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
       await prefs.remove('vehicle_submitted');
 
       // if (context.mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (context) => const OnboardingScreen(),
-          ),
-          (route) => false,
-        );
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const OnboardingScreen()),
+        (route) => false,
+      );
       // }
     } catch (e) {
-      AppLogger.log('Error during logout: $e');
+      //Error during logout: $e');
       if (context.mounted) {
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(
-            builder: (context) => const OnboardingScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => const OnboardingScreen()),
           (route) => false,
         );
       }

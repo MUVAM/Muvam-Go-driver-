@@ -21,14 +21,14 @@ class WalletService {
         if (token != null) 'Authorization': 'Bearer $token',
       },
     );
-    AppLogger.log('response wallet===:${response.body}');
+    //response wallet===:${response.body}');
 
     if (response.statusCode == 200) {
-      AppLogger.log('response++++++:${response.body}');
+      //response++++++:${response.body}');
       final jsonResponse = jsonDecode(response.body);
       return WalletSummaryResponse.fromJson(jsonResponse);
     } else {
-      AppLogger.log('errorrrrr-------:$response');
+      //errorrrrr-------:$response');
       final errorBody = jsonDecode(response.body);
       throw Exception(errorBody['message'] ?? 'Failed to fetch wallet summary');
     }

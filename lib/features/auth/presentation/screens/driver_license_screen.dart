@@ -52,7 +52,7 @@ class _DriverLicenseScreenState extends State<DriverLicenseScreen> {
   }
 
   Future<void> _pickDriverLicense() async {
-    AppLogger.log('📸 User tapped to pick driver license image');
+    //📸 User tapped to pick driver license image');
     try {
       final XFile? pickedFile = await _picker.pickImage(
         source: ImageSource.gallery,
@@ -63,16 +63,16 @@ class _DriverLicenseScreenState extends State<DriverLicenseScreen> {
         setState(() {
           driverLicenseFile = File(pickedFile.path);
         });
-        AppLogger.log('✅ Driver license image selected: ${pickedFile.path}');
+        //✅ Driver license image selected: ${pickedFile.path}');
         CustomFlushbar.showSuccess(
           context: context,
           message: 'Driver license image selected',
         );
       } else {
-        AppLogger.log('❌ No image selected');
+        //❌ No image selected');
       }
     } catch (e) {
-      AppLogger.log('❌ Error picking driver license image: $e');
+      //❌ Error picking driver license image: $e');
       CustomFlushbar.showError(
         context: context,
         message: 'Failed to pick image: $e',
@@ -84,10 +84,10 @@ class _DriverLicenseScreenState extends State<DriverLicenseScreen> {
     AppLogger.log(
       '\n🚀 ========== STARTING DRIVER LICENSE VERIFICATION ==========',
     );
-    AppLogger.log('📋 Step 1: Validating driver license fields...');
+    //📋 Step 1: Validating driver license fields...');
 
     if (driverLicenseNumberController.text.isEmpty) {
-      AppLogger.log('❌ Validation failed: Driver license number is empty');
+      //❌ Validation failed: Driver license number is empty');
       CustomFlushbar.showError(
         context: context,
         message: 'Please enter your driver license number',
@@ -96,7 +96,7 @@ class _DriverLicenseScreenState extends State<DriverLicenseScreen> {
     }
 
     if (driverLicenseFile == null) {
-      AppLogger.log('❌ Validation failed: Driver license file not uploaded');
+      //❌ Validation failed: Driver license file not uploaded');
       CustomFlushbar.showError(
         context: context,
         message: 'Please upload your driver license photo',
@@ -104,11 +104,11 @@ class _DriverLicenseScreenState extends State<DriverLicenseScreen> {
       return;
     }
 
-    AppLogger.log('✅ All fields validated successfully');
+    //✅ All fields validated successfully');
     AppLogger.log(
       '📝 Driver License Number: ${driverLicenseNumberController.text}',
     );
-    AppLogger.log('📝 Driver License File: ${driverLicenseFile!.path}');
+    //📝 Driver License File: ${driverLicenseFile!.path}');
 
     setState(() => isLoading = true);
 
@@ -116,8 +116,8 @@ class _DriverLicenseScreenState extends State<DriverLicenseScreen> {
       AppLogger.log(
         '\n📋 Step 2: Calling uploadVerificationDocuments endpoint...',
       );
-      AppLogger.log('🌐 Endpoint: /users/verification');
-      AppLogger.log('📤 Uploading driver license for verification...');
+      //🌐 Endpoint: /users/verification');
+      //📤 Uploading driver license for verification...');
 
       final verificationResult = await ApiService.uploadVerificationDocuments(
         driverLicenseFile: driverLicenseFile!,
@@ -125,39 +125,39 @@ class _DriverLicenseScreenState extends State<DriverLicenseScreen> {
         token: widget.token,
       );
 
-      AppLogger.log('\n📥 Verification API Response received');
-      AppLogger.log('Response: $verificationResult');
+      //\n📥 Verification API Response received');
+      //Response: $verificationResult');
 
       if (!mounted) {
-        AppLogger.log('⚠️ Widget unmounted, stopping flow');
+        //⚠️ Widget unmounted, stopping flow');
         return;
       }
 
       if (verificationResult['success'] == true) {
-        // AppLogger.log('✅ Driver license verification SUCCESSFUL!');
-        // AppLogger.log('\n📋 Step 3: Returning to Upload Documents Screen...');
-        // AppLogger.log('🎯 Returning with driver license file');
+        // //✅ Driver license verification SUCCESSFUL!');
+        // //\n📋 Step 3: Returning to Upload Documents Screen...');
+        // //🎯 Returning with driver license file');
 
         // Return to upload documents screen with the driver license file
         Navigator.pop(context, driverLicenseFile);
 
-        AppLogger.log('✅ Returned to Upload Documents Screen successfully');
+        //✅ Returned to Upload Documents Screen successfully');
         AppLogger.log(
           '========== DRIVER LICENSE VERIFICATION COMPLETE ==========\n',
         );
       } else {
-        AppLogger.log('❌ Driver license verification FAILED');
+        //❌ Driver license verification FAILED');
         String errorMessage =
             verificationResult['message'] ??
             'Driver license verification failed';
-        AppLogger.log('Error message: $errorMessage');
+        //Error message: $errorMessage');
 
         CustomFlushbar.showError(context: context, message: errorMessage);
       }
     } catch (e, stackTrace) {
-      AppLogger.log('❌ CRITICAL ERROR in driver license verification flow');
-      AppLogger.log('Error: $e');
-      AppLogger.log('Stack trace: $stackTrace');
+      //❌ CRITICAL ERROR in driver license verification flow');
+      //Error: $e');
+      //Stack trace: $stackTrace');
 
       if (mounted) {
         CustomFlushbar.showError(context: context, message: 'Error: $e');
@@ -165,7 +165,7 @@ class _DriverLicenseScreenState extends State<DriverLicenseScreen> {
     } finally {
       if (mounted) {
         setState(() => isLoading = false);
-        AppLogger.log('🔄 Loading state reset');
+        //🔄 Loading state reset');
       }
     }
   }

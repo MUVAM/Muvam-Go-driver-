@@ -73,9 +73,9 @@ All notification calls are wrapped in try-catch blocks to prevent ride operation
 ```dart
 try {
   await UnifiedNotificationService.sendRideNotification(...);
-  AppLogger.log('✅ Notification sent successfully');
+  //✅ Notification sent successfully');
 } catch (e) {
-  AppLogger.log('❌ Failed to send notification: $e');
+  //❌ Failed to send notification: $e');
 }
 ```
 

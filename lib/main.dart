@@ -35,10 +35,10 @@ Future<void> main() async {
 
   try {
     await Firebase.initializeApp();
-    AppLogger.log('Firebase initialized successfully', tag: 'FIREBASE');
+    //Firebase initialized successfully', tag: 'FIREBASE');
     await FCMTokenService.initializeFCM();
     EnhancedNotificationService.initEnhancedNotifications();
-    AppLogger.log('FCM background handler registered', tag: 'FIREBASE');
+    //FCM background handler registered', tag: 'FIREBASE');
   } catch (e) {
     AppLogger.error(
       'Firebase initialization failed',
@@ -82,7 +82,7 @@ Future<void> main() async {
 void _setupGlobalWebSocketHandlerSync() {
   final webSocket = WebSocketService.instance;
 
-  AppLogger.log('DRIVER: Setting up global call handler', tag: 'MAIN_SETUP');
+  //DRIVER: Setting up global call handler', tag: 'MAIN_SETUP');
 
   AppLogger.log(
     'Handler before setup: ${webSocket.onIncomingCall != null}',
@@ -94,16 +94,16 @@ void _setupGlobalWebSocketHandlerSync() {
       'DRIVER: INCOMING CALL IN MAIN.DART',
       tag: 'DRIVER_MAIN_CALL',
     );
-    AppLogger.log('Raw call data: $callData', tag: 'DRIVER_MAIN_CALL');
+    //Raw call data: $callData', tag: 'DRIVER_MAIN_CALL');
 
     final callType = callData['type'];
     final messageData = callData['data'];
 
-    AppLogger.log('Call type: $callType', tag: 'DRIVER_MAIN_CALL');
-    AppLogger.log('Message data: $messageData', tag: 'DRIVER_MAIN_CALL');
+    //Call type: $callType', tag: 'DRIVER_MAIN_CALL');
+    //Message data: $messageData', tag: 'DRIVER_MAIN_CALL');
 
     if (messageData == null) {
-      AppLogger.log('No data in call message!', tag: 'DRIVER_MAIN_CALL');
+      //No data in call message!', tag: 'DRIVER_MAIN_CALL');
       return;
     }
 
@@ -112,10 +112,10 @@ void _setupGlobalWebSocketHandlerSync() {
     final rideId = messageData['ride_id'] ?? 0;
     final recipientId = messageData['recipient_id'];
 
-    AppLogger.log('Session ID: $sessionId', tag: 'DRIVER_MAIN_CALL');
-    AppLogger.log('Caller Name: $callerName', tag: 'DRIVER_MAIN_CALL');
-    AppLogger.log('Ride ID: $rideId', tag: 'DRIVER_MAIN_CALL');
-    AppLogger.log('Recipient ID: $recipientId', tag: 'DRIVER_MAIN_CALL');
+    //Session ID: $sessionId', tag: 'DRIVER_MAIN_CALL');
+    //Caller Name: $callerName', tag: 'DRIVER_MAIN_CALL');
+    //Ride ID: $rideId', tag: 'DRIVER_MAIN_CALL');
+    //Recipient ID: $recipientId', tag: 'DRIVER_MAIN_CALL');
 
     if (callType == 'call_initiate') {
       AppLogger.log(
@@ -147,7 +147,7 @@ void _setupGlobalWebSocketHandlerSync() {
                   ),
                 ),
               );
-              AppLogger.log('Navigated to CallScreen', tag: 'DRIVER_MAIN_CALL');
+              //Navigated to CallScreen', tag: 'DRIVER_MAIN_CALL');
             } catch (e) {
               AppLogger.error(
                 'Failed to navigate to CallScreen',
@@ -200,7 +200,7 @@ void _setupGlobalWebSocketHandlerSync() {
     'Handler after setup: ${webSocket.onIncomingCall != null}',
     tag: 'MAIN_SETUP',
   );
-  AppLogger.log('Global call handler setup complete', tag: 'MAIN_SETUP');
+  //Global call handler setup complete', tag: 'MAIN_SETUP');
   AppLogger.log(
     'DO NOT connect WebSocket yet - wait for HomeScreen',
     tag: 'MAIN_SETUP',
@@ -222,11 +222,11 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
 
-    AppLogger.log('MyApp.initState() called', tag: 'APP_INIT');
+    //MyApp.initState() called', tag: 'APP_INIT');
 
     GlobalCallService.instance.initialize(MyApp.navigatorKey);
 
-    AppLogger.log('GlobalCallService initialized', tag: 'APP_INIT');
+    //GlobalCallService initialized', tag: 'APP_INIT');
   }
 
   @override

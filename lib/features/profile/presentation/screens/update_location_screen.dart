@@ -69,7 +69,7 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
   }
 
   void _onMapTap(LatLng position) {
-    AppLogger.log('=== MAP TAPPED ===');
+    //=== MAP TAPPED ===');
     AppLogger.log(
       'Tapped position: ${position.latitude}, ${position.longitude}',
     );
@@ -86,7 +86,7 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
   }
 
   Future<void> _updateLocation() async {
-    AppLogger.log('=== UPDATING LOCATION ===');
+    //=== UPDATING LOCATION ===');
     AppLogger.log(
       'Selected location: ${_selectedLocation.latitude}, ${_selectedLocation.longitude}',
     );
@@ -107,14 +107,14 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
         );
 
         if (result['success'] == true) {
-          AppLogger.log('Location updated successfully');
+          //Location updated successfully');
           Navigator.pop(context);
           CustomFlushbar.showSuccess(
             context: context,
             message: 'Location updated successfully',
           );
         } else {
-          AppLogger.log('Failed to update location: ${result['message']}');
+          //Failed to update location: ${result['message']}');
           CustomFlushbar.showError(
             context: context,
             message: result['message'] ?? 'Failed to update location',
@@ -122,7 +122,7 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
         }
       }
     } catch (e) {
-      AppLogger.log('Error updating location: $e');
+      //Error updating location: $e');
       CustomFlushbar.showError(context: context, message: 'Error: $e');
     } finally {
       setState(() {
@@ -259,7 +259,7 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
   }
 
   void _filterLocations(String query) {
-    AppLogger.log('Filtering locations for: $query');
+    //Filtering locations for: $query');
 
     _debounceTimer?.cancel();
 
@@ -302,11 +302,11 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
           _showSuggestions = _locationSuggestions.isNotEmpty;
         });
       } else {
-        AppLogger.log('Places API error: ${response.statusCode}');
+        //Places API error: ${response.statusCode}');
         _filterRecentLocations(query);
       }
     } catch (e) {
-      AppLogger.log('Error searching places: $e');
+      //Error searching places: $e');
       _filterRecentLocations(query);
     }
   }
@@ -326,7 +326,7 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
   }
 
   void _selectLocation(Map<String, dynamic> location) {
-    AppLogger.log('Selected location: ${location['description']}');
+    //Selected location: ${location['description']}');
     setState(() {
       _searchController.text = location['description'];
       _showSuggestions = false;
@@ -375,7 +375,7 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
         );
       }
     } catch (e) {
-      AppLogger.log('Error getting place details: $e');
+      //Error getting place details: $e');
     }
   }
 

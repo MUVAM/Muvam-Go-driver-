@@ -85,7 +85,7 @@ class _ActiveTripScreenState extends State<ActiveTripScreen> {
         );
       }
     } catch (e) {
-      AppLogger.log('Error opening Google Maps: $e');
+      //Error opening Google Maps: $e');
       CustomFlushbar.showError(
         context: context,
         message: 'Failed to open Google Maps',

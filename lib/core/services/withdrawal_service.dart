@@ -16,7 +16,7 @@ class WithdrawalService {
 
     final url = '${UrlConstants.baseUrl}/wallet/banks';
 
-    AppLogger.log('Getting banks: $url');
+    //Getting banks: $url');
 
     final response = await http.get(
       Uri.parse(url),
@@ -26,8 +26,8 @@ class WithdrawalService {
       },
     );
 
-    AppLogger.log('Banks response: ${response.statusCode}');
-    AppLogger.log('Banks body: ${response.body}');
+    //Banks response: ${response.statusCode}');
+    //Banks body: ${response.body}');
 
     if (response.statusCode == 200) {
       final responseData = jsonDecode(response.body);
@@ -50,10 +50,10 @@ class WithdrawalService {
         jsonList = responseData;
       }
 
-      AppLogger.log('Banks count: ${jsonList.length}');
+      //Banks count: ${jsonList.length}');
       return jsonList.map((json) => Bank.fromJson(json)).toList();
     } else {
-      AppLogger.log('Failed to fetch banks: ${response.body}');
+      //Failed to fetch banks: ${response.body}');
       throw Exception('Failed to fetch banks');
     }
   }
@@ -69,7 +69,7 @@ class WithdrawalService {
 
     final url = '${UrlConstants.baseUrl}/wallet/withdraw';
 
-    AppLogger.log('Withdrawing funds: $url');
+    //Withdrawing funds: $url');
 
     final body = {
       'account_name': accountName,
@@ -79,7 +79,7 @@ class WithdrawalService {
       'amount': amount,
     };
 
-    AppLogger.log('Withdrawal payload: ${jsonEncode(body)}');
+    //Withdrawal payload: ${jsonEncode(body)}');
 
     final response = await http.post(
       Uri.parse(url),
@@ -90,8 +90,8 @@ class WithdrawalService {
       body: jsonEncode(body),
     );
 
-    AppLogger.log('Withdrawal response: ${response.statusCode}');
-    AppLogger.log('Withdrawal body: ${response.body}');
+    //Withdrawal response: ${response.statusCode}');
+    //Withdrawal body: ${response.body}');
 
     if (response.statusCode == 200) {
       final responseData = jsonDecode(response.body);
@@ -99,7 +99,7 @@ class WithdrawalService {
     } else {
       final errorData = jsonDecode(response.body);
       final errorMessage = errorData['message'] ?? 'Failed to withdraw funds';
-      AppLogger.log('Failed to withdraw: $errorMessage');
+      //Failed to withdraw: $errorMessage');
       throw Exception(errorMessage);
     }
   }

@@ -78,13 +78,13 @@ class _OtpScreenState extends State<OtpScreen> {
     setState(() => _isLoading = false);
 
     if (success) {
-      AppLogger.log('\n🔐 ========== POST-OTP VERIFICATION FLOW ==========');
+      //\n🔐 ========== POST-OTP VERIFICATION FLOW ==========');
 
       final userRole = authProvider.verifyOtpResponse?['user']?['Role'];
-      AppLogger.log('📋 User Role: $userRole');
+      //📋 User Role: $userRole');
 
       if (userRole != null && userRole != 'driver') {
-        AppLogger.log('❌ Invalid role: User is not a driver');
+        //❌ Invalid role: User is not a driver');
         CustomFlushbar.showError(
           context: context,
           message:
@@ -107,18 +107,18 @@ class _OtpScreenState extends State<OtpScreen> {
           ),
         );
       } else {
-        AppLogger.log('👤 Existing user - checking vehicle_submitted status');
+        //👤 Existing user - checking vehicle_submitted status');
 
         // Check vehicle_submitted from SharedPreferences
         final prefs = await SharedPreferences.getInstance();
 
         // Debug: Show all keys
         final allKeys = prefs.getKeys();
-        AppLogger.log('🔍 All keys in SharedPreferences: $allKeys');
+        //🔍 All keys in SharedPreferences: $allKeys');
 
         // Check if key exists
         final hasKey = prefs.containsKey('vehicle_submitted');
-        AppLogger.log('🔍 vehicle_submitted key exists: $hasKey');
+        //🔍 vehicle_submitted key exists: $hasKey');
 
         // Get raw value
         final rawValue = prefs.get('vehicle_submitted');
@@ -128,12 +128,12 @@ class _OtpScreenState extends State<OtpScreen> {
 
         final vehicleSubmitted = prefs.getBool('vehicle_submitted') ?? false;
 
-        AppLogger.log('🚗 Vehicle submitted (final): $vehicleSubmitted');
+        //🚗 Vehicle submitted (final): $vehicleSubmitted');
 
         // Navigate based on vehicle_submitted
         if (vehicleSubmitted == true) {
-          AppLogger.log('✅ Vehicle submitted - navigating to Main App');
-          AppLogger.log('========== AUTHENTICATION SUCCESSFUL ==========\n');
+          //✅ Vehicle submitted - navigating to Main App');
+          //========== AUTHENTICATION SUCCESSFUL ==========\n');
 
           Navigator.pushAndRemoveUntil(
             context,
@@ -167,7 +167,7 @@ class _OtpScreenState extends State<OtpScreen> {
         }
       }
     } else {
-      AppLogger.log('❌ OTP verification failed');
+      //❌ OTP verification failed');
       CustomFlushbar.showError(
         context: context,
         message: authProvider.errorMessage ?? 'Invalid OTP',

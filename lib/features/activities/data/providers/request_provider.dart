@@ -51,7 +51,7 @@ class RequestProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      AppLogger.log('Fetching rides (background: $isBackground)');
+      //Fetching rides (background: $isBackground)');
 
       // Store previous counts to detect changes
       final previousPrebookedCount = _prebookedRides.length;
@@ -73,10 +73,10 @@ class RequestProvider extends ChangeNotifier {
       if (prebookedResult['success'] == true &&
           prebookedResult['data'] != null) {
         _prebookedRides = _parseRides(prebookedResult['data']);
-        AppLogger.log('Prebooked rides: ${_prebookedRides.length}');
+        //Prebooked rides: ${_prebookedRides.length}');
 
         if (isBackground && _prebookedRides.length > previousPrebookedCount) {
-          AppLogger.log('📅 New prebooked ride(s) detected!');
+          //📅 New prebooked ride(s) detected!');
         }
       } else {
         _prebookedRides = [];
@@ -88,10 +88,10 @@ class RequestProvider extends ChangeNotifier {
       // Process active rides
       if (activeResult['success'] == true && activeResult['data'] != null) {
         _activeRides = _parseRides(activeResult['data']);
-        AppLogger.log('Active rides: ${_activeRides.length}');
+        //Active rides: ${_activeRides.length}');
 
         if (isBackground && _activeRides.length > previousActiveCount) {
-          AppLogger.log('🚗 New active ride(s) detected!');
+          //🚗 New active ride(s) detected!');
         }
       } else {
         _activeRides = [];
@@ -105,10 +105,10 @@ class RequestProvider extends ChangeNotifier {
       // Process history rides
       if (historyResult['success'] == true && historyResult['data'] != null) {
         _historyRides = _parseRides(historyResult['data']);
-        AppLogger.log('History rides: ${_historyRides.length}');
+        //History rides: ${_historyRides.length}');
 
         if (isBackground && _historyRides.length > previousHistoryCount) {
-          AppLogger.log('📜 New history ride(s) detected!');
+          //📜 New history ride(s) detected!');
         }
       } else {
         _historyRides = [];
@@ -119,10 +119,10 @@ class RequestProvider extends ChangeNotifier {
         }
       }
 
-      AppLogger.log('All rides fetched successfully');
+      //All rides fetched successfully');
     } catch (e) {
       _errorMessage = 'Error fetching rides: $e';
-      AppLogger.log('Exception: $e');
+      //Exception: $e');
       if (!hasData) {
         _prebookedRides = [];
         _activeRides = [];
@@ -141,7 +141,7 @@ class RequestProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      AppLogger.log('Fetching ride details: $rideId');
+      //Fetching ride details: $rideId');
 
       final result = await _requestService.getRideDetails(rideId);
 
@@ -154,7 +154,7 @@ class RequestProvider extends ChangeNotifier {
       }
     } catch (e) {
       _errorMessage = 'Error fetching ride details: $e';
-      AppLogger.log('Exception in fetchRideDetails: $e');
+      //Exception in fetchRideDetails: $e');
       _selectedRide = null;
     } finally {
       _isLoadingDetails = false;
@@ -182,20 +182,20 @@ class RequestProvider extends ChangeNotifier {
             try {
               return RideData.fromJson(e);
             } catch (e) {
-              AppLogger.log('Failed to parse ride: $e');
+              //Failed to parse ride: $e');
               return null;
             }
           })
           .whereType<RideData>()
           .toList();
     } catch (e) {
-      AppLogger.log('Error parsing rides: $e');
+      //Error parsing rides: $e');
       return [];
     }
   }
 
   void startPolling() {
-    AppLogger.log('Starting automatic polling every 10 seconds');
+    //Starting automatic polling every 10 seconds');
     _pollingTimer?.cancel();
     _pollingTimer = Timer.periodic(
       const Duration(seconds: 10),
@@ -204,18 +204,18 @@ class RequestProvider extends ChangeNotifier {
   }
 
   void stopPolling() {
-    AppLogger.log('Stopping automatic polling');
+    //Stopping automatic polling');
     _pollingTimer?.cancel();
     _pollingTimer = null;
   }
 
   void pausePolling() {
-    AppLogger.log('Pausing polling');
+    //Pausing polling');
     _pollingTimer?.cancel();
   }
 
   void resumePolling() {
-    AppLogger.log('Resuming polling');
+    //Resuming polling');
     startPolling();
     fetchRides(isBackground: true);
   }
@@ -237,7 +237,7 @@ class RequestProvider extends ChangeNotifier {
       final dateTime = DateTime.parse(dateTimeStr);
       return DateFormat('MMM dd, yyyy • hh:mm a').format(dateTime);
     } catch (e) {
-      AppLogger.log('Date format error: $e');
+      //Date format error: $e');
       return dateTimeStr;
     }
   }

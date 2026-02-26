@@ -34,7 +34,7 @@ class EarningsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      AppLogger.log('Fetching earnings summary for period: $period');
+      //Fetching earnings summary for period: $period');
 
       final result = await _earningsService.getEarningsSummary(period: period);
 
@@ -43,7 +43,7 @@ class EarningsProvider extends ChangeNotifier {
         if (summaryData != null) {
           _earningsSummary = EarningsSummary.fromJson(summaryData);
           _errorMessage = null;
-          AppLogger.log('Earnings summary parsed successfully');
+          //Earnings summary parsed successfully');
         } else {
           _errorMessage = 'No summary data available';
           _earningsSummary = null;
@@ -54,7 +54,7 @@ class EarningsProvider extends ChangeNotifier {
       }
     } catch (e) {
       _errorMessage = 'Error fetching earnings summary: $e';
-      AppLogger.log('Exception in fetchEarningsSummary: $e');
+      //Exception in fetchEarningsSummary: $e');
       _earningsSummary = null;
     } finally {
       _isLoading = false;
@@ -68,7 +68,7 @@ class EarningsProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      AppLogger.log('Fetching earnings overview for period: $period');
+      //Fetching earnings overview for period: $period');
 
       final result = await _earningsService.getEarningsOverview(period: period);
 
@@ -84,7 +84,7 @@ class EarningsProvider extends ChangeNotifier {
       }
     } catch (e) {
       _errorMessage = 'Error fetching overview: $e';
-      AppLogger.log('Exception in fetchEarningsOverview: $e');
+      //Exception in fetchEarningsOverview: $e');
       _overviewResponse = null;
     } finally {
       _isLoadingOverview = false;
@@ -123,7 +123,7 @@ class EarningsProvider extends ChangeNotifier {
       final dateTime = DateTime.parse(dateTimeStr);
       return DateFormat('h:mm a').format(dateTime);
     } catch (e) {
-      AppLogger.log('Date format error: $e');
+      //Date format error: $e');
       return '';
     }
   }
@@ -175,7 +175,7 @@ class EarningsProvider extends ChangeNotifier {
 
     try {
       final (startDate, endDate) = getDateRangeFromIndex(periodIndex);
-      AppLogger.log('Fetching earnings breakdown from $startDate to $endDate');
+      //Fetching earnings breakdown from $startDate to $endDate');
 
       final result = await _earningsService.getEarningsBreakdown(
         startDate: startDate,
@@ -187,7 +187,7 @@ class EarningsProvider extends ChangeNotifier {
         if (breakdownData != null) {
           _earningsBreakdown = EarningsBreakdown.fromJson(breakdownData);
           _errorMessage = null;
-          AppLogger.log('Earnings breakdown parsed successfully');
+          //Earnings breakdown parsed successfully');
         } else {
           _errorMessage = 'No breakdown data available';
           _earningsBreakdown = null;
@@ -199,7 +199,7 @@ class EarningsProvider extends ChangeNotifier {
       }
     } catch (e) {
       _errorMessage = 'Error fetching earnings breakdown: $e';
-      AppLogger.log('Exception in fetchEarningsBreakdown: $e');
+      //Exception in fetchEarningsBreakdown: $e');
       _earningsBreakdown = null;
     } finally {
       _isLoadingBreakdown = false;

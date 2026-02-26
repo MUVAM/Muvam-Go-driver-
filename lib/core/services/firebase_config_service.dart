@@ -5,23 +5,23 @@ class FirebaseConfigService {
   static Map<String, dynamic>? _cachedConfig;
 
   static Future<Map<String, dynamic>> getServiceAccountConfig() async {
-    AppLogger.log('CONFIG DEBUG: Starting getServiceAccountConfig');
+    //CONFIG DEBUG: Starting getServiceAccountConfig');
 
     // Return cached config if available
     if (_cachedConfig != null) {
-      AppLogger.log('CONFIG DEBUG: Using cached config');
+      //CONFIG DEBUG: Using cached config');
       return _cachedConfig!;
     }
 
     try {
-      AppLogger.log('CONFIG DEBUG: Loading service account from .env file');
+      //CONFIG DEBUG: Loading service account from .env file');
 
       // Load from FirebaseServiceAccount (which reads from .env)
       _cachedConfig = Map<String, dynamic>.from(
         FirebaseServiceAccount.credentials,
       );
 
-      AppLogger.log('CONFIG DEBUG: Service account config loaded and cached');
+      //CONFIG DEBUG: Service account config loaded and cached');
 
       // Validate the config
       final privateKey = _cachedConfig!["private_key"] as String;
@@ -29,10 +29,10 @@ class FirebaseConfigService {
       final clientEmail = _cachedConfig!["client_email"] as String;
       final privateKeyId = _cachedConfig!["private_key_id"] as String;
 
-      AppLogger.log('CONFIG DEBUG: Project ID: $projectId');
-      AppLogger.log('CONFIG DEBUG: Client Email: $clientEmail');
-      AppLogger.log('CONFIG DEBUG: Has private_key: ${privateKey.isNotEmpty}');
-      AppLogger.log('CONFIG DEBUG: Private key length: ${privateKey.length}');
+      //CONFIG DEBUG: Project ID: $projectId');
+      //CONFIG DEBUG: Client Email: $clientEmail');
+      //CONFIG DEBUG: Has private_key: ${privateKey.isNotEmpty}');
+      //CONFIG DEBUG: Private key length: ${privateKey.length}');
       AppLogger.log(
         'CONFIG DEBUG: Has BEGIN marker: ${privateKey.contains('-----BEGIN')}',
       );
@@ -47,7 +47,7 @@ class FirebaseConfigService {
       if (privateKey.isEmpty ||
           !privateKey.contains('-----BEGIN PRIVATE KEY-----') ||
           !privateKey.contains('-----END PRIVATE KEY-----')) {
-        AppLogger.log('CONFIG DEBUG: Invalid or missing private key!');
+        //CONFIG DEBUG: Invalid or missing private key!');
         throw Exception(
           'Firebase private key is invalid or not found in .env file. '
           'Please ensure FIREBASE_PRIVATE_KEY is set correctly in your .env file.',
@@ -55,7 +55,7 @@ class FirebaseConfigService {
       }
 
       if (projectId.isEmpty) {
-        AppLogger.log('CONFIG DEBUG: Project ID is missing!');
+        //CONFIG DEBUG: Project ID is missing!');
         throw Exception(
           'Firebase project ID not found in .env file. '
           'Please ensure FIREBASE_PROJECT_ID is set in your .env file.',
@@ -63,7 +63,7 @@ class FirebaseConfigService {
       }
 
       if (clientEmail.isEmpty || !clientEmail.contains('@')) {
-        AppLogger.log('CONFIG DEBUG: Client email is invalid!');
+        //CONFIG DEBUG: Client email is invalid!');
         throw Exception(
           'Firebase client email is invalid or not found in .env file. '
           'Please ensure FIREBASE_CLIENT_EMAIL is set correctly in your .env file.',
@@ -74,22 +74,22 @@ class FirebaseConfigService {
       if (privateKey.contains('YOUR_PRIVATE_KEY_HERE') ||
           privateKey.contains('paste_from_json') ||
           clientEmail.contains('YOUR_CLIENT_EMAIL_HERE')) {
-        AppLogger.log('CONFIG DEBUG: .env contains placeholder values!');
+        //CONFIG DEBUG: .env contains placeholder values!');
         throw Exception(
           'Firebase credentials in .env file contain placeholder values. '
           'Please update your .env file with actual credentials from Firebase Console.',
         );
       }
 
-      AppLogger.log('CONFIG DEBUG: ✓ All credential validations passed');
+      //CONFIG DEBUG: ✓ All credential validations passed');
       AppLogger.log(
         'CONFIG DEBUG: ✓ Firebase service account loaded successfully from .env',
       );
 
       return _cachedConfig!;
     } on Exception catch (e) {
-      AppLogger.log('CONFIG DEBUG: Error loading Firebase config: $e');
-      AppLogger.log('CONFIG DEBUG: Stack trace: ${StackTrace.current}');
+      //CONFIG DEBUG: Error loading Firebase config: $e');
+      //CONFIG DEBUG: Stack trace: ${StackTrace.current}');
 
       // Provide helpful guidance based on error type
       if (e.toString().contains('Environment variables not loaded')) {
@@ -108,8 +108,8 @@ class FirebaseConfigService {
 
       rethrow;
     } catch (e) {
-      AppLogger.log('CONFIG DEBUG: Unexpected error: $e');
-      AppLogger.log('CONFIG DEBUG: Stack trace: ${StackTrace.current}');
+      //CONFIG DEBUG: Unexpected error: $e');
+      //CONFIG DEBUG: Stack trace: ${StackTrace.current}');
 
       throw Exception(
         'Failed to load Firebase configuration. '
@@ -120,6 +120,6 @@ class FirebaseConfigService {
 
   static void clearCache() {
     _cachedConfig = null;
-    AppLogger.log('CONFIG DEBUG: Cache cleared');
+    //CONFIG DEBUG: Cache cleared');
   }
 }

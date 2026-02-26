@@ -120,11 +120,11 @@ class _SplashScreenState extends State<SplashScreen>
     );
 
     final isFirstTime = await _isFirstTimeUser();
-    AppLogger.log('📱 First time user: $isFirstTime', tag: 'SPLASH');
+    //📱 First time user: $isFirstTime', tag: 'SPLASH');
 
     if (isFirstTime) {
       await _markAppAsOpened();
-      AppLogger.log('🆕 Navigating to Rider Selection Screen', tag: 'SPLASH');
+      //🆕 Navigating to Rider Selection Screen', tag: 'SPLASH');
 
       Navigator.pushReplacement(
         context,
@@ -146,8 +146,8 @@ class _SplashScreenState extends State<SplashScreen>
       final prefs = await SharedPreferences.getInstance();
       final vehicleSubmitted = prefs.getBool('vehicle_submitted') ?? false;
 
-      AppLogger.log('🔑 Token valid: $isTokenValid', tag: 'SPLASH');
-      AppLogger.log('🚗 Vehicle submitted: $vehicleSubmitted', tag: 'SPLASH');
+      //🔑 Token valid: $isTokenValid', tag: 'SPLASH');
+      //🚗 Vehicle submitted: $vehicleSubmitted', tag: 'SPLASH');
 
       if (isTokenValid && vehicleSubmitted == true) {
         AppLogger.log(

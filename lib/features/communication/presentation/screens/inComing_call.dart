@@ -57,7 +57,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
       await _ringtonePlayer.setReleaseMode(ReleaseMode.loop);
       await _ringtonePlayer.setVolume(1.0);
       await _ringtonePlayer.play(AssetSource('sounds/calling.mp3'));
-      AppLogger.log('Ringtone started playing', tag: 'INCOMING_CALL');
+      //Ringtone started playing', tag: 'INCOMING_CALL');
     } catch (e) {
       AppLogger.error(
         'Failed to play ringtone',
@@ -71,7 +71,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
     if (_isPlaying) {
       await _ringtonePlayer.stop();
       _isPlaying = false;
-      AppLogger.log('Ringtone stopped', tag: 'INCOMING_CALL');
+      //Ringtone stopped', tag: 'INCOMING_CALL');
     }
   }
 

@@ -25,43 +25,43 @@ class InvalidTokenException implements Exception {
 
 class EnhancedNotificationService {
   static Future<String> getAccessToken() async {
-    AppLogger.log('AUTH DEBUG: Starting getAccessToken');
+    //AUTH DEBUG: Starting getAccessToken');
 
     try {
-      AppLogger.log('AUTH DEBUG: Getting Firebase service account config');
+      //AUTH DEBUG: Getting Firebase service account config');
       final serviceAccountJson =
           await FirebaseConfigService.getServiceAccountConfig();
-      AppLogger.log('AUTH DEBUG: Service account config obtained');
+      //AUTH DEBUG: Service account config obtained');
 
       List<String> scopes = [
         "https://www.googleapis.com/auth/userinfo.email",
         "https://www.googleapis.com/auth/firebase.database",
         "https://www.googleapis.com/auth/firebase.messaging",
       ];
-      AppLogger.log('AUTH DEBUG: Scopes: $scopes');
+      //AUTH DEBUG: Scopes: $scopes');
 
-      AppLogger.log('AUTH DEBUG: Creating service account client');
+      //AUTH DEBUG: Creating service account client');
       http.Client client = await auth.clientViaServiceAccount(
         auth.ServiceAccountCredentials.fromJson(serviceAccountJson),
         scopes,
       );
-      AppLogger.log('AUTH DEBUG: Service account client created');
+      //AUTH DEBUG: Service account client created');
 
-      AppLogger.log('AUTH DEBUG: Obtaining access credentials');
+      //AUTH DEBUG: Obtaining access credentials');
       auth.AccessCredentials credentials = await auth
           .obtainAccessCredentialsViaServiceAccount(
             auth.ServiceAccountCredentials.fromJson(serviceAccountJson),
             scopes,
             client,
           );
-      AppLogger.log('AUTH DEBUG: Access credentials obtained');
+      //AUTH DEBUG: Access credentials obtained');
 
       client.close();
-      AppLogger.log('AUTH DEBUG: Access token generated successfully');
+      //AUTH DEBUG: Access token generated successfully');
       return credentials.accessToken.data;
     } catch (e) {
-      AppLogger.log('AUTH DEBUG: Error getting access token: $e');
-      AppLogger.log('AUTH DEBUG: Stack trace: ${StackTrace.current}');
+      //AUTH DEBUG: Error getting access token: $e');
+      //AUTH DEBUG: Stack trace: ${StackTrace.current}');
       rethrow;
     }
   }
@@ -73,19 +73,19 @@ class EnhancedNotificationService {
     required String type,
     Map<String, String>? additionalData,
   }) async {
-    AppLogger.log('FCM DEBUG: Starting sendNotificationWithVibration');
+    //FCM DEBUG: Starting sendNotificationWithVibration');
     AppLogger.log(
       'FCM DEBUG: Token: ${deviceToken.substring(0, 20)}..., Title: $title, Body: $body, Type: $type',
     );
 
     try {
-      AppLogger.log('FCM DEBUG: Getting access token');
+      //FCM DEBUG: Getting access token');
       final String serverAccessToken = await getAccessToken();
-      AppLogger.log('FCM DEBUG: Access token obtained successfully');
+      //FCM DEBUG: Access token obtained successfully');
 
       String endpointFirebasecloudMessaging =
           'https://fcm.googleapis.com/v1/projects/muvam-go/messages:send';
-      AppLogger.log('FCM DEBUG: FCM endpoint: $endpointFirebasecloudMessaging');
+      //FCM DEBUG: FCM endpoint: $endpointFirebasecloudMessaging');
 
       final Map<String, dynamic> message = {
         'message': {
@@ -117,7 +117,7 @@ class EnhancedNotificationService {
       AppLogger.log(
         'FCM DEBUG: Message payload prepared: ${jsonEncode(message)}',
       );
-      AppLogger.log('FCM DEBUG: Sending HTTP POST request to FCM');
+      //FCM DEBUG: Sending HTTP POST request to FCM');
 
       final response = await http.post(
         Uri.parse(endpointFirebasecloudMessaging),
@@ -131,7 +131,7 @@ class EnhancedNotificationService {
       AppLogger.log(
         'FCM DEBUG: FCM Response - Status Code: ${response.statusCode}',
       );
-      AppLogger.log('FCM DEBUG: FCM Response - Body: ${response.body}');
+      //FCM DEBUG: FCM Response - Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
@@ -145,12 +145,12 @@ class EnhancedNotificationService {
         // Parse error details if available
         try {
           final errorData = jsonDecode(response.body);
-          AppLogger.log('FCM DEBUG: Error details: $errorData');
+          //FCM DEBUG: Error details: $errorData');
 
           // Check if token is invalid and remove it
           if (response.statusCode == 400 || response.statusCode == 404) {
             final errorMessage = errorData['error']?['message'] ?? '';
-            AppLogger.log('FCM DEBUG: Error message: $errorMessage');
+            //FCM DEBUG: Error message: $errorMessage');
             if (errorMessage.contains('not a valid FCM registration token') ||
                 errorMessage.contains('Requested entity was not found')) {
               AppLogger.log(
@@ -162,7 +162,7 @@ class EnhancedNotificationService {
             }
           }
         } catch (e) {
-          AppLogger.log('FCM DEBUG: Error parsing FCM error response: $e');
+          //FCM DEBUG: Error parsing FCM error response: $e');
           if (e is InvalidTokenException) {
             rethrow;
           }
@@ -172,7 +172,7 @@ class EnhancedNotificationService {
       AppLogger.log(
         'FCM DEBUG: Exception in sendNotificationWithVibration: $e',
       );
-      AppLogger.log('FCM DEBUG: Stack trace: $stackTrace');
+      //FCM DEBUG: Stack trace: $stackTrace');
       rethrow; // Re-throw to let calling method handle it
     }
   }
@@ -193,7 +193,7 @@ class EnhancedNotificationService {
     required String likerName,
     required String postId,
   }) async {
-    AppLogger.log('ENHANCED_NOTIF DEBUG: Starting sendLikeNotification');
+    //ENHANCED_NOTIF DEBUG: Starting sendLikeNotification');
     AppLogger.log(
       'ENHANCED_NOTIF DEBUG: postOwnerId: $postOwnerId, likerName: $likerName, postId: $postId',
     );
@@ -214,7 +214,7 @@ class EnhancedNotificationService {
       if (userDoc.exists) {
         final userData = userDoc.data();
         userName = userData?['name'] as String? ?? 'User';
-        AppLogger.log('ENHANCED_NOTIF DEBUG: Found vendor name: $userName');
+        //ENHANCED_NOTIF DEBUG: Found vendor name: $userName');
       } else {
         AppLogger.log(
           'ENHANCED_NOTIF DEBUG: Not found in vendors, checking customers collection',
@@ -231,7 +231,7 @@ class EnhancedNotificationService {
               userData?['username'] as String? ??
               userData?['name'] as String? ??
               'User';
-          AppLogger.log('ENHANCED_NOTIF DEBUG: Found customer name: $userName');
+          //ENHANCED_NOTIF DEBUG: Found customer name: $userName');
         } else {
           AppLogger.log(
             'ENHANCED_NOTIF DEBUG: Post owner not found in either collection',
@@ -240,7 +240,7 @@ class EnhancedNotificationService {
       }
 
       final greeting = _getGreeting(userName);
-      AppLogger.log('ENHANCED_NOTIF DEBUG: Generated greeting: $greeting');
+      //ENHANCED_NOTIF DEBUG: Generated greeting: $greeting');
 
       CollectionReference userTokenCollection = FirebaseFirestore.instance
           .collection('UserToken');
@@ -293,7 +293,7 @@ class EnhancedNotificationService {
               'ENHANCED_NOTIF DEBUG: Failed to send notification to token: ${token.substring(0, 20)}... Error: $e',
             );
             if (e is InvalidTokenException) {
-              AppLogger.log('ENHANCED_NOTIF DEBUG: Removing invalid token');
+              //ENHANCED_NOTIF DEBUG: Removing invalid token');
               await FCMTokenService.removeInvalidToken(postOwnerId, token);
             }
           }
@@ -305,7 +305,7 @@ class EnhancedNotificationService {
         await _attemptTokenRefresh(postOwnerId);
       }
 
-      AppLogger.log('ENHANCED_NOTIF DEBUG: Storing notification in Firestore');
+      //ENHANCED_NOTIF DEBUG: Storing notification in Firestore');
       // Store notification in Firestore
       await _storeNotificationInFirestore(
         userId: postOwnerId,
@@ -321,8 +321,8 @@ class EnhancedNotificationService {
         'ENHANCED_NOTIF DEBUG: sendLikeNotification completed successfully',
       );
     } catch (e) {
-      AppLogger.log('ENHANCED_NOTIF DEBUG: Error in sendLikeNotification: $e');
-      AppLogger.log('ENHANCED_NOTIF DEBUG: Stack trace: ${StackTrace.current}');
+      //ENHANCED_NOTIF DEBUG: Error in sendLikeNotification: $e');
+      //ENHANCED_NOTIF DEBUG: Stack trace: ${StackTrace.current}');
     }
   }
 
@@ -653,11 +653,11 @@ class EnhancedNotificationService {
     required String type,
     Map<String, dynamic>? additionalData,
   }) async {
-    AppLogger.log('FIRESTORE DEBUG: Starting _storeNotificationInFirestore');
+    //FIRESTORE DEBUG: Starting _storeNotificationInFirestore');
     AppLogger.log(
       'FIRESTORE DEBUG: userId: $userId, title: $title, body: $body, type: $type',
     );
-    AppLogger.log('FIRESTORE DEBUG: additionalData: $additionalData');
+    //FIRESTORE DEBUG: additionalData: $additionalData');
 
     try {
       final notificationData = {
@@ -700,7 +700,7 @@ class EnhancedNotificationService {
       AppLogger.log(
         'FIRESTORE DEBUG: Error storing notification in Firestore: $e',
       );
-      AppLogger.log('FIRESTORE DEBUG: Stack trace: ${StackTrace.current}');
+      //FIRESTORE DEBUG: Stack trace: ${StackTrace.current}');
     }
   }
 
@@ -889,14 +889,14 @@ class EnhancedNotificationService {
           'TOKEN_REFRESH DEBUG: User matches current authenticated user, refreshing token',
         );
         await FCMTokenService.ensureCurrentUserTokenStored();
-        AppLogger.log('TOKEN_REFRESH DEBUG: Token refresh completed');
+        //TOKEN_REFRESH DEBUG: Token refresh completed');
       } else {
         AppLogger.log(
           'TOKEN_REFRESH DEBUG: User does not match current authenticated user, skipping refresh',
         );
       }
     } catch (e) {
-      AppLogger.log('TOKEN_REFRESH DEBUG: Error in _attemptTokenRefresh: $e');
+      //TOKEN_REFRESH DEBUG: Error in _attemptTokenRefresh: $e');
     }
   }
 }

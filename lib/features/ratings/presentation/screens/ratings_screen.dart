@@ -28,12 +28,12 @@ class _RatingsScreenState extends State<RatingsScreen> {
   }
 
   Future<void> _loadRatings() async {
-    AppLogger.log('═══════════════════════════════════════', tag: 'RATINGS');
-    AppLogger.log('LOADING RATINGS STARTED', tag: 'RATINGS');
-    AppLogger.log('═══════════════════════════════════════', tag: 'RATINGS');
+    //═══════════════════════════════════════', tag: 'RATINGS');
+    //LOADING RATINGS STARTED', tag: 'RATINGS');
+    //═══════════════════════════════════════', tag: 'RATINGS');
 
     try {
-      AppLogger.log('Getting SharedPreferences...', tag: 'RATINGS');
+      //Getting SharedPreferences...', tag: 'RATINGS');
       final prefs = await SharedPreferences.getInstance();
 
       final token = prefs.getString('auth_token');
@@ -50,36 +50,36 @@ class _RatingsScreenState extends State<RatingsScreen> {
         }
       }
 
-      AppLogger.log('Token exists: ${token != null}', tag: 'RATINGS');
+      //Token exists: ${token != null}', tag: 'RATINGS');
       if (token != null) {
         AppLogger.log(
           'Token preview: ${token.substring(0, 20)}...',
           tag: 'RATINGS',
         );
       }
-      AppLogger.log('User ID: $userId', tag: 'RATINGS');
-      AppLogger.log('User ID type: ${userId.runtimeType}', tag: 'RATINGS');
+      //User ID: $userId', tag: 'RATINGS');
+      //User ID type: ${userId.runtimeType}', tag: 'RATINGS');
 
       if (token == null || userId == null) {
-        AppLogger.log('Missing token or userId - stopping', tag: 'RATINGS');
-        AppLogger.log('   Token is null: ${token == null}', tag: 'RATINGS');
-        AppLogger.log('   UserId is null: ${userId == null}', tag: 'RATINGS');
+        //Missing token or userId - stopping', tag: 'RATINGS');
+        //   Token is null: ${token == null}', tag: 'RATINGS');
+        //   UserId is null: ${userId == null}', tag: 'RATINGS');
         setState(() => isLoading = false);
         return;
       }
 
-      AppLogger.log('Calling ApiService.getUserRatings...', tag: 'RATINGS');
-      AppLogger.log('   Endpoint: users/$userId/ratings', tag: 'RATINGS');
+      //Calling ApiService.getUserRatings...', tag: 'RATINGS');
+      //   Endpoint: users/$userId/ratings', tag: 'RATINGS');
 
       final response = await ApiService.getUserRatings(token, userId);
 
-      AppLogger.log('API Response received:', tag: 'RATINGS');
-      AppLogger.log('   Success: ${response['success']}', tag: 'RATINGS');
-      AppLogger.log('   Data: ${response['data']}', tag: 'RATINGS');
-      AppLogger.log('   Message: ${response['message']}', tag: 'RATINGS');
+      //API Response received:', tag: 'RATINGS');
+      //   Success: ${response['success']}', tag: 'RATINGS');
+      //   Data: ${response['data']}', tag: 'RATINGS');
+      //   Message: ${response['message']}', tag: 'RATINGS');
 
       if (response['success']) {
-        AppLogger.log('Response successful, parsing data...', tag: 'RATINGS');
+        //Response successful, parsing data...', tag: 'RATINGS');
 
         final ratingResponse = RatingResponse.fromJson(response['data']);
 
@@ -93,10 +93,10 @@ class _RatingsScreenState extends State<RatingsScreen> {
           isLoading = false;
         });
 
-        AppLogger.log('State updated - isLoading: false', tag: 'RATINGS');
-        AppLogger.log('Ratings count: ${ratings.length}', tag: 'RATINGS');
+        //State updated - isLoading: false', tag: 'RATINGS');
+        //Ratings count: ${ratings.length}', tag: 'RATINGS');
       } else {
-        AppLogger.log('API returned success: false', tag: 'RATINGS');
+        //API returned success: false', tag: 'RATINGS');
         AppLogger.log(
           '   Error message: ${response['message']}',
           tag: 'RATINGS',
@@ -104,20 +104,20 @@ class _RatingsScreenState extends State<RatingsScreen> {
         setState(() => isLoading = false);
       }
     } catch (e, stackTrace) {
-      AppLogger.log('EXCEPTION IN _loadRatings', tag: 'RATINGS');
-      AppLogger.log('Error: $e', tag: 'RATINGS');
-      AppLogger.log('Error type: ${e.runtimeType}', tag: 'RATINGS');
-      AppLogger.log('Stack trace: $stackTrace', tag: 'RATINGS');
+      //EXCEPTION IN _loadRatings', tag: 'RATINGS');
+      //Error: $e', tag: 'RATINGS');
+      //Error type: ${e.runtimeType}', tag: 'RATINGS');
+      //Stack trace: $stackTrace', tag: 'RATINGS');
       setState(() => isLoading = false);
     } finally {
-      AppLogger.log('═══════════════════════════════════════', tag: 'RATINGS');
-      AppLogger.log('LOADING RATINGS COMPLETED', tag: 'RATINGS');
-      AppLogger.log('   Final isLoading: $isLoading', tag: 'RATINGS');
+      //═══════════════════════════════════════', tag: 'RATINGS');
+      //LOADING RATINGS COMPLETED', tag: 'RATINGS');
+      //   Final isLoading: $isLoading', tag: 'RATINGS');
       AppLogger.log(
         '   Final ratings count: ${ratings.length}',
         tag: 'RATINGS',
       );
-      AppLogger.log('═══════════════════════════════════════', tag: 'RATINGS');
+      //═══════════════════════════════════════', tag: 'RATINGS');
     }
   }
 

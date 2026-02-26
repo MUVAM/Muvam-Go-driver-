@@ -19,7 +19,7 @@ class RequestService {
     final token = await _getToken();
 
     if (token == null) {
-      AppLogger.log('No auth token found');
+      //No auth token found');
       return {'success': false, 'message': 'No authentication token'};
     }
 
@@ -29,13 +29,6 @@ class RequestService {
     // Uncomment if pagination is needed later
     // if (limit != null) requestBody['limit'] = limit;
     // if (offset != null) requestBody['offset'] = offset;
-
-    AppLogger.log('FETCHING RIDES');
-    AppLogger.log('URL: ${UrlConstants.baseUrl}${UrlConstants.rides}');
-    AppLogger.log('Method: POST');
-    AppLogger.log('Status filter: ${status ?? "all"}');
-    AppLogger.log('Request Body: ${jsonEncode(requestBody)}');
-    AppLogger.log('Token: ${token.substring(0, 20)}...');
 
     try {
       final response = await http.post(
@@ -47,18 +40,11 @@ class RequestService {
         body: jsonEncode(requestBody),
       );
 
-      AppLogger.log('Response Status: ${response.statusCode}');
-      AppLogger.log('Response Headers: ${response.headers}');
-      AppLogger.log('Response Body: ${response.body}');
-
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        AppLogger.log(
-          'Success: ${data.toString().substring(0, min(200, data.toString().length))}',
-        );
+
         return {'success': true, 'data': data};
       } else {
-        AppLogger.log('Failed: ${response.body}');
         return {
           'success': false,
           'message':
@@ -66,28 +52,19 @@ class RequestService {
         };
       }
     } catch (e) {
-      AppLogger.log('Exception in getRides: $e');
       return {'success': false, 'message': 'Exception: $e'};
-    } finally {
-      AppLogger.log('END FETCHING RIDES');
-    }
+    } finally {}
   }
 
   Future<Map<String, dynamic>> getRideDetails(int rideId) async {
     final token = await _getToken();
 
     if (token == null) {
-      AppLogger.log('No auth token found');
+      //No auth token found');
       return {'success': false, 'message': 'No authentication token'};
     }
 
     final url = '${UrlConstants.baseUrl}${UrlConstants.rides}/$rideId';
-
-    AppLogger.log('FETCHING RIDE DETAILS');
-    AppLogger.log('URL: $url');
-    AppLogger.log('Method: GET');
-    AppLogger.log('Ride ID: $rideId');
-    AppLogger.log('Token: ${token.substring(0, 20)}...');
 
     try {
       final response = await http.get(
@@ -98,9 +75,9 @@ class RequestService {
         },
       );
 
-      AppLogger.log('Response Status: ${response.statusCode}');
-      AppLogger.log('Response Headers: ${response.headers}');
-      AppLogger.log('Response boyyyyy: ${response.body}');
+      //Response Status: ${response.statusCode}');
+      //Response Headers: ${response.headers}');
+      //Response boyyyyy: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -109,7 +86,7 @@ class RequestService {
         );
         return {'success': true, 'data': data};
       } else {
-        AppLogger.log('Failed: ${response.body}');
+        //Failed: ${response.body}');
         return {
           'success': false,
           'message':
@@ -117,10 +94,10 @@ class RequestService {
         };
       }
     } catch (e) {
-      AppLogger.log('Exception in getRideDetails: $e');
+      //Exception in getRideDetails: $e');
       return {'success': false, 'message': 'Exception: $e'};
     } finally {
-      AppLogger.log('END FETCHING RIDE DETAILS');
+      //END FETCHING RIDE DETAILS');
     }
   }
 

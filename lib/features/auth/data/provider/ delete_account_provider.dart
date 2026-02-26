@@ -20,25 +20,25 @@ class DeleteAccountProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
-      AppLogger.log('Deleting account with reason: $reason');
+      //Deleting account with reason: $reason');
 
       final result = await _deleteAccountService.deleteAccount(reason);
 
       if (result['success'] == true) {
         _successMessage = result['message'] ?? 'Account deleted successfully';
         _errorMessage = null;
-        AppLogger.log('Success: $_successMessage');
+        //Success: $_successMessage');
         return true;
       } else {
         _errorMessage = result['message'] ?? 'Failed to delete account';
         _successMessage = null;
-        AppLogger.log('Failed: $_errorMessage');
+        //Failed: $_errorMessage');
         return false;
       }
     } catch (e) {
       _errorMessage = 'Error deleting account: $e';
       _successMessage = null;
-      AppLogger.log('Exception in deleteAccount: $e');
+      //Exception in deleteAccount: $e');
       return false;
     } finally {
       _isDeleting = false;

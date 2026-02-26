@@ -87,11 +87,11 @@ class UnifiedNotificationService {
       // Get receiver's FCM tokens
       final tokens = await FCMTokenService.getTokensForUser(receiverId);
       if (tokens.isEmpty) {
-        AppLogger.log('CALL_NOTIF: No FCM tokens found for user $receiverId');
+        //CALL_NOTIF: No FCM tokens found for user $receiverId');
         return;
       }
 
-      AppLogger.log('CALL_NOTIF: Sending call notification to $receiverId');
+      //CALL_NOTIF: Sending call notification to $receiverId');
       AppLogger.log(
         'CALL_NOTIF: Caller: $callerName, Ride: $rideId, Session: $sessionId',
       );
@@ -117,14 +117,14 @@ class UnifiedNotificationService {
             'CALL_NOTIF: Notification sent to token: ${token.substring(0, 20)}...',
           );
         } catch (e) {
-          AppLogger.log('CALL_NOTIF: Failed to send to token: $e');
+          //CALL_NOTIF: Failed to send to token: $e');
           if (e is InvalidTokenException) {
             await FCMTokenService.removeInvalidToken(receiverId, token);
           }
         }
       }
     } catch (e) {
-      AppLogger.log('CALL_NOTIF: Error sending call notification: $e');
+      //CALL_NOTIF: Error sending call notification: $e');
     }
   }
 }

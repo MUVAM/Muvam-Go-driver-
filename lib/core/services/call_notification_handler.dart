@@ -8,7 +8,7 @@ class CallNotificationHandler {
       FlutterLocalNotificationsPlugin();
 
   static Future<void> initialize() async {
-    AppLogger.log('CALL_HANDLER: Initializing call notification handler');
+    //CALL_HANDLER: Initializing call notification handler');
 
     // Create a high-priority notification channel for incoming calls
     final AndroidNotificationChannel callChannel = AndroidNotificationChannel(
@@ -47,15 +47,15 @@ class CallNotificationHandler {
       onDidReceiveNotificationResponse: _onNotificationResponse,
     );
 
-    AppLogger.log('CALL_HANDLER: Call notification handler initialized');
+    //CALL_HANDLER: Call notification handler initialized');
   }
 
   static Future<void> _onNotificationResponse(
     NotificationResponse response,
   ) async {
-    AppLogger.log('CALL_HANDLER: Notification response received');
-    AppLogger.log('CALL_HANDLER: Action ID: ${response.actionId}');
-    AppLogger.log('CALL_HANDLER: Payload: ${response.payload}');
+    //CALL_HANDLER: Notification response received');
+    //CALL_HANDLER: Action ID: ${response.actionId}');
+    //CALL_HANDLER: Payload: ${response.payload}');
 
     if (response.payload == null) return;
 
@@ -64,23 +64,23 @@ class CallNotificationHandler {
       final String? actionId = response.actionId;
 
       if (actionId == 'accept_call') {
-        AppLogger.log('CALL_HANDLER: User accepted the call');
+        //CALL_HANDLER: User accepted the call');
         await _handleAcceptCall(data);
       } else if (actionId == 'reject_call') {
-        AppLogger.log('CALL_HANDLER: User rejected the call');
+        //CALL_HANDLER: User rejected the call');
         await _handleRejectCall(data);
       } else {
         // Default tap - open the app to call screen
-        AppLogger.log('CALL_HANDLER: User tapped notification');
+        //CALL_HANDLER: User tapped notification');
         await _handleAcceptCall(data);
       }
     } catch (e) {
-      AppLogger.log('CALL_HANDLER: Error handling notification response: $e');
+      //CALL_HANDLER: Error handling notification response: $e');
     }
   }
 
   static Future<void> _handleAcceptCall(Map<String, dynamic> data) async {
-    AppLogger.log('CALL_HANDLER: Handling accept call');
+    //CALL_HANDLER: Handling accept call');
 
     // Store the call data for navigation
     final callData = {
@@ -94,17 +94,17 @@ class CallNotificationHandler {
     // Store in a global variable or shared preferences for the app to pick up
     _pendingCallAction = callData;
 
-    AppLogger.log('CALL_HANDLER: Call acceptance data stored');
+    //CALL_HANDLER: Call acceptance data stored');
   }
 
   static Future<void> _handleRejectCall(Map<String, dynamic> data) async {
-    AppLogger.log('CALL_HANDLER: Handling reject call');
+    //CALL_HANDLER: Handling reject call');
 
     // You can send a rejection message to the server here
     // For now, just dismiss the notification
     await _notificationsPlugin.cancel(999); // Call notification ID
 
-    AppLogger.log('CALL_HANDLER: Call rejected and notification dismissed');
+    //CALL_HANDLER: Call rejected and notification dismissed');
   }
 
   static Map<String, dynamic>? _pendingCallAction;
@@ -122,8 +122,8 @@ class CallNotificationHandler {
     required String rideId,
     required String sessionId,
   }) async {
-    AppLogger.log('CALL_HANDLER: Showing incoming call notification');
-    AppLogger.log('CALL_HANDLER: Caller: $callerName, Ride: $rideId');
+    //CALL_HANDLER: Showing incoming call notification');
+    //CALL_HANDLER: Caller: $callerName, Ride: $rideId');
 
     final payload = jsonEncode({
       'caller_name': callerName,
@@ -188,12 +188,12 @@ class CallNotificationHandler {
       payload: payload,
     );
 
-    AppLogger.log('CALL_HANDLER: Incoming call notification shown');
+    //CALL_HANDLER: Incoming call notification shown');
   }
 
   /// Cancel the incoming call notification
   static Future<void> cancelCallNotification() async {
     await _notificationsPlugin.cancel(999);
-    AppLogger.log('CALL_HANDLER: Call notification cancelled');
+    //CALL_HANDLER: Call notification cancelled');
   }
 }

@@ -54,7 +54,7 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
   }
 
   Future<void> _loadVehicleData() async {
-    AppLogger.log('🔄 Loading vehicle data...', tag: 'CAR_INFO');
+    //🔄 Loading vehicle data...', tag: 'CAR_INFO');
 
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
@@ -70,7 +70,7 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
         setState(() {});
       }
     } else {
-      AppLogger.log('⚠️ No auth token found', tag: 'CAR_INFO');
+      //⚠️ No auth token found', tag: 'CAR_INFO');
     }
   }
 
@@ -349,7 +349,7 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
     AppLogger.log(
       '\n🚀 ========== STARTING VEHICLE REGISTRATION FLOW ==========',
     );
-    AppLogger.log('📋 Step 1: Validating all required fields...');
+    //📋 Step 1: Validating all required fields...');
 
     if (selectedCarName == null ||
         selectedCarModel == null ||
@@ -358,7 +358,7 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
         licensePlateController.text.isEmpty ||
         colorController.text.isEmpty ||
         selectedAC == null) {
-      AppLogger.log('❌ Validation failed: Missing car information fields');
+      //❌ Validation failed: Missing car information fields');
       CustomFlushbar.showError(
         context: context,
         message: 'Please fill all car information fields',
@@ -366,22 +366,22 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
       return;
     }
 
-    AppLogger.log('✅ All fields validated successfully');
-    AppLogger.log('📝 Car Name: $selectedCarName');
-    AppLogger.log('📝 Car Model: $selectedCarModel');
-    AppLogger.log('📝 Car Year: $selectedCarYear');
-    AppLogger.log('📝 Seats: $selectedSeats');
-    AppLogger.log('📝 License Plate: ${licensePlateController.text}');
-    AppLogger.log('📝 Color: ${colorController.text}');
-    AppLogger.log('📝 AC: $selectedAC');
+    //✅ All fields validated successfully');
+    //📝 Car Name: $selectedCarName');
+    //📝 Car Model: $selectedCarModel');
+    //📝 Car Year: $selectedCarYear');
+    //📝 Seats: $selectedSeats');
+    //📝 License Plate: ${licensePlateController.text}');
+    //📝 Color: ${colorController.text}');
+    //📝 AC: $selectedAC');
 
     try {
-      AppLogger.log('\n📋 Step 2: Retrieving authentication token...');
+      //\n📋 Step 2: Retrieving authentication token...');
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
 
       if (token == null) {
-        AppLogger.log('❌ Authentication token not found');
+        //❌ Authentication token not found');
         CustomFlushbar.showError(
           context: context,
           message: 'Authentication token not found. Please login again.',
@@ -389,12 +389,12 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
         return;
       }
 
-      AppLogger.log('✅ Token retrieved successfully');
-      AppLogger.log('\n📋 Step 3: Navigating to Upload Documents Screen...');
+      //✅ Token retrieved successfully');
+      //\n📋 Step 3: Navigating to Upload Documents Screen...');
       AppLogger.log(
         '🎯 Next screen: KycVerificationScreen (upload_document_screen.dart)',
       );
-      AppLogger.log('📦 Passing car information to next screen...');
+      //📦 Passing car information to next screen...');
 
       Navigator.push(
         context,
@@ -413,12 +413,12 @@ class _CarInformationScreenState extends State<CarInformationScreen> {
         ),
       );
 
-      AppLogger.log('✅ Navigation to Upload Documents Screen successful');
-      AppLogger.log('========== CAR INFORMATION STEP COMPLETE ==========\n');
+      //✅ Navigation to Upload Documents Screen successful');
+      //========== CAR INFORMATION STEP COMPLETE ==========\n');
     } catch (e, stackTrace) {
-      AppLogger.log('❌ CRITICAL ERROR in vehicle registration flow');
-      AppLogger.log('Error: $e');
-      AppLogger.log('Stack trace: $stackTrace');
+      //❌ CRITICAL ERROR in vehicle registration flow');
+      //Error: $e');
+      //Stack trace: $stackTrace');
 
       if (mounted) {
         CustomFlushbar.showError(context: context, message: 'Error: $e');

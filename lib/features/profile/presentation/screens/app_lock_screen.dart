@@ -38,7 +38,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
       _canCheckBiometrics = await auth.canCheckBiometrics;
       _availableBiometrics = await auth.getAvailableBiometrics();
     } on PlatformException catch (e) {
-      AppLogger.log('Error checking biometric support: $e');
+      //Error checking biometric support: $e');
     }
   }
 
@@ -67,7 +67,7 @@ class _AppLockScreenState extends State<AppLockScreen> {
       );
       return authenticated;
     } on PlatformException catch (e) {
-      AppLogger.log('Authentication error: $e');
+      //Authentication error: $e');
       return false;
     }
   }

@@ -54,14 +54,14 @@ class FCMTokenService {
   }
 
   static Future<void> storeTokenForUser(String userId, String token) async {
-    AppLogger.log('FCM_TOKEN DEBUG: Storing token for userId: $userId');
-    AppLogger.log('FCM_TOKEN DEBUG: Token: ${token.substring(0, 20)}...');
+    //FCM_TOKEN DEBUG: Storing token for userId: $userId');
+    //FCM_TOKEN DEBUG: Token: ${token.substring(0, 20)}...');
 
     try {
       final userTokenRef = _firestore.collection('UserToken').doc(userId);
       final doc = await userTokenRef.get();
       if (doc.exists) {
-        AppLogger.log('FCM_TOKEN DEBUG: Document exists, updating token array');
+        //FCM_TOKEN DEBUG: Document exists, updating token array');
         final data = doc.data() as Map<String, dynamic>;
         List<dynamic> existingTokens = data['token'] ?? [];
         AppLogger.log(
@@ -82,7 +82,7 @@ class FCMTokenService {
           'token': existingTokens,
           'lastUpdated': FieldValue.serverTimestamp(),
         });
-        AppLogger.log('FCM_TOKEN DEBUG: Token updated successfully');
+        //FCM_TOKEN DEBUG: Token updated successfully');
       } else {
         AppLogger.log(
           'FCM_TOKEN DEBUG: Document doesn\'t exist, creating new one',
@@ -98,22 +98,22 @@ class FCMTokenService {
         );
       }
     } catch (e) {
-      AppLogger.log('FCM_TOKEN DEBUG: Error storing token: $e');
+      //FCM_TOKEN DEBUG: Error storing token: $e');
     }
   }
 
   static Future<void> ensureCurrentUserTokenStored() async {
-    AppLogger.log('FCM_TOKEN DEBUG: Starting ensureCurrentUserTokenStored');
+    //FCM_TOKEN DEBUG: Starting ensureCurrentUserTokenStored');
 
     try {
       final prefs = await SharedPreferences.getInstance();
       final user = prefs.getString('user_id');
       if (user == null) {
-        AppLogger.log('FCM_TOKEN DEBUG: No authenticated user found');
+        //FCM_TOKEN DEBUG: No authenticated user found');
         return;
       }
 
-      AppLogger.log('FCM_TOKEN DEBUG: Checking tokens for user: ${user}');
+      //FCM_TOKEN DEBUG: Checking tokens for user: ${user}');
 
       final userTokenDoc = await _firestore
           .collection('UserToken')
@@ -147,7 +147,7 @@ class FCMTokenService {
   }
 
   static Future<List<String>> getTokensForUser(String userId) async {
-    AppLogger.log('FCM_TOKEN DEBUG: Getting tokens for userId: $userId');
+    //FCM_TOKEN DEBUG: Getting tokens for userId: $userId');
 
     try {
       final doc = await _firestore.collection('UserToken').doc(userId).get();
@@ -201,20 +201,20 @@ class FCMTokenService {
         AppLogger.log(
           'FCM_TOKEN DEBUG: Removed ${originalCount - newCount} invalid tokens',
         );
-        AppLogger.log('FCM_TOKEN DEBUG: Remaining tokens: $newCount');
+        //FCM_TOKEN DEBUG: Remaining tokens: $newCount');
 
         await userTokenRef.update({
           'token': tokens,
           'lastUpdated': FieldValue.serverTimestamp(),
         });
-        AppLogger.log('FCM_TOKEN DEBUG: Invalid token removed successfully');
+        //FCM_TOKEN DEBUG: Invalid token removed successfully');
       } else {
         AppLogger.log(
           'FCM_TOKEN DEBUG: No token document found for user $userId',
         );
       }
     } catch (e) {
-      AppLogger.log('FCM_TOKEN DEBUG: Error removing invalid token: $e');
+      //FCM_TOKEN DEBUG: Error removing invalid token: $e');
     }
   }
 }

@@ -14,18 +14,18 @@ class InAppNotificationService {
     String? senderImage,
     VoidCallback? onTap,
   }) {
-    AppLogger.log('InAppNotificationService: showMessageNotification called');
-    AppLogger.log('   Sender: $senderName');
-    AppLogger.log('   Message: "$message"');
-    AppLogger.log('   Ride ID: $rideId');
+    //InAppNotificationService: showMessageNotification called');
+    //   Sender: $senderName');
+    //   Message: "$message"');
+    //   Ride ID: $rideId');
 
     if (_isShowing) {
-      AppLogger.log('InAppNotificationService: Already showing, hiding first');
+      //InAppNotificationService: Already showing, hiding first');
       hide();
     }
 
     _isShowing = true;
-    AppLogger.log('InAppNotificationService: Starting notification display');
+    //InAppNotificationService: Starting notification display');
 
     final overlay = context.findRenderObject() as RenderObject?;
     AppLogger.log(
@@ -44,7 +44,7 @@ class InAppNotificationService {
             message: message,
             senderImage: senderImage,
             onTap: () {
-              AppLogger.log('InAppNotificationService: Notification tapped');
+              //InAppNotificationService: Notification tapped');
               hide();
               onTap?.call();
             },
@@ -56,7 +56,7 @@ class InAppNotificationService {
 
     final overlayManager = Overlay.of(context);
     overlayManager.insert(_currentOverlay!);
-    AppLogger.log('InAppNotificationService: Overlay inserted');
+    //InAppNotificationService: Overlay inserted');
 
     Future.delayed(Duration(seconds: 5), () {
       if (_isShowing) {

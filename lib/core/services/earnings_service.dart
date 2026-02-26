@@ -16,15 +16,15 @@ class EarningsService {
     final token = await _getToken();
 
     if (token == null) {
-      AppLogger.log('No auth token found');
+      //No auth token found');
       return {'success': false, 'message': 'No authentication token'};
     }
 
     final url = '${UrlConstants.baseUrl}/earnings/summary?period=$period';
 
-    AppLogger.log('FETCHING EARNINGS SUMMARY');
-    AppLogger.log('URL: $url');
-    AppLogger.log('Period: $period');
+    //FETCHING EARNINGS SUMMARY');
+    //URL: $url');
+    //Period: $period');
 
     try {
       final response = await http.get(
@@ -35,25 +35,25 @@ class EarningsService {
         },
       );
 
-      AppLogger.log('Response Status: ${response.statusCode}');
-      AppLogger.log('Response Body++++++++: ${response.body}');
+      //Response Status: ${response.statusCode}');
+      //Response Body++++++++: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        AppLogger.log('Earnings summary fetched successfully');
+        //Earnings summary fetched successfully');
         return {'success': true, 'data': data};
       } else {
-        AppLogger.log('Failed: ${response.body}');
+        //Failed: ${response.body}');
         return {
           'success': false,
           'message': 'Failed with status ${response.statusCode}',
         };
       }
     } catch (e) {
-      AppLogger.log('Exception in getEarningsSummary: $e');
+      //Exception in getEarningsSummary: $e');
       return {'success': false, 'message': 'Exception: $e'};
     } finally {
-      AppLogger.log('==================================');
+      //==================================');
     }
   }
 
@@ -63,15 +63,15 @@ class EarningsService {
     final token = await _getToken();
 
     if (token == null) {
-      AppLogger.log('No auth token found');
+      //No auth token found');
       return {'success': false, 'message': 'No authentication token'};
     }
 
     final url = '${UrlConstants.baseUrl}/earnings/overview?period=$period';
 
-    AppLogger.log('FETCHING EARNINGS OVERVIEW');
-    AppLogger.log('URL: $url');
-    AppLogger.log('Period: $period');
+    //FETCHING EARNINGS OVERVIEW');
+    //URL: $url');
+    //Period: $period');
 
     try {
       final response = await http.get(
@@ -82,12 +82,12 @@ class EarningsService {
         },
       );
 
-      AppLogger.log('Response Status: ${response.statusCode}');
-      AppLogger.log('Response Bodyyyyyyy: ${response.body}');
+      //Response Status: ${response.statusCode}');
+      //Response Bodyyyyyyy: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        AppLogger.log('Overview fetched successfully');
+        //Overview fetched successfully');
 
         // Log daily breakdown count
         final overview = data['overview'];
@@ -99,17 +99,17 @@ class EarningsService {
 
         return {'success': true, 'data': data};
       } else {
-        AppLogger.log('Failed: ${response.body}');
+        //Failed: ${response.body}');
         return {
           'success': false,
           'message': 'Failed with status ${response.statusCode}',
         };
       }
     } catch (e) {
-      AppLogger.log('Exception in getEarningsOverview: $e');
+      //Exception in getEarningsOverview: $e');
       return {'success': false, 'message': 'Exception: $e'};
     } finally {
-      AppLogger.log('==================================');
+      //==================================');
     }
   }
 
@@ -120,15 +120,15 @@ class EarningsService {
     final token = await _getToken();
 
     if (token == null) {
-      AppLogger.log('No auth token found');
+      //No auth token found');
       return {'success': false, 'message': 'No authentication token'};
     }
 
     final url =
         '${UrlConstants.baseUrl}/earnings/breakdown?start_date=$startDate&end_date=$endDate';
 
-    AppLogger.log('FETCHING EARNINGS BREAKDOWN');
-    AppLogger.log('URL: $url');
+    //FETCHING EARNINGS BREAKDOWN');
+    //URL: $url');
 
     try {
       final response = await http.get(
@@ -139,25 +139,25 @@ class EarningsService {
         },
       );
 
-      AppLogger.log('Response Status: ${response.statusCode}');
-      AppLogger.log('Response Body: ${response.body}');
+      //Response Status: ${response.statusCode}');
+      //Response Body: ${response.body}');
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        AppLogger.log('Earnings breakdown fetched successfully');
+        //Earnings breakdown fetched successfully');
         return {'success': true, 'data': data};
       } else {
-        AppLogger.log('Failed: ${response.body}');
+        //Failed: ${response.body}');
         return {
           'success': false,
           'message': 'Failed with status ${response.statusCode}',
         };
       }
     } catch (e) {
-      AppLogger.log('Exception in getEarningsBreakdown: $e');
+      //Exception in getEarningsBreakdown: $e');
       return {'success': false, 'message': 'Exception: $e'};
     } finally {
-      AppLogger.log('==================================');
+      //==================================');
     }
   }
 }

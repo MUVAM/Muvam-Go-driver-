@@ -171,10 +171,20 @@ class AuthService {
     await prefs.setInt(_tokenExpiryKey, expiryTime);
   }
 
-  Future<String?> getToken() async {
+  Future<dynamic?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString(_tokenKey);
-    final expiryTime = prefs.getInt(_tokenExpiryKey);
+
+    // Safely read expiry — handle legacy String value stored by old code
+    int? expiryTime;
+    try {
+      expiryTime = prefs.getInt(_tokenExpiryKey);
+    } catch (e) {
+      // Old code saved a String here — clear it and treat as no expiry
+      AppLogger.log('⚠️ Corrupt expiry value found, clearing...', tag: 'AUTH');
+      await prefs.remove(_tokenExpiryKey);
+      expiryTime = null;
+    }
 
     if (token == null) {
       AppLogger.log('❌ No token found', tag: 'AUTH');
@@ -182,10 +192,9 @@ class AuthService {
     }
 
     if (expiryTime != null) {
-      final currentTime = DateTime.now().millisecondsSinceEpoch;
-      final bufferTime = 5 * 60 * 1000; // 5 minutes before expiry
+      final int currentTime = DateTime.now().millisecondsSinceEpoch;
+      final int bufferTime = 5 * 60 * 1000;
 
-      // Check if token has already expired
       if (currentTime >= expiryTime) {
         AppLogger.log(
           '⚠️ Token has expired, attempting refresh...',
@@ -201,14 +210,12 @@ class AuthService {
         }
       }
 
-      // Check if token is expiring soon (within 5 minutes)
       if (currentTime >= (expiryTime - bufferTime)) {
         AppLogger.log('🔄 Token expiring soon, refreshing...', tag: 'AUTH');
         final refreshed = await refreshToken();
         if (refreshed) {
           return await getToken();
         }
-        // If refresh fails but token is still valid, continue using it
       }
 
       final remainingTime = (expiryTime - currentTime) / 1000 / 60;
@@ -226,73 +233,81 @@ class AuthService {
     return prefs.getString(_refreshTokenKey);
   }
 
-  Future<bool> refreshToken() async {
-    try {
-      final refreshToken = await getRefreshToken();
-
-      if (refreshToken == null) {
-        AppLogger.log('❌ No refresh token available', tag: 'AUTH');
-        return false;
-      }
-
-      AppLogger.log('🔄 Attempting to refresh token...', tag: 'AUTH');
-
-      final response = await http
-          .post(
-            Uri.parse('${UrlConstants.baseUrl}${UrlConstants.refreshToken}'),
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({'refresh_token': refreshToken}),
-          )
-          .timeout(
-            const Duration(seconds: 10),
-            onTimeout: () {
-              throw Exception('Token refresh request timed out');
-            },
-          );
-
-      AppLogger.log(
-        '📡 Refresh response status: ${response.statusCode}',
-        tag: 'AUTH',
-      );
-      AppLogger.log('📄 Refresh response body: ${response.body}', tag: 'AUTH');
-
-      if (response.statusCode == 200) {
-        final responseData = jsonDecode(response.body);
-
-        if (responseData['token'] != null) {
-          final tokenData = responseData['token'];
-          if (tokenData is Map<String, dynamic>) {
-            final accessToken = tokenData['access_token'];
-            final newRefreshToken = tokenData['refresh_token'];
-            final expiresIn = tokenData['expires_in'];
-
-            if (accessToken != null) {
-              await _saveToken(accessToken);
-            }
-            if (newRefreshToken != null) {
-              await _saveRefreshToken(newRefreshToken);
-            }
-            if (expiresIn != null) {
-              await _saveTokenExpiry(expiresIn);
-            }
-
-            AppLogger.log('✅ Token refreshed successfully!', tag: 'AUTH');
-            return true;
-          }
-        }
-
-        AppLogger.log('❌ Invalid response structure', tag: 'AUTH');
-        return false;
-      } else {
-        AppLogger.log('❌ Token refresh failed: ${response.body}', tag: 'AUTH');
-        return false;
-      }
-    } catch (e) {
-      AppLogger.log('❌ Token refresh error: $e', tag: 'AUTH');
-      return false;
-    }
+  Future<String?> _getToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('auth_token');
   }
 
+ Future<bool> refreshToken() async {
+  try {
+    final refreshToken = await getRefreshToken();
+    final token = await _getToken();
+    log("this is the refresh token $refreshToken");
+    if (refreshToken == null) {
+      AppLogger.log('❌ No refresh token available', tag: 'AUTH');
+      return false;
+    }
+
+    AppLogger.log('🔄 Attempting to refresh token...', tag: 'AUTH');
+
+    final response = await http
+        .post(
+          Uri.parse('${UrlConstants.baseUrl}${UrlConstants.refreshToken}'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+          body: jsonEncode({'refresh_token': refreshToken}),
+        )
+        .timeout(
+          const Duration(seconds: 10),
+          onTimeout: () {
+            throw Exception('Token refresh request timed out');
+          },
+        );
+
+    AppLogger.log('📡 Refresh response status: ${response.statusCode}', tag: 'AUTH');
+    AppLogger.log('📄 Refresh response body: ${response.body}', tag: 'AUTH');
+
+    if (response.statusCode == 200) {
+      final responseData = jsonDecode(response.body);
+
+      // Backend returns { "access_token": { "access_token": "...", "refresh_token": "...", "expires_in": 3600 } }
+      final tokenWrapper = responseData['access_token'];
+
+      if (tokenWrapper != null && tokenWrapper is Map<String, dynamic>) {
+        final accessToken = tokenWrapper['access_token'];
+        final newRefreshToken = tokenWrapper['refresh_token'];
+        final expiresIn = tokenWrapper['expires_in'];
+
+        if (accessToken != null) {
+          await _saveToken(accessToken);
+          AppLogger.log('✅ New access token saved', tag: 'AUTH');
+        }
+        if (newRefreshToken != null) {
+          await _saveRefreshToken(newRefreshToken);
+          AppLogger.log('✅ New refresh token saved', tag: 'AUTH');
+        }
+        if (expiresIn != null) {
+          await _saveTokenExpiry(expiresIn);
+          AppLogger.log('✅ Token expiry saved: $expiresIn seconds', tag: 'AUTH');
+        }
+
+        AppLogger.log('✅ Token refreshed successfully!', tag: 'AUTH');
+        return true;
+      }
+
+      AppLogger.log('❌ Invalid response structure: $responseData', tag: 'AUTH');
+      return false;
+    } else {
+      AppLogger.log('❌ Token refresh failed: ${response.body}', tag: 'AUTH');
+      return false;
+    }
+  } catch (e) {
+    AppLogger.log('❌ Token refresh error: $e', tag: 'AUTH');
+    return false;
+  }
+}
   Future<void> clearToken() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
@@ -343,7 +358,13 @@ class AuthService {
 
   Future<bool> isSessionExpired() async {
     final prefs = await SharedPreferences.getInstance();
-    final expiryTime = prefs.getInt(_tokenExpiryKey);
+    int? expiryTime;
+    try {
+      expiryTime = prefs.getInt(_tokenExpiryKey);
+    } catch (e) {
+      await prefs.remove(_tokenExpiryKey);
+      return true;
+    }
 
     if (expiryTime != null) {
       final currentTime = DateTime.now().millisecondsSinceEpoch;

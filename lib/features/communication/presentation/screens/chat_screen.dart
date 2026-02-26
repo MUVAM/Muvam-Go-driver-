@@ -53,7 +53,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    AppLogger.log('ChatScreen initState - Ride ID: ${widget.rideId}');
+    //ChatScreen initState - Ride ID: ${widget.rideId}');
     _initializeScreen();
   }
 
@@ -63,13 +63,13 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _loadUserId() async {
-    AppLogger.log('Loading user ID...');
+    //Loading user ID...');
     try {
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString('user_id');
 
-      AppLogger.log('User ID: $userId');
-      AppLogger.log('Passenger ID: ${widget.driverId}');
+      //User ID: $userId');
+      //Passenger ID: ${widget.driverId}');
 
       if (mounted) {
         setState(() {
@@ -78,7 +78,7 @@ class _ChatScreenState extends State<ChatScreen> {
         });
       }
     } catch (e) {
-      AppLogger.log('Error loading user ID: $e');
+      //Error loading user ID: $e');
       if (mounted) {
         setState(() {
           _userIdLoaded = true;
@@ -89,15 +89,15 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _initializeWebSocket() async {
     try {
-      AppLogger.log('Initializing ChatScreen WebSocket');
+      //Initializing ChatScreen WebSocket');
 
       _webSocketService = WebSocketService.instance;
 
       if (!_webSocketService.isConnected) {
-        AppLogger.log('Connecting...');
+        //Connecting...');
         await _webSocketService.connect();
       } else {
-        AppLogger.log('Already connected');
+        //Already connected');
       }
 
       if (mounted) {
@@ -108,11 +108,11 @@ class _ChatScreenState extends State<ChatScreen> {
       }
 
       context.read<ChatProvider>().setActiveRide(widget.rideId);
-      AppLogger.log('Chat screen marked as active for ride ${widget.rideId}');
+      //Chat screen marked as active for ride ${widget.rideId}');
 
-      AppLogger.log('WebSocket initialized for ChatScreen');
+      //WebSocket initialized for ChatScreen');
     } catch (e) {
-      AppLogger.log('WebSocket initialization error: $e');
+      //WebSocket initialization error: $e');
       if (mounted) {
         setState(() {
           isLoading = false;
@@ -124,7 +124,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
-    AppLogger.log('ChatScreen dispose');
+    //ChatScreen dispose');
     context.read<ChatProvider>().setActiveRide(null);
     _messageController.dispose();
     _scrollController.dispose();
@@ -133,12 +133,12 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _handleIncomingMessage(Map<String, dynamic> data) {
     try {
-      AppLogger.log('Chat message handler called');
-      AppLogger.log('   Data: $data');
+      //Chat message handler called');
+      //   Data: $data');
 
       final messageData = data['data'] as Map<String, dynamic>?;
       if (messageData == null) {
-        AppLogger.log('No data field');
+        //No data field');
         return;
       }
 
@@ -148,7 +148,7 @@ class _ChatScreenState extends State<ChatScreen> {
       );
 
       if (messageRideId != widget.rideId) {
-        AppLogger.log('Different ride, ignoring');
+        //Different ride, ignoring');
         return;
       }
 
@@ -159,8 +159,8 @@ class _ChatScreenState extends State<ChatScreen> {
           '';
       final timestamp = data['timestamp'] ?? DateTime.now().toIso8601String();
 
-      AppLogger.log('Adding message: "$messageText"');
-      AppLogger.log('   From: $senderId (Current user: $currentUserId)');
+      //Adding message: "$messageText"');
+      //   From: $senderId (Current user: $currentUserId)');
 
       if (mounted) {
         final message = ChatMessageModel(
@@ -183,7 +183,7 @@ class _ChatScreenState extends State<ChatScreen> {
         });
       }
     } catch (e) {
-      AppLogger.log('Error handling message: $e');
+      //Error handling message: $e');
     }
   }
 
@@ -210,24 +210,24 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _sendMessage() async {
-    AppLogger.log('');
-    AppLogger.log('SEND MESSAGE INITIATED');
+    //');
+    //SEND MESSAGE INITIATED');
 
     if (_isSending) {
-      AppLogger.log('Already sending a message, ignoring');
-      AppLogger.log('');
+      //Already sending a message, ignoring');
+      //');
       return;
     }
 
     if (!_userIdLoaded) {
-      AppLogger.log('User ID not loaded');
-      AppLogger.log('');
+      //User ID not loaded');
+      //');
       return;
     }
 
     if (!isConnected) {
-      AppLogger.log('Not connected');
-      AppLogger.log('');
+      //Not connected');
+      //');
       CustomFlushbar.showError(
         context: context,
         message: 'Not connected to chat',
@@ -237,8 +237,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
     final text = _messageController.text.trim();
     if (text.isEmpty) {
-      AppLogger.log('Empty message');
-      AppLogger.log('');
+      //Empty message');
+      //');
       return;
     }
 
@@ -247,13 +247,13 @@ class _ChatScreenState extends State<ChatScreen> {
     });
 
     _messageController.clear();
-    AppLogger.log('Input field cleared');
+    //Input field cleared');
 
     try {
-      AppLogger.log('Message: "$text"');
-      AppLogger.log('Ride ID: ${widget.rideId}');
-      AppLogger.log('User ID: $currentUserId');
-      AppLogger.log('Time: ${DateTime.now().toIso8601String()}');
+      //Message: "$text"');
+      //Ride ID: ${widget.rideId}');
+      //User ID: $currentUserId');
+      //Time: ${DateTime.now().toIso8601String()}');
 
       final prefs = await SharedPreferences.getInstance();
       final userName =
@@ -261,7 +261,7 @@ class _ChatScreenState extends State<ChatScreen> {
           prefs.getString('name') ??
           'Unknown User';
 
-      AppLogger.log('User Name: $userName');
+      //User Name: $userName');
 
       _webSocketService.sendMessage({
         "type": 'chat',
@@ -273,9 +273,9 @@ class _ChatScreenState extends State<ChatScreen> {
         },
       });
 
-      AppLogger.log('Passed to WebSocket service');
+      //Passed to WebSocket service');
 
-      AppLogger.log('Sending FCM notification to driver...');
+      //Sending FCM notification to driver...');
       try {
         await UnifiedNotificationService.sendChatNotification(
           receiverId: widget.driverId,
@@ -284,17 +284,17 @@ class _ChatScreenState extends State<ChatScreen> {
           chatRoomId: widget.rideId.toString(),
         );
 
-        AppLogger.log('FCM notification sent');
+        //FCM notification sent');
       } catch (e) {
-        AppLogger.log('FCM notification error: $e');
+        //FCM notification error: $e');
       }
 
-      AppLogger.log('Waiting for server response...');
-      AppLogger.log('');
+      //Waiting for server response...');
+      //');
     } catch (e, stack) {
-      AppLogger.log('Exception: $e');
-      AppLogger.log('Stack: $stack');
-      AppLogger.log('');
+      //Exception: $e');
+      //Stack: $stack');
+      //');
       CustomFlushbar.showError(
         context: context,
         message: 'Failed to send message',
@@ -305,7 +305,7 @@ class _ChatScreenState extends State<ChatScreen> {
           _isSending = false;
         });
       }
-      AppLogger.log('Send operation completed');
+      //Send operation completed');
     }
   }
 
@@ -426,7 +426,7 @@ class _ChatScreenState extends State<ChatScreen> {
         );
       }
     } catch (e) {
-      AppLogger.log('Call error: $e');
+      //Call error: $e');
     }
   }
 

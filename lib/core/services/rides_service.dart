@@ -16,7 +16,7 @@ class RidesService {
 
     final url = '${UrlConstants.baseUrl}${UrlConstants.rides}';
 
-    AppLogger.log('Getting rides: $url');
+    //Getting rides: $url');
 
     final Map<String, dynamic> body = {};
 
@@ -33,8 +33,8 @@ class RidesService {
       body: jsonEncode(body),
     );
 
-    AppLogger.log('Rides response: ${response.statusCode}');
-    AppLogger.log('Rides body: ${response.body}');
+    //Rides response: ${response.statusCode}');
+    //Rides body: ${response.body}');
 
     if (response.statusCode == 200) {
       final responseData = jsonDecode(response.body);
@@ -50,7 +50,7 @@ class RidesService {
 
       return jsonList.map((json) => Ride.fromJson(json)).toList();
     } else {
-      AppLogger.log('Failed to fetch rides: ${response.body}');
+      //Failed to fetch rides: ${response.body}');
       throw Exception('Failed to fetch rides');
     }
   }
@@ -60,7 +60,7 @@ class RidesService {
 
     final url = '${UrlConstants.baseUrl}/rides/$rideId';
 
-    AppLogger.log('Getting ride details: $url');
+    //Getting ride details: $url');
 
     final response = await http.get(
       Uri.parse(url),
@@ -70,14 +70,14 @@ class RidesService {
       },
     );
 
-    AppLogger.log('Ride details response: ${response.statusCode}');
-    AppLogger.log('Ride details body: ${response.body}');
+    //Ride details response: ${response.statusCode}');
+    //Ride details body: ${response.body}');
 
     if (response.statusCode == 200) {
       final responseData = jsonDecode(response.body);
       return Ride.fromJson(responseData);
     } else {
-      AppLogger.log('Failed to fetch ride details: ${response.body}');
+      //Failed to fetch ride details: ${response.body}');
       throw Exception('Failed to fetch ride details');
     }
   }

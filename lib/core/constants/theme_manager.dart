@@ -19,7 +19,7 @@ class ThemeManager extends ChangeNotifier {
       _isDarkMode = prefs.getBool(_themeKey) ?? false;
       notifyListeners();
     } catch (e) {
-      AppLogger.log('Error loading theme: $e');
+      //Error loading theme: $e');
       _isDarkMode = false;
       notifyListeners();
     }
@@ -31,7 +31,7 @@ class ThemeManager extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool(_themeKey, _isDarkMode);
     } catch (e) {
-      AppLogger.log('Error saving theme: $e');
+      //Error saving theme: $e');
     }
     notifyListeners();
   }

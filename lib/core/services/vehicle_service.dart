@@ -6,7 +6,7 @@ import '../constants/url_constants.dart';
 class VehicleService {
   Future<Map<String, dynamic>> getVehicles(String token) async {
     try {
-      AppLogger.log('Fetching vehicles from API...', tag: 'VEHICLE');
+      //Fetching vehicles from API...', tag: 'VEHICLE');
 
       final response = await http.get(
         Uri.parse('${UrlConstants.baseUrl}${UrlConstants.registerVehicle}'),
@@ -27,7 +27,7 @@ class VehicleService {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        AppLogger.log('Vehicles fetched successfully', tag: 'VEHICLE');
+        //Vehicles fetched successfully', tag: 'VEHICLE');
         return {'success': true, 'data': data};
       } else {
         AppLogger.log(
@@ -40,7 +40,7 @@ class VehicleService {
         };
       }
     } catch (e) {
-      AppLogger.log('Error fetching vehicles: $e', tag: 'VEHICLE');
+      //Error fetching vehicles: $e', tag: 'VEHICLE');
       return {'success': false, 'message': 'Error: $e'};
     }
   }

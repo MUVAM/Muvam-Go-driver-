@@ -52,7 +52,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
           );
         }
       } catch (e) {
-        AppLogger.log('Error parsing date: $e');
+        //Error parsing date: $e');
       }
     }
 
@@ -81,7 +81,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
       String month = picked.month.toString().padLeft(2, '0');
       String day = picked.day.toString().padLeft(2, '0');
       dobController.text = "$month/$day/${picked.year}";
-      AppLogger.log('Date selected: ${dobController.text}');
+      //Date selected: ${dobController.text}');
     }
   }
 

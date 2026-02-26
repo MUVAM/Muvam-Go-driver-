@@ -12,15 +12,15 @@ class CallNotificationService {
     required String type,
     Map<String, String>? additionalData,
   }) async {
-    AppLogger.log('FCM CALL DEBUG: Starting sendCallNotificationWithActions');
+    //FCM CALL DEBUG: Starting sendCallNotificationWithActions');
     AppLogger.log(
       'FCM CALL DEBUG: Token: ${deviceToken.substring(0, 20)}..., Title: $title, Body: $body',
     );
 
     try {
-      AppLogger.log('FCM CALL DEBUG: Getting access token');
+      //FCM CALL DEBUG: Getting access token');
       final String serverAccessToken = await _getAccessToken();
-      AppLogger.log('FCM CALL DEBUG: Access token obtained successfully');
+      //FCM CALL DEBUG: Access token obtained successfully');
 
       String endpointFirebasecloudMessaging =
           'https://fcm.googleapis.com/v1/projects/muvam-go/messages:send';
@@ -59,8 +59,8 @@ class CallNotificationService {
         },
       };
 
-      AppLogger.log('FCM CALL DEBUG: Message payload prepared');
-      AppLogger.log('FCM CALL DEBUG: Sending HTTP POST request to FCM');
+      //FCM CALL DEBUG: Message payload prepared');
+      //FCM CALL DEBUG: Sending HTTP POST request to FCM');
 
       final response = await http.post(
         Uri.parse(endpointFirebasecloudMessaging),
@@ -84,13 +84,13 @@ class CallNotificationService {
         AppLogger.log(
           'FCM CALL DEBUG: FCM request failed with status: ${response.statusCode}',
         );
-        AppLogger.log('FCM CALL DEBUG: Response body: ${response.body}');
+        //FCM CALL DEBUG: Response body: ${response.body}');
       }
     } catch (e, stackTrace) {
       AppLogger.log(
         'FCM CALL DEBUG: Exception in sendCallNotificationWithActions: $e',
       );
-      AppLogger.log('FCM CALL DEBUG: Stack trace: $stackTrace');
+      //FCM CALL DEBUG: Stack trace: $stackTrace');
       rethrow;
     }
   }

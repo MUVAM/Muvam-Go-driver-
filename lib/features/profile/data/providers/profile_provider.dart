@@ -31,7 +31,7 @@ class ProfileProvider with ChangeNotifier {
   bool get isProfileComplete => userProfile?.profileComplete ?? false;
 
   Future<bool> fetchUserProfile() async {
-    AppLogger.log('📱 ProfileProvider: Fetching user profile...');
+    //📱 ProfileProvider: Fetching user profile...');
 
     _isLoading = true;
     _errorMessage = null;
@@ -45,8 +45,8 @@ class ProfileProvider with ChangeNotifier {
         _isLoading = false;
         notifyListeners();
 
-        AppLogger.log('ProfileProvider: Profile loaded successfully');
-        AppLogger.log('   User: ${profile.user.fullName}');
+        //ProfileProvider: Profile loaded successfully');
+        //   User: ${profile.user.fullName}');
 
         return true;
       } else {
@@ -54,7 +54,7 @@ class ProfileProvider with ChangeNotifier {
         _isLoading = false;
         notifyListeners();
 
-        AppLogger.log('ProfileProvider: Failed to load profile');
+        //ProfileProvider: Failed to load profile');
         return false;
       }
     } catch (e) {
@@ -62,7 +62,7 @@ class ProfileProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
 
-      AppLogger.log('ProfileProvider: Error - $e');
+      //ProfileProvider: Error - $e');
       return false;
     }
   }
@@ -73,7 +73,7 @@ class ProfileProvider with ChangeNotifier {
     required String email,
     required String dateOfBirth,
   }) async {
-    AppLogger.log('UserProfileProvider: Updating user profile');
+    //UserProfileProvider: Updating user profile');
 
     _isUpdating = true;
     _errorMessage = null;
@@ -92,19 +92,19 @@ class ProfileProvider with ChangeNotifier {
       if (result['success'] == true) {
         await fetchUserProfile();
 
-        AppLogger.log('UserProfileProvider: Profile updated successfully');
+        //UserProfileProvider: Profile updated successfully');
         notifyListeners();
         return true;
       } else {
         _errorMessage = result['message'] ?? 'Failed to update profile';
-        AppLogger.log('UserProfileProvider: Update failed - $_errorMessage');
+        //UserProfileProvider: Update failed - $_errorMessage');
         notifyListeners();
         return false;
       }
     } catch (e) {
       _errorMessage = e.toString();
       _isUpdating = false;
-      AppLogger.log('UserProfileProvider: Error updating profile - $e');
+      //UserProfileProvider: Error updating profile - $e');
       notifyListeners();
       return false;
     }
@@ -120,12 +120,12 @@ class ProfileProvider with ChangeNotifier {
     await _profileService.clearCachedUserData();
     notifyListeners();
 
-    AppLogger.log('🗑️ ProfileProvider: Profile cleared');
+    //🗑️ ProfileProvider: Profile cleared');
   }
 
   // Method to refresh profile data
   Future<void> refreshProfile() async {
-    AppLogger.log('🔄 ProfileProvider: Refreshing profile...');
+    //🔄 ProfileProvider: Refreshing profile...');
     await fetchUserProfile();
   }
 }

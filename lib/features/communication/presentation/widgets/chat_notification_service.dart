@@ -54,7 +54,7 @@ class ChatNotificationService {
       await _audioPlayer.stop();
       await _audioPlayer.play(AssetSource('sounds/messageAlert.mp3'));
     } catch (e) {
-      AppLogger.log('Error playing notification sound: $e');
+      //Error playing notification sound: $e');
     }
   }
 

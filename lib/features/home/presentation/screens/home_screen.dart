@@ -226,17 +226,17 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _initializeServices() async {
-    AppLogger.log('=== INITIALIZING HOME SCREEN SERVICES ===');
+    //=== INITIALIZING HOME SCREEN SERVICES ===');
 
     // Check session expiration first
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final isExpired = await authProvider.isSessionExpired();
 
     if (isExpired) {
-      AppLogger.log('🔒 Session expired, attempting token refresh...');
+      //🔒 Session expired, attempting token refresh...');
       final refreshed = await authProvider.refreshToken();
       if (!refreshed) {
-        AppLogger.log('❌ Token refresh failed, redirecting to login...');
+        //❌ Token refresh failed, redirecting to login...');
         if (mounted) {
           Navigator.pushAndRemoveUntil(
             context,
@@ -246,11 +246,11 @@ class _HomeScreenState extends State<HomeScreen> {
         }
         return;
       }
-      AppLogger.log('✅ Token refreshed successfully, continuing...');
+      //✅ Token refreshed successfully, continuing...');
     }
 
     // Fetch user profile
-    AppLogger.log('👤 Fetching user profile...');
+    //👤 Fetching user profile...');
     final profileProvider = Provider.of<ProfileProvider>(
       context,
       listen: false,
@@ -258,35 +258,35 @@ class _HomeScreenState extends State<HomeScreen> {
     await profileProvider.fetchUserProfile();
 
     // Initialize FCM for push notifications
-    AppLogger.log('🔔 Initializing FCM notifications...');
+    //🔔 Initializing FCM notifications...');
     try {
       // final fcmProvider = Provider.of<FCMProvider>(context, listen: false);
       final userId = profileProvider.userProfile?.id.toString();
       if (userId != null) {
         // await fcmProvider.initializeFCM(userId);
-        AppLogger.log('✅ FCM initialized for user: $userId');
+        //✅ FCM initialized for user: $userId');
       } else {
-        AppLogger.log('⚠️ Could not initialize FCM: User ID is null');
+        //⚠️ Could not initialize FCM: User ID is null');
       }
     } catch (e) {
-      AppLogger.log('❌ FCM initialization error: $e');
+      //❌ FCM initialization error: $e');
     }
 
-    AppLogger.log('🔌 Connecting WebSocket...');
+    //🔌 Connecting WebSocket...');
     try {
       await _webSocketService.connect();
-      AppLogger.log('✅ WebSocket connection attempt completed');
+      //✅ WebSocket connection attempt completed');
 
       Future.delayed(Duration(seconds: 2), () {
-        AppLogger.log('🧪 Testing WebSocket connection...');
+        //🧪 Testing WebSocket connection...');
       });
     } catch (e) {
-      AppLogger.log('❌ WebSocket connection failed: $e');
+      //❌ WebSocket connection failed: $e');
     }
 
     // CRITICAL: Register chat handler GLOBALLY in HomeScreen
     _webSocketService.onChatMessage = (chatData) {
-      AppLogger.log('💬 Global chat handler called in HomeScreen');
+      //💬 Global chat handler called in HomeScreen');
       _handleGlobalChatMessage(chatData);
     };
 
@@ -301,7 +301,7 @@ class _HomeScreenState extends State<HomeScreen> {
             "type": "chat",
             "data": {"ride_id": _activeRide!['ID'], "message": "Hello"},
           });
-          AppLogger.log('✅ Initialization message sent');
+          //✅ Initialization message sent');
         }
       });
     }
@@ -331,30 +331,30 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     };
 
-    AppLogger.log('📍 Getting current location...');
+    //📍 Getting current location...');
     _getCurrentLocation();
 
-    AppLogger.log('👤 Initializing driver status...');
+    //👤 Initializing driver status...');
     final driverProvider = Provider.of<DriverProvider>(context, listen: false);
     await driverProvider.initializeDriverStatus();
 
-    AppLogger.log('🚗 Checking active rides...');
+    //🚗 Checking active rides...');
     _checkActiveRides();
 
-    AppLogger.log('💰 Fetching earnings summary...');
+    //💰 Fetching earnings summary...');
     _fetchEarningsSummary();
 
-    AppLogger.log('⏰ Starting ride checking timer...');
+    //⏰ Starting ride checking timer...');
     _startRideChecking();
 
-    AppLogger.log('✅ All services initialized');
-    AppLogger.log('=== HOME SCREEN READY ===\n');
+    //✅ All services initialized');
+    //=== HOME SCREEN READY ===\n');
   }
 
   // Add this new method to handle global chat messages
   void _handleGlobalChatMessage(Map<String, dynamic> chatData) async {
     try {
-      AppLogger.log('📨 Processing global chat message');
+      //📨 Processing global chat message');
       final data = chatData['data'] ?? {};
       final messageText = data['message'] ?? '';
       final senderName = data['sender_name'] ?? 'Unknown User';
@@ -364,16 +364,16 @@ class _HomeScreenState extends State<HomeScreen> {
       final timestamp =
           chatData['timestamp'] ?? DateTime.now().toIso8601String();
 
-      AppLogger.log('   Message: "$messageText"');
-      AppLogger.log('   From: $senderName (ID: $senderId)');
-      AppLogger.log('   Ride: $rideId');
+      //   Message: "$messageText"');
+      //   From: $senderName (ID: $senderId)');
+      //   Ride: $rideId');
 
       // Get current user ID to check if this is our own message
       final prefs = await SharedPreferences.getInstance();
       final currentUserId = prefs.getString('user_id');
 
-      AppLogger.log('   Current User ID: $currentUserId');
-      AppLogger.log('   Sender ID: $senderId');
+      //   Current User ID: $currentUserId');
+      //   Sender ID: $senderId');
 
       // Add message to ChatProvider so it's available when user opens ChatScreen
       if (mounted && rideId > 0) {
@@ -386,11 +386,11 @@ class _HomeScreenState extends State<HomeScreen> {
         );
 
         chatProvider.addMessage(rideId, message);
-        AppLogger.log('✅ Message added to ChatProvider');
+        //✅ Message added to ChatProvider');
 
         // Only show notification if the message is NOT from the current user
         if (senderId != currentUserId) {
-          AppLogger.log('📢 Showing notification for message from other user');
+          //📢 Showing notification for message from other user');
           // Show notification
           ChatNotificationService.showChatNotification(
             context,
@@ -398,7 +398,7 @@ class _HomeScreenState extends State<HomeScreen> {
             message: messageText,
             senderImage: senderImage,
             onTap: () {
-              AppLogger.log('🔔 Notification tapped, navigating to chat');
+              //🔔 Notification tapped, navigating to chat');
 
               // Navigate to chat screen
               if (_activeRide != null) {
@@ -446,15 +446,15 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
     } catch (e, stack) {
-      AppLogger.log('❌ Error handling global chat message: $e');
-      AppLogger.log('Stack: $stack');
+      //❌ Error handling global chat message: $e');
+      //Stack: $stack');
     }
   }
 
   void _startRideChecking() {
     // Setup WebSocket ride request listener
     _webSocketService.onRideRequest = (rideData) {
-      AppLogger.log('📨 Received ride request via WebSocket: $rideData');
+      //📨 Received ride request via WebSocket: $rideData');
       final driverProvider = Provider.of<DriverProvider>(
         context,
         listen: false,
@@ -499,7 +499,7 @@ class _HomeScreenState extends State<HomeScreen> {
         );
         final refreshed = await authProvider.refreshToken();
         if (!refreshed) {
-          AppLogger.log('❌ Token refresh failed, redirecting to login...');
+          //❌ Token refresh failed, redirecting to login...');
           timer.cancel();
           if (mounted) {
             Navigator.pushAndRemoveUntil(
@@ -509,7 +509,7 @@ class _HomeScreenState extends State<HomeScreen> {
             );
           }
         } else {
-          AppLogger.log('✅ Token refreshed silently from session timer.');
+          //✅ Token refreshed silently from session timer.');
         }
       }
     });
@@ -549,7 +549,7 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
     } catch (e) {
-      AppLogger.log('❌ Failed to update driver location: $e');
+      //❌ Failed to update driver location: $e');
     }
   }
 
@@ -565,7 +565,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final errorMessage = result['message']?.toString().toLowerCase() ?? '';
         if (errorMessage.contains('invalid token') ||
             errorMessage.contains('token')) {
-          AppLogger.log('🔒 Invalid token detected, logging out...');
+          //🔒 Invalid token detected, logging out...');
           await _handleInvalidToken();
           return;
         }
@@ -605,7 +605,7 @@ class _HomeScreenState extends State<HomeScreen> {
   /// Handles invalid/expired token: first tries to refresh, only logs out if refresh fails.
   Future<void> _handleInvalidToken() async {
     try {
-      AppLogger.log('🔄 Invalid token detected - attempting refresh...');
+      //🔄 Invalid token detected - attempting refresh...');
 
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final refreshed = await authProvider.refreshToken();
@@ -619,7 +619,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
 
       // Refresh failed — log the user out
-      AppLogger.log('❌ Token refresh failed - logging out user');
+      //❌ Token refresh failed - logging out user');
 
       // Cancel all timers
       _rideCheckTimer?.cancel();
@@ -633,7 +633,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
 
-      AppLogger.log('✅ User data cleared');
+      //✅ User data cleared');
 
       // Show message to user and navigate to login
       if (mounted) {
@@ -653,7 +653,7 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       }
     } catch (e) {
-      AppLogger.log('❌ Error handling invalid token: $e');
+      //❌ Error handling invalid token: $e');
     }
   }
 
@@ -674,9 +674,9 @@ class _HomeScreenState extends State<HomeScreen> {
     if (token != null) {
       final result = await ApiService.acceptRide(token, rideId);
 
-      AppLogger.log('ACCEPT RIDE RESPONSE: $result');
+      //ACCEPT RIDE RESPONSE: $result');
 
-      AppLogger.log('ACCEPT RIDE RESPONSE: $result');
+      //ACCEPT RIDE RESPONSE: $result');
       if (result['success'] == true) {
         if (mounted) {
           setState(() {
@@ -733,30 +733,30 @@ class _HomeScreenState extends State<HomeScreen> {
               '✅ Ride accepted notification sent to passenger $passengerId',
             );
           } catch (e) {
-            AppLogger.log('❌ Failed to send ride accepted notification: $e');
+            //❌ Failed to send ride accepted notification: $e');
           }
         }
 
         AppLogger.log("PASSENGER ID ${transformedRide['Passenger']['ID']}");
-        AppLogger.log('🔄 TRANSFORMED RIDE DATA:');
-        AppLogger.log('   Transformed keys: ${transformedRide.keys.toList()}');
+        //🔄 TRANSFORMED RIDE DATA:');
+        //   Transformed keys: ${transformedRide.keys.toList()}');
         AppLogger.log(
           '   PickupLocation: ${transformedRide['PickupLocation']}',
         );
-        AppLogger.log('   DestLocation: ${transformedRide['DestLocation']}');
-        AppLogger.log('   Has data field: ${transformedRide['data'] != null}');
+        //   DestLocation: ${transformedRide['DestLocation']}');
+        //   Has data field: ${transformedRide['data'] != null}');
 
         // CRITICAL DEBUG: Log ALL location-related fields from rideData
-        AppLogger.log('🚨 LOCATION DATA DEBUG (from rideData):');
-        AppLogger.log('   rideData keys: ${rideData.keys.toList()}');
-        AppLogger.log('   PickupLocation: ${rideData['PickupLocation']}');
-        AppLogger.log('   DestLocation: ${rideData['DestLocation']}');
-        AppLogger.log('   PickupLat: ${rideData['PickupLat']}');
-        AppLogger.log('   PickupLng: ${rideData['PickupLng']}');
-        AppLogger.log('   DestLat: ${rideData['DestLat']}');
-        AppLogger.log('   DestLng: ${rideData['DestLng']}');
-        AppLogger.log('   pickup_location: ${rideData['pickup_location']}');
-        AppLogger.log('   dest_location: ${rideData['dest_location']}');
+        //🚨 LOCATION DATA DEBUG (from rideData):');
+        //   rideData keys: ${rideData.keys.toList()}');
+        //   PickupLocation: ${rideData['PickupLocation']}');
+        //   DestLocation: ${rideData['DestLocation']}');
+        //   PickupLat: ${rideData['PickupLat']}');
+        //   PickupLng: ${rideData['PickupLng']}');
+        //   DestLat: ${rideData['DestLat']}');
+        //   DestLng: ${rideData['DestLng']}');
+        //   pickup_location: ${rideData['pickup_location']}');
+        //   dest_location: ${rideData['dest_location']}');
 
         // If location coordinates are missing, geocode the addresses
         if (transformedRide['PickupLocation'] == null ||
@@ -785,8 +785,8 @@ class _HomeScreenState extends State<HomeScreen> {
       final pickupAddress = ride['PickupAddress'] ?? '';
       final destAddress = ride['DestAddress'] ?? '';
 
-      AppLogger.log('📍 Geocoding pickup address: $pickupAddress');
-      AppLogger.log('📍 Geocoding dest address: $destAddress');
+      //📍 Geocoding pickup address: $pickupAddress');
+      //📍 Geocoding dest address: $destAddress');
 
       // Geocode pickup address
       final pickupUrl = Uri.parse(
@@ -815,8 +815,8 @@ class _HomeScreenState extends State<HomeScreen> {
         final destLat = destData['results'][0]['geometry']['location']['lat'];
         final destLng = destData['results'][0]['geometry']['location']['lng'];
 
-        AppLogger.log('✅ Geocoded pickup: $pickupLat, $pickupLng');
-        AppLogger.log('✅ Geocoded dest: $destLat, $destLng');
+        //✅ Geocoded pickup: $pickupLat, $pickupLng');
+        //✅ Geocoded dest: $destLat, $destLng');
 
         // Convert to WKB format (POINT format) for compatibility
         final pickupWKB = 'POINT($pickupLng $pickupLat)';
@@ -832,16 +832,16 @@ class _HomeScreenState extends State<HomeScreen> {
           ride['data']['DestLocation'] = destWKB;
         }
 
-        AppLogger.log('✅ Updated ride with geocoded locations');
+        //✅ Updated ride with geocoded locations');
         _showRideAcceptedSheet(ride, acceptedData);
       } else {
-        AppLogger.log('❌ Geocoding failed, showing ride without markers');
-        AppLogger.log('   Pickup status: ${pickupData['status']}');
-        AppLogger.log('   Dest status: ${destData['status']}');
+        //❌ Geocoding failed, showing ride without markers');
+        //   Pickup status: ${pickupData['status']}');
+        //   Dest status: ${destData['status']}');
         _showRideAcceptedSheet(ride, acceptedData);
       }
     } catch (e) {
-      AppLogger.log('❌ Error geocoding addresses: $e');
+      //❌ Error geocoding addresses: $e');
       _showRideAcceptedSheet(ride, acceptedData);
     }
   }
@@ -860,11 +860,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (token != null) {
       final result = await ApiService.rejectRide(token, rideId);
-      AppLogger.log('REJECT RIDE RESPONSE: $result');
+      //REJECT RIDE RESPONSE: $result');
       if (result['success'] == true) {
-        AppLogger.log('Ride rejected successfully');
+        //Ride rejected successfully');
       } else {
-        AppLogger.log('Failed to reject ride: ${result['message']}');
+        //Failed to reject ride: ${result['message']}');
       }
     }
 
@@ -881,7 +881,68 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   String _calculateETA(Map<String, dynamic> ride) {
-    return '5 min';
+    // The driver's current location is tracked in _currentLocation.
+    // Extract the pickup coordinates from the ride data so we can compute
+    // the real distance — and therefore a real ETA — to the passenger.
+
+    try {
+      final rideData = ride['data'] ?? ride;
+
+      double? pickupLat;
+      double? pickupLng;
+
+      // Try to extract lat/lng from the WKB POINT string (e.g. "POINT(3.123 6.456)")
+      final pickupLocationRaw =
+          rideData['PickupLocation'] ?? rideData['pickup_location'];
+
+      if (pickupLocationRaw != null) {
+        final pointStr = pickupLocationRaw.toString();
+        final match = RegExp(
+          r'POINT\(([^\s]+)\s+([^\)]+)\)',
+        ).firstMatch(pointStr);
+        if (match != null) {
+          pickupLng = double.tryParse(match.group(1) ?? '');
+          pickupLat = double.tryParse(match.group(2) ?? '');
+        }
+      }
+
+      // Fallback: separate lat/lng fields
+      pickupLat ??= double.tryParse(
+        (rideData['PickupLat'] ?? rideData['pickup_lat'] ?? '').toString(),
+      );
+      pickupLng ??= double.tryParse(
+        (rideData['PickupLng'] ?? rideData['pickup_lng'] ?? '').toString(),
+      );
+
+      if (pickupLat == null ||
+          pickupLng == null ||
+          pickupLat == 0.0 ||
+          pickupLng == 0.0) {
+        AppLogger.log(
+          '⚠️ ETA: No valid pickup coordinates found, showing placeholder',
+        );
+        return '--';
+      }
+
+      // Calculate distance in metres between driver and pickup
+      final distanceMeters = Geolocator.distanceBetween(
+        _currentLocation.latitude,
+        _currentLocation.longitude,
+        pickupLat,
+        pickupLng,
+      );
+
+      // Assume city speed of 30 km/h
+      final distanceKm = distanceMeters / 1000;
+      final timeMinutes = ((distanceKm / 30) * 60).round();
+
+      if (timeMinutes < 1) return '< 1 min';
+      if (timeMinutes == 1) return '1 min';
+      return '$timeMinutes mins';
+    } catch (e) {
+      //❌ ETA calculation error: $e');
+      return '--';
+    }
   }
 
   String _formatPaymentMethod(String? method) {
@@ -946,7 +1007,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    AppLogger.log('🎯 Attempting to center map on active ride');
+    //🎯 Attempting to center map on active ride');
 
     try {
       // If we have markers, use them to center the map
@@ -979,10 +1040,10 @@ class _HomeScreenState extends State<HomeScreen> {
           '✅ Map centered on available marker: ${anyMarker.position}',
         );
       } else {
-        AppLogger.log('⚠️ No markers available for centering');
+        //⚠️ No markers available for centering');
       }
     } catch (e) {
-      AppLogger.log('❌ Error centering map on active ride: $e');
+      //❌ Error centering map on active ride: $e');
     }
   }
 
@@ -2548,7 +2609,7 @@ class _HomeScreenState extends State<HomeScreen> {
         formattedDate =
             '${_getMonth(dateTime.month)} ${dateTime.day}, ${dateTime.year} at ${TimeOfDay.fromDateTime(dateTime).format(context)}';
       } catch (e) {
-        AppLogger.log('Error parsing date: $e');
+        //Error parsing date: $e');
       }
     }
 
@@ -2948,7 +3009,7 @@ class _HomeScreenState extends State<HomeScreen> {
         formattedDate =
             '${_getMonth(dateTime.month)} ${dateTime.day}, ${dateTime.year} at ${TimeOfDay.fromDateTime(dateTime).format(context)}';
       } catch (e) {
-        AppLogger.log('Error parsing scheduled date: $e');
+        //Error parsing scheduled date: $e');
       }
     }
 
@@ -3283,7 +3344,7 @@ class _HomeScreenState extends State<HomeScreen> {
         formattedDate =
             '${_getMonth(dateTime.month)} ${dateTime.day}, ${dateTime.year} at ${TimeOfDay.fromDateTime(dateTime).format(context)}';
       } catch (e) {
-        AppLogger.log('Error parsing scheduled date: $e');
+        //Error parsing scheduled date: $e');
       }
     }
 
@@ -3873,7 +3934,14 @@ class _HomeScreenState extends State<HomeScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  eta.replaceAll(' min', ''),
+                                  // Strip ' mins' / ' min' / '< ' to show just the number
+                                  eta == '--'
+                                      ? '--'
+                                      : eta.startsWith('<')
+                                      ? '<1'
+                                      : eta
+                                            .replaceAll(' mins', '')
+                                            .replaceAll(' min', ''),
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 16.sp,
@@ -4111,24 +4179,24 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _checkActiveRides() async {
-    AppLogger.log('=== CHECKING ACTIVE RIDES ===');
+    //=== CHECKING ACTIVE RIDES ===');
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
 
     if (token != null) {
-      AppLogger.log('Token found, calling getActiveRides API');
+      //Token found, calling getActiveRides API');
       final result = await ApiService.getActiveRides(token);
-      AppLogger.log('API Result: $result');
+      //API Result: $result');
 
       if (result['success'] == true) {
         final rides = result['data']['rides'] as List;
-        AppLogger.log('Number of active rides: ${rides.length}');
+        //Number of active rides: ${rides.length}');
 
         if (rides.isNotEmpty) {
           final activeRide = rides.first;
-          AppLogger.log('Active ride found: $activeRide');
-          AppLogger.log('Ride Status: ${activeRide['Status']}');
-          AppLogger.log('Ride ID: ${activeRide['ID']}');
+          //Active ride found: $activeRide');
+          //Ride Status: ${activeRide['Status']}');
+          //Ride ID: ${activeRide['ID']}');
 
           // Small delay to ensure map is initialized before showing ride
           Future.delayed(Duration(milliseconds: 1000), () {
@@ -4137,15 +4205,15 @@ class _HomeScreenState extends State<HomeScreen> {
             }
           });
         } else {
-          AppLogger.log('No active rides found');
+          //No active rides found');
         }
       } else {
-        AppLogger.log('Failed to get active rides: ${result['message']}');
+        //Failed to get active rides: ${result['message']}');
       }
     } else {
-      AppLogger.log('No auth token found');
+      //No auth token found');
     }
-    AppLogger.log('=== END CHECKING ACTIVE RIDES ===\n');
+    //=== END CHECKING ACTIVE RIDES ===\n');
   }
 
   void _showRideAcceptedSheet(
@@ -4160,7 +4228,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     // Always start/restart ride tracking to ensure markers are displayed
-    AppLogger.log('🗺️ Starting ride tracking for accepted ride');
+    //🗺️ Starting ride tracking for accepted ride');
     RideTrackingService.startRideTracking(
       ride: ride,
       onUpdate: (markers, polylines) {
@@ -4195,28 +4263,28 @@ class _HomeScreenState extends State<HomeScreen> {
         ride: ride,
         acceptedData: acceptedData,
         onRideStatusChanged: (updatedRide) {
-          AppLogger.log('🔔 onRideStatusChanged callback triggered');
-          AppLogger.log('   Updated Status: ${updatedRide['Status']}');
+          //🔔 onRideStatusChanged callback triggered');
+          //   Updated Status: ${updatedRide['Status']}');
 
           _onRideStatusChanged(updatedRide);
 
-          AppLogger.log('📤 Closing current sheet...');
+          //📤 Closing current sheet...');
           Navigator.of(context).pop();
 
-          AppLogger.log('🔍 Checking status for next action...');
+          //🔍 Checking status for next action...');
           if (updatedRide['Status'] == 'completed') {
             AppLogger.log(
               '✅ Status is completed, scheduling completion sheet...',
             );
             Future.delayed(Duration(milliseconds: 400), () {
-              AppLogger.log('⏰ Delay elapsed, checking mounted state...');
+              //⏰ Delay elapsed, checking mounted state...');
               if (mounted) {
                 AppLogger.log(
                   '✅ Still mounted, calling _showCompletedSheet...',
                 );
                 _showCompletedSheet(context, updatedRide);
               } else {
-                AppLogger.log('❌ Widget no longer mounted!');
+                //❌ Widget no longer mounted!');
               }
             });
           } else if (updatedRide['Status'] != 'cancelled') {
@@ -4229,7 +4297,7 @@ class _HomeScreenState extends State<HomeScreen> {
               }
             });
           } else {
-            AppLogger.log('🚫 Status is cancelled, no further action');
+            //🚫 Status is cancelled, no further action');
           }
         },
       ),
@@ -4243,12 +4311,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showCompletedSheet(BuildContext context, Map<String, dynamic> ride) {
-    AppLogger.log('🎉 === _showCompletedSheet CALLED ===');
-    AppLogger.log('   Mounted: $mounted');
-    AppLogger.log('   Ride data: $ride');
+    //🎉 === _showCompletedSheet CALLED ===');
+    //   Mounted: $mounted');
+    //   Ride data: $ride');
 
     if (!mounted) {
-      AppLogger.log('❌ Widget not mounted, cannot show sheet');
+      //❌ Widget not mounted, cannot show sheet');
       return;
     }
 
@@ -4259,8 +4327,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final stopAddress = ride['StopAddress'];
     final hasStop = stopAddress != null && stopAddress.toString().isNotEmpty;
 
-    AppLogger.log('   Passenger: $passengerName');
-    AppLogger.log('   Price: ${ride['Price']}');
+    //   Passenger: $passengerName');
+    //   Price: ${ride['Price']}');
 
     final parentContext = context;
 
@@ -4459,8 +4527,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onRideStatusChanged(Map<String, dynamic> updatedRide) {
-    AppLogger.log('=== RIDE STATUS CHANGED ===');
-    AppLogger.log('Updated Ride Status: ${updatedRide['Status']}');
+    //=== RIDE STATUS CHANGED ===');
+    //Updated Ride Status: ${updatedRide['Status']}');
 
     if (mounted) {
       setState(() {
@@ -4478,17 +4546,17 @@ class _HomeScreenState extends State<HomeScreen> {
       if (rideId != null) {
         final chatProvider = Provider.of<ChatProvider>(context, listen: false);
         chatProvider.clearMessages(rideId);
-        AppLogger.log('🗑️ Cleared chat messages for ride $rideId');
+        //🗑️ Cleared chat messages for ride $rideId');
       }
 
       // Stop tracking when ride is completed or cancelled
-      AppLogger.log('Stopping tracking for completed/cancelled ride');
+      //Stopping tracking for completed/cancelled ride');
       RideTrackingService.stopTracking();
 
       // Clear the map display after completion sheet is shown
       Future.delayed(Duration(milliseconds: 1000), () {
         if (mounted) {
-          AppLogger.log('Clearing map markers and polylines');
+          //Clearing map markers and polylines');
           setState(() {
             _activeRide = null;
             _isRideSheetVisible = false;
@@ -4501,12 +4569,12 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     }
 
-    AppLogger.log('=== RIDE STATUS CHANGE HANDLED ===\n');
+    //=== RIDE STATUS CHANGE HANDLED ===\n');
   }
 
   Future<void> _handleEmergencySOS() async {
     try {
-      AppLogger.log('🚨 Emergency SOS button tapped', tag: 'SOS');
+      //🚨 Emergency SOS button tapped', tag: 'SOS');
 
       if (_activeRide == null) {
         CustomFlushbar.showError(
@@ -4531,9 +4599,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ? _currentLocationName
           : 'Lat: ${position.latitude}, Lng: ${position.longitude}';
 
-      AppLogger.log('📍 SOS Location: $location', tag: 'SOS');
-      AppLogger.log('📍 SOS Address: $locationAddress', tag: 'SOS');
-      AppLogger.log('🚗 SOS Ride ID: $rideId', tag: 'SOS');
+      //📍 SOS Location: $location', tag: 'SOS');
+      //📍 SOS Address: $locationAddress', tag: 'SOS');
+      //🚗 SOS Ride ID: $rideId', tag: 'SOS');
 
       // Get auth token
       final prefs = await SharedPreferences.getInstance();
@@ -4562,7 +4630,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
       if (result['success'] == true) {
-        AppLogger.log('✅ SOS alert sent successfully', tag: 'SOS');
+        //✅ SOS alert sent successfully', tag: 'SOS');
         // Show success dialog
         showDialog(
           context: context,
@@ -4637,7 +4705,7 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     } catch (e) {
-      AppLogger.log('❌ Error handling emergency SOS: $e', tag: 'SOS');
+      //❌ Error handling emergency SOS: $e', tag: 'SOS');
       // Show error dialog
       showDialog(
         context: context,

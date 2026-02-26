@@ -344,7 +344,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               },
             );
       } on TimeoutException catch (e) {
-        AppLogger.log('Position timeout: $e');
+        //Position timeout: $e');
         setState(() {
           locationController.clear();
         });
@@ -358,7 +358,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 
       // Store location point immediately (this is most important)
       _locationPoint = 'POINT(${position.longitude} ${position.latitude})';
-      AppLogger.log('Location Point (correct format): $_locationPoint');
+      //Location Point (correct format): $_locationPoint');
 
       // Set default state using coordinates as fallback
       String fallbackCity =
@@ -372,7 +372,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       try {
         for (int attempt = 0; attempt < 3; attempt++) {
           try {
-            AppLogger.log('Geocoding attempt ${attempt + 1}...');
+            //Geocoding attempt ${attempt + 1}...');
 
             List<Placemark> placemarks = await placemarkFromCoordinates(
               position.latitude,
@@ -391,7 +391,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 
               if (city != null && city.isNotEmpty) {
                 _selectedState = city;
-                AppLogger.log('Extracted city: $_selectedState');
+                //Extracted city: $_selectedState');
               }
 
               // Build a readable address
@@ -421,16 +421,16 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               }
 
               geocodingSuccessful = true;
-              AppLogger.log('Geocoded address: $address');
+              //Geocoded address: $address');
               break;
             }
           } on TimeoutException catch (e) {
-            AppLogger.log('Geocoding attempt ${attempt + 1} timed out: $e');
+            //Geocoding attempt ${attempt + 1} timed out: $e');
             if (attempt < 2) {
               await Future.delayed(Duration(seconds: 1));
             }
           } catch (e) {
-            AppLogger.log('Geocoding attempt ${attempt + 1} failed: $e');
+            //Geocoding attempt ${attempt + 1} failed: $e');
             if (attempt < 2) {
               await Future.delayed(Duration(seconds: 1));
             } else {
@@ -439,7 +439,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
           }
         }
       } catch (e) {
-        AppLogger.log('Geocoding completely failed: $e');
+        //Geocoding completely failed: $e');
         // Don't return here - we still have coordinates
       }
 
@@ -468,10 +468,10 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
         );
       }
 
-      AppLogger.log('Final location point to send to backend: $_locationPoint');
-      AppLogger.log('Final city to send to backend: $_selectedState');
+      //Final location point to send to backend: $_locationPoint');
+      //Final city to send to backend: $_selectedState');
     } on LocationServiceDisabledException catch (e) {
-      AppLogger.log('Location services disabled: $e');
+      //Location services disabled: $e');
       setState(() {
         locationController.clear();
         _locationPoint = null;
@@ -483,7 +483,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
         message: 'Location services are disabled. Please enable GPS.',
       );
     } catch (e) {
-      AppLogger.log('Error getting location: $e');
+      //Error getting location: $e');
       setState(() {
         locationController.clear();
         _locationPoint = null;

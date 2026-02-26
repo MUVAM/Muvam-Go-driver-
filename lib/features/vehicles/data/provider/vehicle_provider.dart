@@ -84,14 +84,14 @@ class VehicleProvider with ChangeNotifier {
         _errorMessage = null;
       } else {
         _errorMessage = result['message'] ?? 'Failed to fetch vehicle data';
-        AppLogger.log('Failed: $_errorMessage', tag: 'VEHICLE_PROVIDER');
+        //Failed: $_errorMessage', tag: 'VEHICLE_PROVIDER');
 
         // Set default year options on error
         _carYears = _vehicleService.generateYearOptions();
       }
     } catch (e) {
       _errorMessage = 'Error: $e';
-      AppLogger.log('Exception: $e', tag: 'VEHICLE_PROVIDER');
+      //Exception: $e', tag: 'VEHICLE_PROVIDER');
 
       // Set default year options on error
       _carYears = _vehicleService.generateYearOptions();

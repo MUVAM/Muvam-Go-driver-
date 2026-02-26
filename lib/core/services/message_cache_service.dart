@@ -35,7 +35,7 @@ class MessageCacheService {
 
       await prefs.setString(_cacheKey, jsonEncode(cache));
 
-      AppLogger.log('Messages cached successfully', tag: 'CACHE');
+      //Messages cached successfully', tag: 'CACHE');
     } catch (e) {
       AppLogger.error('Failed to cache messages', error: e, tag: 'CACHE');
     }
@@ -43,13 +43,13 @@ class MessageCacheService {
 
   static Future<List<ChatMessageModel>> loadMessages(int rideId) async {
     try {
-      AppLogger.log('Loading cached messages for ride $rideId', tag: 'CACHE');
+      //Loading cached messages for ride $rideId', tag: 'CACHE');
 
       final prefs = await SharedPreferences.getInstance();
       final cachedData = prefs.getString(_cacheKey);
 
       if (cachedData == null) {
-        AppLogger.log('No cached messages found', tag: 'CACHE');
+        //No cached messages found', tag: 'CACHE');
         return [];
       }
 
@@ -57,7 +57,7 @@ class MessageCacheService {
       final rideData = cache[rideId.toString()];
 
       if (rideData == null) {
-        AppLogger.log('No cached messages for ride $rideId', tag: 'CACHE');
+        //No cached messages for ride $rideId', tag: 'CACHE');
         return [];
       }
 
@@ -88,7 +88,7 @@ class MessageCacheService {
       );
 
       if (isDuplicate) {
-        AppLogger.log('Duplicate message detected, skipping', tag: 'CACHE');
+        //Duplicate message detected, skipping', tag: 'CACHE');
         return;
       }
 
@@ -96,7 +96,7 @@ class MessageCacheService {
 
       await saveMessages(rideId, existingMessages);
 
-      AppLogger.log('Message added to cache', tag: 'CACHE');
+      //Message added to cache', tag: 'CACHE');
     } catch (e) {
       AppLogger.error('Failed to add message to cache', error: e, tag: 'CACHE');
     }
@@ -104,7 +104,7 @@ class MessageCacheService {
 
   static Future<void> clearRideMessages(int rideId) async {
     try {
-      AppLogger.log('Clearing messages for ride $rideId', tag: 'CACHE');
+      //Clearing messages for ride $rideId', tag: 'CACHE');
 
       final prefs = await SharedPreferences.getInstance();
       final cachedData = prefs.getString(_cacheKey);
@@ -116,7 +116,7 @@ class MessageCacheService {
 
       await prefs.setString(_cacheKey, jsonEncode(cache));
 
-      AppLogger.log('Messages cleared', tag: 'CACHE');
+      //Messages cleared', tag: 'CACHE');
     } catch (e) {
       AppLogger.error('Failed to clear messages', error: e, tag: 'CACHE');
     }
@@ -124,12 +124,12 @@ class MessageCacheService {
 
   static Future<void> clearAllMessages() async {
     try {
-      AppLogger.log('Clearing all cached messages', tag: 'CACHE');
+      //Clearing all cached messages', tag: 'CACHE');
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove(_cacheKey);
 
-      AppLogger.log('All messages cleared', tag: 'CACHE');
+      //All messages cleared', tag: 'CACHE');
     } catch (e) {
       AppLogger.error('Failed to clear all messages', error: e, tag: 'CACHE');
     }

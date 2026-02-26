@@ -9,6 +9,8 @@ import 'dart:io';
 import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:muvam_rider/core/constants/fonts.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'package:muvam_rider/features/auth/presentation/screens/driver_license_screen.dart';
 import 'package:muvam_rider/features/auth/presentation/screens/vehicle_insurance_screen.dart';
@@ -195,24 +197,65 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
     }
   }
 
+  /// Compresses [file] to JPEG at 70% quality if it exceeds 2 MB.
+  /// Returns the original file unchanged if it is already within the limit.
+  Future<File> _compressIfNeeded(File file) async {
+    final sizeInBytes = await file.length();
+    final sizeInMB = sizeInBytes / (1024 * 1024);
+
+    if (sizeInMB <= 2) {
+      AppLogger.log(
+        '✅ File is ${sizeInMB.toStringAsFixed(2)} MB — no compression needed',
+      );
+      return file;
+    }
+
+    AppLogger.log(
+      '🗜️ File is ${sizeInMB.toStringAsFixed(2)} MB — compressing to JPEG 70%...',
+    );
+
+    final dir = await getTemporaryDirectory();
+    final targetPath =
+        '${dir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
+
+    final compressedFile = await FlutterImageCompress.compressAndGetFile(
+      file.path,
+      targetPath,
+      quality: 70,
+      format: CompressFormat.jpeg,
+    );
+
+    if (compressedFile == null) {
+      //⚠️ Compression returned null — using original file');
+      return file;
+    }
+
+    final compressedSizeMB =
+        await File(compressedFile.path).length() / (1024 * 1024);
+    AppLogger.log(
+      '✅ Compressed to ${compressedSizeMB.toStringAsFixed(2)} MB → ${compressedFile.path}',
+    );
+    return File(compressedFile.path);
+  }
+
   Future<void> _uploadDocuments() async {
-    AppLogger.log('\n🚀 ========== UPLOAD DOCUMENTS BUTTON TAPPED ==========');
+    //\n🚀 ========== UPLOAD DOCUMENTS BUTTON TAPPED ==========');
     AppLogger.log(
       '📋 Current Screen: Upload Documents Screen (KycVerificationScreen)',
     );
-    AppLogger.log('📋 Step 1: Validating uploaded documents...');
+    //📋 Step 1: Validating uploaded documents...');
 
     if (driverLicense == null ||
         vehicleRegistration == null ||
         insurance == null ||
         vehiclePhotos.length < 3) {
-      AppLogger.log('❌ Validation failed: Missing required documents');
-      AppLogger.log('Driver License: ${driverLicense != null ? "✅" : "❌"}');
+      //❌ Validation failed: Missing required documents');
+      //Driver License: ${driverLicense != null ? "✅" : "❌"}');
       AppLogger.log(
         'Vehicle Registration: ${vehicleRegistration != null ? "✅" : "❌"}',
       );
-      AppLogger.log('Insurance: ${insurance != null ? "✅" : "❌"}');
-      AppLogger.log('Vehicle Photos: ${vehiclePhotos.length}/3');
+      //Insurance: ${insurance != null ? "✅" : "❌"}');
+      //Vehicle Photos: ${vehiclePhotos.length}/3');
 
       CustomFlushbar.showInfo(
         context: context,
@@ -221,24 +264,39 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
       return;
     }
 
-    AppLogger.log('✅ All documents validated successfully');
-    AppLogger.log('📝 Vehicle Registration: ${vehicleRegistration!.path}');
-    AppLogger.log('📝 Insurance: ${insurance!.path}');
-    AppLogger.log('📝 Vehicle Photos: ${vehiclePhotos.length} photos');
+    //✅ All documents validated successfully');
+    //📝 Vehicle Registration: ${vehicleRegistration!.path}');
+    //📝 Insurance: ${insurance!.path}');
+    //📝 Vehicle Photos: ${vehiclePhotos.length} photos');
 
     setState(() => _isLoading = true);
 
     try {
-      AppLogger.log('\n📋 Step 2: Calling registerVehicle endpoint...');
-      AppLogger.log('🌐 Endpoint: /rides/vehicle');
-      AppLogger.log('📤 Uploading vehicle information and documents...');
-      AppLogger.log('📦 Car Make: ${widget.carMake}');
-      AppLogger.log('📦 Car Model: ${widget.carModel}');
-      AppLogger.log('📦 Car Year: ${widget.carYear}');
-      AppLogger.log('📦 Seats: ${widget.carSeats}');
-      AppLogger.log('📦 License Plate: ${widget.licensePlate}');
-      AppLogger.log('📦 Color: ${widget.carColor}');
-      AppLogger.log('📦 AC Enabled: ${widget.isAcEnabled}');
+      // ── Step 2a: Compress any files that exceed 2 MB ──────────────────────
+      //\n📋 Step 2a: Compressing documents if needed...');
+
+      final compressedLicense = await _compressIfNeeded(driverLicense!);
+      final compressedInsurance = await _compressIfNeeded(insurance!);
+      final compressedRegistration = await _compressIfNeeded(
+        vehicleRegistration!,
+      );
+      final compressedPhotos = await Future.wait(
+        vehiclePhotos.map((photo) => _compressIfNeeded(photo)),
+      );
+
+      //✅ All files compressed/checked successfully');
+
+      // ── Step 2b: Upload ───────────────────────────────────────────────────
+      //\n📋 Step 2b: Calling registerVehicle endpoint...');
+      //🌐 Endpoint: /rides/vehicle');
+      //📤 Uploading vehicle information and documents...');
+      //📦 Car Make: ${widget.carMake}');
+      //📦 Car Model: ${widget.carModel}');
+      //📦 Car Year: ${widget.carYear}');
+      //📦 Seats: ${widget.carSeats}');
+      //📦 License Plate: ${widget.licensePlate}');
+      //📦 Color: ${widget.carColor}');
+      //📦 AC Enabled: ${widget.isAcEnabled}');
 
       final result = await ApiService.registerVehicle(
         make: widget.carMake,
@@ -248,23 +306,23 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
         licenseNumber: widget.licenseNumber,
         color: widget.carColor,
         licensePlate: widget.licensePlate,
-        registrationDoc: vehicleRegistration!,
-        insuranceDoc: insurance!,
-        vehiclePhotos: vehiclePhotos,
+        registrationDoc: compressedRegistration,
+        insuranceDoc: compressedInsurance,
+        vehiclePhotos: compressedPhotos,
         token: widget.token,
         ac: widget.isAcEnabled,
       );
 
-      AppLogger.log('\n📥 Vehicle Registration API Response received');
-      AppLogger.log('Response: $result');
+      //\n📥 Vehicle Registration API Response received');
+      //Response: $result');
 
       if (!mounted) {
-        AppLogger.log('⚠️ Widget unmounted, stopping flow');
+        //⚠️ Widget unmounted, stopping flow');
         return;
       }
 
       if (result['success'] == true) {
-        AppLogger.log('✅ Vehicle registration SUCCESSFUL!');
+        //✅ Vehicle registration SUCCESSFUL!');
 
         // Update vehicle_submitted status in SharedPreferences
         AppLogger.log(
@@ -272,10 +330,10 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
         );
         final prefs = await SharedPreferences.getInstance();
         await prefs.setBool('vehicle_submitted', true);
-        AppLogger.log('✅ vehicle_submitted status saved: true');
+        //✅ vehicle_submitted status saved: true');
 
-        AppLogger.log('\n📋 Step 3: Navigating to Success Screen...');
-        AppLogger.log('🎯 Next screen: DocumentVerificationSuccessScreen');
+        //\n📋 Step 3: Navigating to Success Screen...');
+        //🎯 Next screen: DocumentVerificationSuccessScreen');
 
         // Navigate to success screen
         Navigator.pushReplacement(
@@ -285,25 +343,25 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
           ),
         );
 
-        AppLogger.log('✅ Navigation to Success Screen successful');
+        //✅ Navigation to Success Screen successful');
         AppLogger.log(
           '========== VEHICLE REGISTRATION FLOW COMPLETE ==========\n',
         );
       } else {
-        AppLogger.log('❌ Vehicle registration FAILED');
+        //❌ Vehicle registration FAILED');
         String errorMessage = result['message'] ?? 'Registration failed';
         if (errorMessage.contains('413') ||
             errorMessage.contains('Too Large')) {
           errorMessage = 'Images are too large. Please select smaller images.';
         }
-        AppLogger.log('Error message: $errorMessage');
+        //Error message: $errorMessage');
 
         CustomFlushbar.showError(context: context, message: errorMessage);
       }
     } catch (e, stackTrace) {
-      AppLogger.log('❌ CRITICAL ERROR in upload documents flow');
-      AppLogger.log('Error: $e');
-      AppLogger.log('Stack trace: $stackTrace');
+      //❌ CRITICAL ERROR in upload documents flow');
+      //Error: $e');
+      //Stack trace: $stackTrace');
 
       if (mounted) {
         CustomFlushbar.showError(context: context, message: 'Error: $e');
@@ -311,14 +369,14 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
-        AppLogger.log('🔄 Loading state reset');
+        //🔄 Loading state reset');
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    AppLogger.log('check user access token:${widget.token}');
+    //check user access token:${widget.token}');
     final themeManager = Provider.of<ThemeManager>(context);
     return Scaffold(
       backgroundColor: themeManager.getBackgroundColor(context),
@@ -444,23 +502,24 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
                 padding: EdgeInsets.symmetric(horizontal: 20.w),
                 child: Column(
                   children: [
-                    Container(
-                      width: double.infinity,
-                      height: 48.h,
-                      decoration: BoxDecoration(
-                        // color: const Color(ConstColors.mainColor),
-                        color: _isLoading
-                            ? const Color(ConstColors.mainColor)
-                            : (driverLicense != null &&
-                                  insurance != null &&
-                                  vehicleRegistration != null &&
-                                  vehiclePhotos.length >= 3)
-                            ? const Color(ConstColors.mainColor)
-                            : Color(0xffB1B1B1),
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: GestureDetector(
-                        onTap: _isLoading ? null : _uploadDocuments,
+                    GestureDetector(
+                      onTap: _isLoading ? null : _uploadDocuments,
+
+                      child: Container(
+                        width: double.infinity,
+                        height: 48.h,
+                        decoration: BoxDecoration(
+                          // color: const Color(ConstColors.mainColor),
+                          color: _isLoading
+                              ? const Color(ConstColors.mainColor)
+                              : (driverLicense != null &&
+                                    insurance != null &&
+                                    vehicleRegistration != null &&
+                                    vehiclePhotos.length >= 3)
+                              ? const Color(ConstColors.mainColor)
+                              : Color(0xffB1B1B1),
+                          borderRadius: BorderRadius.circular(8.r),
+                        ),
                         child: Center(
                           child: Text(
                             'Upload Documents',

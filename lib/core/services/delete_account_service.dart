@@ -14,7 +14,7 @@ class DeleteAccountService {
     final token = await _getToken();
 
     if (token == null) {
-      AppLogger.log('No auth token found');
+      //No auth token found');
       return {'success': false, 'message': 'No authentication token'};
     }
 
@@ -22,12 +22,12 @@ class DeleteAccountService {
 
     final requestBody = {'reason': reason};
 
-    AppLogger.log('==================================');
-    AppLogger.log('DELETING ACCOUNT');
-    AppLogger.log('==================================');
-    AppLogger.log('URL: $url');
-    AppLogger.log('Method: POST');
-    AppLogger.log('Request Body: ${jsonEncode(requestBody)}');
+    //==================================');
+    //DELETING ACCOUNT');
+    //==================================');
+    //URL: $url');
+    //Method: POST');
+    //Request Body: ${jsonEncode(requestBody)}');
 
     try {
       final response = await http.post(
@@ -39,20 +39,20 @@ class DeleteAccountService {
         body: jsonEncode(requestBody),
       );
 
-      AppLogger.log('Response Status: ${response.statusCode}');
-      AppLogger.log('Response Body: ${response.body}');
+      //Response Status: ${response.statusCode}');
+      //Response Body: ${response.body}');
 
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
         if (data['error'] != null) {
           final errorMsg = data['message'] ?? data['error'];
-          AppLogger.log('Error in 200 response: $errorMsg');
+          //Error in 200 response: $errorMsg');
           return {'success': false, 'message': errorMsg};
         }
 
         if (data['message'] != null) {
-          AppLogger.log('Account deleted successfully: ${data['message']}');
+          //Account deleted successfully: ${data['message']}');
 
           final prefs = await SharedPreferences.getInstance();
           await prefs.remove('auth_token');
@@ -71,13 +71,13 @@ class DeleteAccountService {
         return {'success': false, 'message': errorMessage};
       }
     } catch (e) {
-      AppLogger.log('Exception in deleteAccount: $e');
+      //Exception in deleteAccount: $e');
       return {
         'success': false,
         'message': 'Failed to delete account. Please try again.',
       };
     } finally {
-      AppLogger.log('==================================');
+      //==================================');
     }
   }
 }

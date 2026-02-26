@@ -9,13 +9,13 @@ class WKBDecoder {
       wkbHex = wkbHex.replaceAll(' ', '').toUpperCase();
 
       final bytes = _hexToBytes(wkbHex);
-      AppLogger.log('WKB bytes length: ${bytes.length}');
+      //WKB bytes length: ${bytes.length}');
       AppLogger.log(
         'First few bytes: ${bytes.take(10).map((b) => b.toRadixString(16).padLeft(2, '0')).join(' ')}',
       );
 
       if (bytes.length < 25) {
-        AppLogger.log('WKB too short: ${bytes.length} bytes, need at least 25');
+        //WKB too short: ${bytes.length} bytes, need at least 25');
         return null;
       }
 
@@ -31,13 +31,13 @@ class WKBDecoder {
         1,
         isLittleEndian ? Endian.little : Endian.big,
       );
-      AppLogger.log('Geometry type: $geomType');
+      //Geometry type: $geomType');
 
       final srid = data.getUint32(
         5,
         isLittleEndian ? Endian.little : Endian.big,
       );
-      AppLogger.log('SRID: $srid');
+      //SRID: $srid');
 
       final longitude = data.getFloat64(
         9,
@@ -49,7 +49,7 @@ class WKBDecoder {
         isLittleEndian ? Endian.little : Endian.big,
       );
 
-      AppLogger.log('Decoded coordinates: lat=$latitude, lng=$longitude');
+      //Decoded coordinates: lat=$latitude, lng=$longitude');
 
       if (latitude.abs() > 90 || longitude.abs() > 180) {
         AppLogger.log(
@@ -60,7 +60,7 @@ class WKBDecoder {
 
       return {'latitude': latitude, 'longitude': longitude};
     } catch (e) {
-      AppLogger.log('Error decoding WKB: $e');
+      //Error decoding WKB: $e');
       return null;
     }
   }

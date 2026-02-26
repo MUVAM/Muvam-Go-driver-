@@ -31,10 +31,10 @@ class CallService {
   bool _wasConnected = false; // Track if call was ever connected
 
   Future<bool> initialize() async {
-    AppLogger.log('Initializing CallService (Agora)...', tag: 'CALL');
+    //Initializing CallService (Agora)...', tag: 'CALL');
 
     if (_isEngineInitialized) {
-      AppLogger.log('Engine already initialized, skipping.', tag: 'CALL');
+      //Engine already initialized, skipping.', tag: 'CALL');
       return true;
     }
 
@@ -42,25 +42,25 @@ class CallService {
       // 1. WebSocket Setup
       _webSocketService = WebSocketService.instance;
       if (!_webSocketService!.isConnected) {
-        AppLogger.log('Connecting WebSocket...', tag: 'CALL');
+        //Connecting WebSocket...', tag: 'CALL');
         await _webSocketService!.connect();
       }
       _webSocketService!.addIncomingCallListener(_handleWebSocketMessage);
 
       // 2. Initialize Agora Engine
-      AppLogger.log('Creating Agora Engine...', tag: 'CALL');
+      //Creating Agora Engine...', tag: 'CALL');
       _engine = createAgoraRtcEngine();
 
       // SAFETY: Release any lingering native instance (Hot Restart issue)
       try {
         await _engine!.release();
-        AppLogger.log('Released previous engine instance', tag: 'CALL');
+        //Released previous engine instance', tag: 'CALL');
       } catch (e) {
         // Ignore, expected if not initialized
       }
 
-      AppLogger.log('Initializing Agora Engine with App ID...', tag: 'CALL');
-      AppLogger.log('   - App ID Length: ${agoraAppId.length}', tag: 'CALL');
+      //Initializing Agora Engine with App ID...', tag: 'CALL');
+      //   - App ID Length: ${agoraAppId.length}', tag: 'CALL');
 
       await _engine!.initialize(
         RtcEngineContext(
@@ -128,7 +128,7 @@ class CallService {
         ),
       );
 
-      AppLogger.log('Setting Client Role & Audio Profile...', tag: 'CALL');
+      //Setting Client Role & Audio Profile...', tag: 'CALL');
       await _engine!.setClientRole(role: ClientRoleType.clientRoleBroadcaster);
       await _engine!.enableAudio();
       await _engine!.setAudioProfile(
@@ -139,7 +139,7 @@ class CallService {
       // Note: setEnableSpeakerphone will be called after joining channel
 
       _isEngineInitialized = true;
-      AppLogger.log('CallService initialized successfully', tag: 'CALL');
+      //CallService initialized successfully', tag: 'CALL');
       return true;
     } catch (e, stack) {
       AppLogger.error(
@@ -147,7 +147,7 @@ class CallService {
         error: e,
         tag: 'CALL',
       );
-      AppLogger.log('Stack trace: $stack', tag: 'CALL');
+      //Stack trace: $stack', tag: 'CALL');
       return false;
     }
   }
@@ -158,10 +158,10 @@ class CallService {
       return;
     }
 
-    AppLogger.log('CallService received: $type', tag: 'CALL');
+    //CallService received: $type', tag: 'CALL');
 
     if (type == 'call_initiate') {
-      AppLogger.log('Incoming call received', tag: 'CALL');
+      //Incoming call received', tag: 'CALL');
       playRingtone();
       onIncomingCall?.call(data);
 
@@ -175,7 +175,7 @@ class CallService {
         );
       }
     } else if (type == 'call_answer') {
-      AppLogger.log('Call answered by other party (Signal)', tag: 'CALL');
+      //Call answered by other party (Signal)', tag: 'CALL');
       // The media connection handles the "Connected" state via onUserJoined
       // But we can stop ringtone here too as a backup
       stopRingtone();
@@ -186,7 +186,7 @@ class CallService {
         _joinAgoraChannel(_rideId!);
       }
     } else if (type == 'call_reject' || type == 'call_end') {
-      AppLogger.log('Call ended/rejected', tag: 'CALL');
+      //Call ended/rejected', tag: 'CALL');
       stopRingtone();
       onCallStateChanged?.call('Call ended');
       await _leaveAgoraChannel();
@@ -207,7 +207,7 @@ class CallService {
     }
 
     String channelName = "CallID${rideId}Call";
-    AppLogger.log('Joining Agora Channel: $channelName', tag: 'CALL');
+    //Joining Agora Channel: $channelName', tag: 'CALL');
 
     try {
       await _engine!.joinChannel(
@@ -227,9 +227,9 @@ class CallService {
       // Set audio routing to earpiece after joining channel
       try {
         await _engine!.setEnableSpeakerphone(false);
-        AppLogger.log('Audio routed to earpiece', tag: 'CALL');
+        //Audio routed to earpiece', tag: 'CALL');
       } catch (e) {
-        AppLogger.log('Could not set earpiece (will retry): $e', tag: 'CALL');
+        //Could not set earpiece (will retry): $e', tag: 'CALL');
       }
     } catch (e) {
       AppLogger.error('Failed to join Agora channel', error: e, tag: 'CALL');
@@ -258,7 +258,7 @@ class CallService {
   Future<void> playRingtone() async {
     if (_isRinging) return;
     _isRinging = true;
-    AppLogger.log('Playing ringtone...', tag: 'CALL');
+    //Playing ringtone...', tag: 'CALL');
     try {
       await _audioPlayer.setReleaseMode(ReleaseMode.loop);
       await _audioPlayer.setVolume(1.0);
@@ -271,13 +271,13 @@ class CallService {
   Future<void> stopRingtone() async {
     if (!_isRinging) return;
     _isRinging = false;
-    AppLogger.log('Stopping ringtone...', tag: 'CALL');
+    //Stopping ringtone...', tag: 'CALL');
     await _audioPlayer.stop();
   }
 
   Future<Map<String, dynamic>> initiateCall(int rideId) async {
     try {
-      AppLogger.log('Initiating API call for ride ID: $rideId', tag: 'CALL');
+      //Initiating API call for ride ID: $rideId', tag: 'CALL');
       _rideId = rideId;
       _wasConnected = false; // Reset connection state for new call
 
@@ -320,7 +320,7 @@ class CallService {
             );
           }
         } catch (e) {
-          AppLogger.log('Failed to send call notification: $e', tag: 'CALL');
+          //Failed to send call notification: $e', tag: 'CALL');
         }
 
         // Join Agora Immediately after success API?
@@ -348,7 +348,7 @@ class CallService {
 
   Future<void> answerCall(int sessionId, int rideId) async {
     try {
-      AppLogger.log('Answering API call...', tag: 'CALL');
+      //Answering API call...', tag: 'CALL');
       _currentSessionId = sessionId;
       _rideId = rideId; // Set ride ID immediately
       _wasConnected = false; // Reset connection state for new call
@@ -378,14 +378,14 @@ class CallService {
 
   Future<void> rejectCall(int sessionId) async {
     try {
-      AppLogger.log('Rejecting Call...', tag: 'CALL');
+      //Rejecting Call...', tag: 'CALL');
       final headers = await getHeaders();
       await http.post(
         Uri.parse('$baseUrl/calls/$sessionId/reject'),
         headers: headers,
       );
       stopRingtone();
-      AppLogger.log('Call rejected API success', tag: 'CALL');
+      //Call rejected API success', tag: 'CALL');
     } catch (e) {
       AppLogger.error('Failed to reject call', error: e, tag: 'CALL');
     }
@@ -404,7 +404,7 @@ class CallService {
   Future<void> endCall(int? sessionId, int duration) async {
     if (sessionId == null) return;
     try {
-      AppLogger.log('Ending Call...', tag: 'CALL');
+      //Ending Call...', tag: 'CALL');
       stopRingtone();
       await _leaveAgoraChannel();
 
@@ -416,7 +416,7 @@ class CallService {
       );
 
       await clearStoredSessionId();
-      AppLogger.log('Call ended API success', tag: 'CALL');
+      //Call ended API success', tag: 'CALL');
     } catch (e) {
       AppLogger.error('Failed to end call', error: e, tag: 'CALL');
     } finally {
@@ -426,12 +426,12 @@ class CallService {
 
   void toggleMute(bool isMuted) {
     _engine?.muteLocalAudioStream(isMuted);
-    AppLogger.log('Mute: $isMuted', tag: 'CALL');
+    //Mute: $isMuted', tag: 'CALL');
   }
 
   Future<void> toggleSpeaker(bool isSpeakerOn) async {
     await _engine?.setEnableSpeakerphone(isSpeakerOn);
-    AppLogger.log('Speaker: $isSpeakerOn', tag: 'CALL');
+    //Speaker: $isSpeakerOn', tag: 'CALL');
   }
 
   // Helper methods for session storage
@@ -458,7 +458,7 @@ class CallService {
   }
 
   void dispose() {
-    AppLogger.log('Disposing CallService', tag: 'CALL');
+    //Disposing CallService', tag: 'CALL');
     stopRingtone();
     _engine?.release(); // Destroy Agora engine
     _webSocketService?.removeIncomingCallListener(_handleWebSocketMessage);

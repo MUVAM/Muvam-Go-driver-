@@ -39,7 +39,7 @@ class DriverProvider extends ChangeNotifier {
         }
       }
     } catch (e) {
-      AppLogger.log('Error getting driver status: $e');
+      //Error getting driver status: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -65,7 +65,7 @@ class DriverProvider extends ChangeNotifier {
         }
       }
     } catch (e) {
-      AppLogger.log('Error toggling driver status: $e');
+      //Error toggling driver status: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -92,7 +92,7 @@ class DriverProvider extends ChangeNotifier {
         }
       }
     } catch (e) {
-      AppLogger.log('Error setting driver online: $e');
+      //Error setting driver online: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -119,7 +119,7 @@ class DriverProvider extends ChangeNotifier {
         }
       }
     } catch (e) {
-      AppLogger.log('Error setting driver offline: $e');
+      //Error setting driver offline: $e');
     } finally {
       _isLoading = false;
       notifyListeners();

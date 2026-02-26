@@ -17,7 +17,7 @@ class BiometricAuthService {
     try {
       return await _auth.canCheckBiometrics;
     } on PlatformException catch (e) {
-      AppLogger.log('Error checking biometrics: $e', tag: 'BIOMETRIC');
+      //Error checking biometrics: $e', tag: 'BIOMETRIC');
       return false;
     }
   }
@@ -27,7 +27,7 @@ class BiometricAuthService {
     try {
       return await _auth.getAvailableBiometrics();
     } on PlatformException catch (e) {
-      AppLogger.log('Error getting biometrics: $e', tag: 'BIOMETRIC');
+      //Error getting biometrics: $e', tag: 'BIOMETRIC');
       return [];
     }
   }
@@ -52,19 +52,19 @@ class BiometricAuthService {
     try {
       // Check if device supports biometrics
       final canCheck = await canCheckBiometrics();
-      AppLogger.log('Can check biometrics: $canCheck', tag: 'BIOMETRIC');
+      //Can check biometrics: $canCheck', tag: 'BIOMETRIC');
 
       if (!canCheck) {
-        AppLogger.log('Biometrics not available on device', tag: 'BIOMETRIC');
+        //Biometrics not available on device', tag: 'BIOMETRIC');
         return false;
       }
 
       // Check if device is enrolled
       final isDeviceSupported = await _auth.isDeviceSupported();
-      AppLogger.log('Device supported: $isDeviceSupported', tag: 'BIOMETRIC');
+      //Device supported: $isDeviceSupported', tag: 'BIOMETRIC');
 
       if (!isDeviceSupported) {
-        AppLogger.log('Device does not support biometrics', tag: 'BIOMETRIC');
+        //Device does not support biometrics', tag: 'BIOMETRIC');
         return false;
       }
 
@@ -76,11 +76,11 @@ class BiometricAuthService {
       );
 
       if (availableBiometrics.isEmpty) {
-        AppLogger.log('No biometrics enrolled on device', tag: 'BIOMETRIC');
+        //No biometrics enrolled on device', tag: 'BIOMETRIC');
         return false;
       }
 
-      AppLogger.log('Attempting authentication...', tag: 'BIOMETRIC');
+      //Attempting authentication...', tag: 'BIOMETRIC');
 
       final isAuthenticated = await _auth.authenticate(
         localizedReason: reason,
@@ -106,24 +106,24 @@ class BiometricAuthService {
       // Handle specific error codes
       switch (e.code) {
         case 'NotAvailable':
-          AppLogger.log('Biometric not available', tag: 'BIOMETRIC');
+          //Biometric not available', tag: 'BIOMETRIC');
           break;
         case 'NotEnrolled':
-          AppLogger.log('No biometrics enrolled', tag: 'BIOMETRIC');
+          //No biometrics enrolled', tag: 'BIOMETRIC');
           break;
         case 'LockedOut':
-          AppLogger.log('Too many attempts, locked out', tag: 'BIOMETRIC');
+          //Too many attempts, locked out', tag: 'BIOMETRIC');
           break;
         case 'PermanentlyLockedOut':
-          AppLogger.log('Permanently locked out', tag: 'BIOMETRIC');
+          //Permanently locked out', tag: 'BIOMETRIC');
           break;
         default:
-          AppLogger.log('Unknown error: ${e.code}', tag: 'BIOMETRIC');
+        //Unknown error: ${e.code}', tag: 'BIOMETRIC');
       }
 
       return false;
     } catch (e) {
-      AppLogger.log('Authentication general error: $e', tag: 'BIOMETRIC');
+      //Authentication general error: $e', tag: 'BIOMETRIC');
       return false;
     }
   }
@@ -163,7 +163,7 @@ class BiometricAuthService {
   /// Clear background time (when app is unlocked)
   void clearBackgroundTime() {
     _lastBackgroundTime = null;
-    AppLogger.log('Background time cleared', tag: 'BIOMETRIC');
+    //Background time cleared', tag: 'BIOMETRIC');
   }
 
   /// Get biometric type name for display

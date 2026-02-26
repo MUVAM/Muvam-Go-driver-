@@ -12,8 +12,8 @@ class ApiService {
   // Send OTP
   static Future<Map<String, dynamic>> sendOtp(String phoneNumber) async {
     try {
-      AppLogger.log('Sending OTP to: $phoneNumber');
-      AppLogger.log('URL: $baseUrl${UrlConstants.sendOtp}');
+      //Sending OTP to: $phoneNumber');
+      //URL: $baseUrl${UrlConstants.sendOtp}');
 
       final response = await http.post(
         Uri.parse('$baseUrl${UrlConstants.sendOtp}'),
@@ -21,8 +21,8 @@ class ApiService {
         body: jsonEncode({'Phone': phoneNumber}),
       );
 
-      AppLogger.log('Response status: ${response.statusCode}');
-      AppLogger.log('Response body: ${response.body}');
+      //Response status: ${response.statusCode}');
+      //Response body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
@@ -35,7 +35,7 @@ class ApiService {
         };
       }
     } catch (e) {
-      AppLogger.log('Error: $e');
+      //Error: $e');
       return {'success': false, 'message': 'Network error: $e'};
     }
   }
@@ -70,13 +70,13 @@ class ApiService {
     String otp,
   ) async {
     try {
-      AppLogger.log('=== VERIFY OTP DEBUG ===');
-      AppLogger.log('Phone: $phoneNumber');
-      AppLogger.log('OTP: $otp');
-      AppLogger.log('URL: $baseUrl${UrlConstants.verifyOtp}');
+      //=== VERIFY OTP DEBUG ===');
+      //Phone: $phoneNumber');
+      //OTP: $otp');
+      //URL: $baseUrl${UrlConstants.verifyOtp}');
 
       final requestBody = {'Phone': phoneNumber, 'Code': otp};
-      AppLogger.log('Request Body: ${jsonEncode(requestBody)}');
+      //Request Body: ${jsonEncode(requestBody)}');
 
       final response = await http.post(
         Uri.parse('$baseUrl${UrlConstants.verifyOtp}'),
@@ -84,13 +84,13 @@ class ApiService {
         body: jsonEncode(requestBody),
       );
 
-      AppLogger.log('Response Status: ${response.statusCode}');
-      AppLogger.log('Response Body: ${response.body}');
+      //Response Status: ${response.statusCode}');
+      //Response Body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        AppLogger.log('✅ SUCCESS: OTP verified');
-        AppLogger.log('Full response: $data');
+        //✅ SUCCESS: OTP verified');
+        //Full response: $data');
 
         final prefs = await SharedPreferences.getInstance();
 
@@ -104,30 +104,30 @@ class ApiService {
 
             if (accessToken != null) {
               await prefs.setString('auth_token', accessToken);
-              AppLogger.log('✅ Access token saved');
+              //✅ Access token saved');
             }
             if (refreshToken != null) {
               await prefs.setString('refresh_token', refreshToken);
-              AppLogger.log('✅ Refresh token saved');
+              //✅ Refresh token saved');
             }
             if (expiresIn != null) {
               final expiryTime =
                   DateTime.now().millisecondsSinceEpoch + (expiresIn * 1000);
               await prefs.setInt('token_expiry', expiryTime.toInt());
-              AppLogger.log('✅ Token expiry saved');
+              //✅ Token expiry saved');
             }
           }
         }
 
         // Save vehicle_submitted status directly from response
         final vehicleSubmitted = data['vehicle_submitted'] ?? false;
-        AppLogger.log('📊 Backend vehicle_submitted value: $vehicleSubmitted');
+        //📊 Backend vehicle_submitted value: $vehicleSubmitted');
         await prefs.setBool('vehicle_submitted', vehicleSubmitted);
-        AppLogger.log('✅ vehicle_submitted saved: $vehicleSubmitted');
+        //✅ vehicle_submitted saved: $vehicleSubmitted');
 
         // Immediately verify it was saved
         final savedValue = prefs.getBool('vehicle_submitted');
-        AppLogger.log('🔍 Immediate verification read: $savedValue');
+        //🔍 Immediate verification read: $savedValue');
 
         if (savedValue != vehicleSubmitted) {
           AppLogger.log(
@@ -163,12 +163,12 @@ class ApiService {
           if (user['Role'] != null) {
             await prefs.setString('user_role', user['Role'].toString());
           }
-          AppLogger.log('✅ User data saved successfully');
+          //✅ User data saved successfully');
         }
 
         return {'success': true, 'data': data};
       } else {
-        AppLogger.log('❌ ERROR: OTP verification failed');
+        //❌ ERROR: OTP verification failed');
         final error = jsonDecode(response.body);
         return {
           'success': false,
@@ -176,11 +176,11 @@ class ApiService {
         };
       }
     } catch (e, stackTrace) {
-      AppLogger.log('❌ VERIFY OTP ERROR: $e');
-      AppLogger.log('Stack trace: $stackTrace');
+      //❌ VERIFY OTP ERROR: $e');
+      //Stack trace: $stackTrace');
       return {'success': false, 'message': 'Network error: $e'};
     } finally {
-      AppLogger.log('=== END VERIFY OTP DEBUG ===\n');
+      //=== END VERIFY OTP DEBUG ===\n');
     }
   }
 
@@ -199,7 +199,7 @@ class ApiService {
     String serviceType = 'taxi',
   }) async {
     try {
-      AppLogger.log('=== REGISTER DRIVER DEBUG ===');
+      //=== REGISTER DRIVER DEBUG ===');
       final requestBody = {
         'first_name': firstName,
         'middle_name': middleName,
@@ -215,7 +215,7 @@ class ApiService {
         'referral_code': referralCode,
         'service_type': serviceType,
       };
-      AppLogger.log('Request Body: ${jsonEncode(requestBody)}');
+      //Request Body: ${jsonEncode(requestBody)}');
 
       final response = await http.post(
         Uri.parse('$baseUrl${UrlConstants.registerUser}'),
@@ -223,8 +223,8 @@ class ApiService {
         body: jsonEncode(requestBody),
       );
 
-      AppLogger.log('Response Status: ${response.statusCode}');
-      AppLogger.log('Response Body: ${response.body}');
+      //Response Status: ${response.statusCode}');
+      //Response Body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
@@ -239,14 +239,14 @@ class ApiService {
             final accessToken = tokenData['access_token'];
             if (accessToken != null) {
               await prefs.setString('auth_token', accessToken);
-              AppLogger.log('Access token saved successfully');
+              //Access token saved successfully');
             }
 
             // Save refresh token
             final refreshToken = tokenData['refresh_token'];
             if (refreshToken != null) {
               await prefs.setString('refresh_token', refreshToken);
-              AppLogger.log('Refresh token saved successfully');
+              //Refresh token saved successfully');
             }
 
             // Save token expiry
@@ -255,7 +255,7 @@ class ApiService {
               final expiryTime =
                   DateTime.now().millisecondsSinceEpoch + (expiresIn * 1000);
               await prefs.setString('token_expiry', expiryTime.toString());
-              AppLogger.log('Token expiry saved successfully');
+              //Token expiry saved successfully');
             }
 
             // Save last login time
@@ -289,7 +289,7 @@ class ApiService {
               user['profile_photo'].toString(),
             );
           }
-          AppLogger.log('User data saved successfully');
+          //User data saved successfully');
         }
         return {'success': true, 'data': data};
       } else {
@@ -299,10 +299,10 @@ class ApiService {
         return {'success': false, 'message': errorMessage};
       }
     } catch (e) {
-      AppLogger.log('REGISTER ERROR: $e');
+      //REGISTER ERROR: $e');
       return {'success': false, 'message': 'Network error: $e'};
     } finally {
-      AppLogger.log('=== END REGISTER DRIVER DEBUG ===\n');
+      //=== END REGISTER DRIVER DEBUG ===\n');
     }
   }
 
@@ -314,9 +314,9 @@ class ApiService {
   // Get nearby rides
   static Future<Map<String, dynamic>> getNearbyRides(String token) async {
     try {
-      AppLogger.log('=== GET NEARBY RIDES DEBUG ===');
-      AppLogger.log('URL: $baseUrl/rides/nearby');
-      AppLogger.log('Token: $token');
+      //=== GET NEARBY RIDES DEBUG ===');
+      //URL: $baseUrl/rides/nearby');
+      //Token: $token');
 
       final response = await http.get(
         Uri.parse('$baseUrl/rides/nearby'),
@@ -326,8 +326,8 @@ class ApiService {
         },
       );
 
-      AppLogger.log('Response Status: ${response.statusCode}');
-      AppLogger.log('Response Body: ${response.body}');
+      //Response Status: ${response.statusCode}');
+      //Response Body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
@@ -341,10 +341,10 @@ class ApiService {
         };
       }
     } catch (e) {
-      AppLogger.log('GET NEARBY RIDES ERROR: $e');
+      //GET NEARBY RIDES ERROR: $e');
       return {'success': false, 'message': 'Network error: $e'};
     } finally {
-      AppLogger.log('=== END GET NEARBY RIDES DEBUG ===\n');
+      //=== END GET NEARBY RIDES DEBUG ===\n');
     }
   }
 
@@ -354,9 +354,9 @@ class ApiService {
     int rideId,
   ) async {
     try {
-      AppLogger.log('=== ACCEPT RIDE DEBUG ===');
-      AppLogger.log('URL: $baseUrl/rides/accept/$rideId');
-      AppLogger.log('Token: $token');
+      //=== ACCEPT RIDE DEBUG ===');
+      //URL: $baseUrl/rides/accept/$rideId');
+      //Token: $token');
 
       final response = await http.post(
         Uri.parse('$baseUrl/rides/accept/$rideId'),
@@ -366,8 +366,8 @@ class ApiService {
         },
       );
 
-      AppLogger.log('Response Status: ${response.statusCode}');
-      AppLogger.log('Response Body: ${response.body}');
+      //Response Status: ${response.statusCode}');
+      //Response Body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
@@ -381,10 +381,10 @@ class ApiService {
         };
       }
     } catch (e) {
-      AppLogger.log('ACCEPT RIDE ERROR: $e');
+      //ACCEPT RIDE ERROR: $e');
       return {'success': false, 'message': 'Network error: $e'};
     } finally {
-      AppLogger.log('=== END ACCEPT RIDE DEBUG ===\n');
+      //=== END ACCEPT RIDE DEBUG ===\n');
     }
   }
 
@@ -394,10 +394,10 @@ class ApiService {
     int rideId,
   ) async {
     try {
-      AppLogger.log('=== REJECT RIDE DEBUG ===');
-      AppLogger.log('URL: $baseUrl/rides/reject/$rideId');
-      AppLogger.log('Token: $token');
-      AppLogger.log('Ride ID: $rideId');
+      //=== REJECT RIDE DEBUG ===');
+      //URL: $baseUrl/rides/reject/$rideId');
+      //Token: $token');
+      //Ride ID: $rideId');
 
       final response = await http.post(
         Uri.parse('$baseUrl/rides/reject/$rideId'),
@@ -407,8 +407,8 @@ class ApiService {
         },
       );
 
-      AppLogger.log('Response Status: ${response.statusCode}');
-      AppLogger.log('Response Body: ${response.body}');
+      //Response Status: ${response.statusCode}');
+      //Response Body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
@@ -422,10 +422,10 @@ class ApiService {
         };
       }
     } catch (e) {
-      AppLogger.log('REJECT RIDE ERROR: $e');
+      //REJECT RIDE ERROR: $e');
       return {'success': false, 'message': 'Network error: $e'};
     } finally {
-      AppLogger.log('=== END REJECT RIDE DEBUG ===\n');
+      //=== END REJECT RIDE DEBUG ===\n');
     }
   }
 
@@ -526,9 +526,9 @@ class ApiService {
     String token,
   ) async {
     try {
-      AppLogger.log('=== DRIVER ONLINE STATUS DEBUG ===');
-      AppLogger.log('URL: $baseUrl/driver/online');
-      AppLogger.log('Token: $token');
+      //=== DRIVER ONLINE STATUS DEBUG ===');
+      //URL: $baseUrl/driver/online');
+      //Token: $token');
 
       final response = await http.post(
         Uri.parse('$baseUrl/driver/online'),
@@ -538,8 +538,8 @@ class ApiService {
         },
       );
 
-      AppLogger.log('Response Status: ${response.statusCode}');
-      AppLogger.log('Response Body: ${response.body}');
+      //Response Status: ${response.statusCode}');
+      //Response Body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
@@ -553,10 +553,10 @@ class ApiService {
         };
       }
     } catch (e) {
-      AppLogger.log('DRIVER STATUS ERROR: $e');
+      //DRIVER STATUS ERROR: $e');
       return {'success': false, 'message': 'Network error: $e'};
     } finally {
-      AppLogger.log('=== END DRIVER ONLINE STATUS DEBUG ===\n');
+      //=== END DRIVER ONLINE STATUS DEBUG ===\n');
     }
   }
 
@@ -626,10 +626,10 @@ class ApiService {
       AppLogger.log(
         '=== UPLOAD VERIFICATION DOCUMENTS (DRIVER LICENSE) DEBUG ===',
       );
-      AppLogger.log('URL: $baseUrl/users/verification');
-      AppLogger.log('Token: ${token.substring(0, 20)}...');
-      AppLogger.log('Driver License Number: $driverLicenseNumber');
-      AppLogger.log('Driver License File Path: ${driverLicenseFile.path}');
+      //URL: $baseUrl/users/verification');
+      //Token: ${token.substring(0, 20)}...');
+      //Driver License Number: $driverLicenseNumber');
+      //Driver License File Path: ${driverLicenseFile.path}');
 
       var request = http.MultipartRequest(
         'POST',
@@ -649,23 +649,23 @@ class ApiService {
         ),
       );
 
-      AppLogger.log('Request fields: ${request.fields}');
-      AppLogger.log('Request headers: ${request.headers}');
-      AppLogger.log('Files added to request: ${request.files.length}');
-      AppLogger.log('Sending verification request...');
+      //Request fields: ${request.fields}');
+      //Request headers: ${request.headers}');
+      //Files added to request: ${request.files.length}');
+      //Sending verification request...');
 
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
 
-      AppLogger.log('Response Status: ${response.statusCode}');
-      AppLogger.log('Response Body verification: $responseBody');
+      //Response Status: ${response.statusCode}');
+      //Response Body verification: $responseBody');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        AppLogger.log('✅ Driver license verification successful');
+        //✅ Driver license verification successful');
         final data = jsonDecode(responseBody);
         return {'success': true, 'data': data};
       } else if (response.statusCode == 413) {
-        AppLogger.log('❌ 413 Request Entity Too Large');
+        //❌ 413 Request Entity Too Large');
         return {
           'success': false,
           'message':
@@ -689,11 +689,11 @@ class ApiService {
         }
       }
     } catch (e, stackTrace) {
-      AppLogger.log('❌ UPLOAD VERIFICATION ERROR: $e');
-      AppLogger.log('Stack trace: $stackTrace');
+      //❌ UPLOAD VERIFICATION ERROR: $e');
+      //Stack trace: $stackTrace');
       return {'success': false, 'message': 'Network error: $e'};
     } finally {
-      AppLogger.log('=== END UPLOAD VERIFICATION DOCUMENTS DEBUG ===\n');
+      //=== END UPLOAD VERIFICATION DOCUMENTS DEBUG ===\n');
     }
   }
 
@@ -714,18 +714,18 @@ class ApiService {
     required bool ac,
   }) async {
     try {
-      AppLogger.log('=== REGISTER VEHICLE API DEBUG ===');
-      AppLogger.log('URL: $baseUrl${UrlConstants.registerVehicle}');
-      AppLogger.log('Token: ${token.substring(0, 20)}...');
-      AppLogger.log('Make: $make');
-      AppLogger.log('Model Type: $modelType');
-      AppLogger.log('Seats: $seats');
-      AppLogger.log('Year: $year');
-      AppLogger.log('License Number: $licenseNumber');
-      AppLogger.log('Color: $color');
-      AppLogger.log('License Plate: $licensePlate');
-      AppLogger.log('AC: $ac');
-      AppLogger.log('Vehicle Photos: ${vehiclePhotos.length}');
+      //=== REGISTER VEHICLE API DEBUG ===');
+      //URL: $baseUrl${UrlConstants.registerVehicle}');
+      //Token: ${token.substring(0, 20)}...');
+      //Make: $make');
+      //Model Type: $modelType');
+      //Seats: $seats');
+      //Year: $year');
+      //License Number: $licenseNumber');
+      //Color: $color');
+      //License Plate: $licensePlate');
+      //AC: $ac');
+      //Vehicle Photos: ${vehiclePhotos.length}');
 
       var request = http.MultipartRequest(
         'POST',
@@ -743,8 +743,8 @@ class ApiService {
       request.fields['license_plate'] = licensePlate;
       request.fields['ac'] = ac.toString();
 
-      AppLogger.log('Request fields: ${request.fields}');
-      AppLogger.log('Request headers: ${request.headers}');
+      //Request fields: ${request.fields}');
+      //Request headers: ${request.headers}');
 
       request.files.add(
         await http.MultipartFile.fromPath(
@@ -761,22 +761,22 @@ class ApiService {
         );
       }
 
-      AppLogger.log('Files added to request: ${request.files.length}');
-      AppLogger.log('Sending request...');
+      //Files added to request: ${request.files.length}');
+      //Sending request...');
 
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
 
-      AppLogger.log('Response Status: ${response.statusCode}');
-      AppLogger.log('Response Headers: ${response.headers}');
-      AppLogger.log('Response Body: $responseBody');
+      //Response Status: ${response.statusCode}');
+      //Response Headers: ${response.headers}');
+      //Response Body: $responseBody');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        AppLogger.log('Vehicle registration successful');
+        //Vehicle registration successful');
         final data = jsonDecode(responseBody);
         return {'success': true, 'data': data};
       } else if (response.statusCode == 413) {
-        AppLogger.log('413 Request Entity Too Large');
+        //413 Request Entity Too Large');
         return {
           'success': false,
           'message':
@@ -796,7 +796,7 @@ class ApiService {
                 'Vehicle registration failed',
           };
         } catch (parseError) {
-          AppLogger.log('Failed to parse error response: $parseError');
+          //Failed to parse error response: $parseError');
           return {
             'success': false,
             'message':
@@ -805,11 +805,11 @@ class ApiService {
         }
       }
     } catch (e, stackTrace) {
-      AppLogger.log('REGISTER VEHICLE API ERROR: $e');
-      AppLogger.log('Stack trace: $stackTrace');
+      //REGISTER VEHICLE API ERROR: $e');
+      //Stack trace: $stackTrace');
       return {'success': false, 'message': 'Network error: $e'};
     } finally {
-      AppLogger.log('=== END REGISTER VEHICLE API DEBUG ===\n');
+      //=== END REGISTER VEHICLE API DEBUG ===\n');
     }
   }
 
@@ -820,13 +820,13 @@ class ApiService {
     double lng,
   ) async {
     try {
-      AppLogger.log('=== UPDATE LOCATION DEBUG ===');
-      AppLogger.log('URL: $baseUrl${UrlConstants.updateLocation}');
-      AppLogger.log('Token: $token');
-      AppLogger.log('Latitude: $lat, Longitude: $lng');
+      //=== UPDATE LOCATION DEBUG ===');
+      //URL: $baseUrl${UrlConstants.updateLocation}');
+      //Token: $token');
+      //Latitude: $lat, Longitude: $lng');
 
       final locationPoint = 'POINT($lng $lat)';
-      AppLogger.log('Location Point: $locationPoint');
+      //Location Point: $locationPoint');
 
       final response = await http.put(
         Uri.parse('$baseUrl${UrlConstants.updateLocation}'),
@@ -837,8 +837,8 @@ class ApiService {
         body: jsonEncode({'location': locationPoint}),
       );
 
-      AppLogger.log('Response Status: ${response.statusCode}');
-      AppLogger.log('Response Body: ${response.body}');
+      //Response Status: ${response.statusCode}');
+      //Response Body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
@@ -852,20 +852,20 @@ class ApiService {
         };
       }
     } catch (e) {
-      AppLogger.log('UPDATE LOCATION ERROR: $e');
+      //UPDATE LOCATION ERROR: $e');
       return {'success': false, 'message': 'Network error: $e'};
     } finally {
-      AppLogger.log('=== END UPDATE LOCATION DEBUG ===\n');
+      //=== END UPDATE LOCATION DEBUG ===\n');
     }
   }
 
   // Get active rides
   static Future<Map<String, dynamic>> getActiveRides(String token) async {
     try {
-      AppLogger.log('=== GET ACTIVE RIDES DEBUG ===');
-      AppLogger.log('URL: $baseUrl${UrlConstants.activeRides}');
-      AppLogger.log('Token: $token');
-      AppLogger.log('Request Body: {"status": "active"}');
+      //=== GET ACTIVE RIDES DEBUG ===');
+      //URL: $baseUrl${UrlConstants.activeRides}');
+      //Token: $token');
+      //Request Body: {"status": "active"}');
 
       final response = await http.post(
         Uri.parse('$baseUrl${UrlConstants.activeRides}'),
@@ -876,16 +876,16 @@ class ApiService {
         body: jsonEncode({'status': 'active'}),
       );
 
-      AppLogger.log('Response Status: ${response.statusCode}');
-      AppLogger.log('Response Body: ${response.body}');
+      //Response Status: ${response.statusCode}');
+      //Response Body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        AppLogger.log('Active rides found: ${data['rides']?.length ?? 0}');
+        //Active rides found: ${data['rides']?.length ?? 0}');
         return {'success': true, 'data': data};
       } else {
         final error = jsonDecode(response.body);
-        AppLogger.log('Error getting active rides: $error');
+        //Error getting active rides: $error');
         return {
           'success': false,
           'message':
@@ -895,10 +895,10 @@ class ApiService {
         };
       }
     } catch (e) {
-      AppLogger.log('GET ACTIVE RIDES ERROR: $e');
+      //GET ACTIVE RIDES ERROR: $e');
       return {'success': false, 'message': 'Network error: $e'};
     } finally {
-      AppLogger.log('=== END GET ACTIVE RIDES DEBUG ===\n');
+      //=== END GET ACTIVE RIDES DEBUG ===\n');
     }
   }
 
@@ -908,10 +908,10 @@ class ApiService {
     int rideId,
   ) async {
     try {
-      AppLogger.log('=== START RIDE DEBUG ===');
-      AppLogger.log('URL: $baseUrl${UrlConstants.startRide}/$rideId');
-      AppLogger.log('Token: $token');
-      AppLogger.log('Ride ID: $rideId');
+      //=== START RIDE DEBUG ===');
+      //URL: $baseUrl${UrlConstants.startRide}/$rideId');
+      //Token: $token');
+      //Ride ID: $rideId');
 
       final response = await http.post(
         Uri.parse('$baseUrl${UrlConstants.startRide}/$rideId'),
@@ -921,15 +921,15 @@ class ApiService {
         },
       );
 
-      AppLogger.log('Response Status: ${response.statusCode}');
-      AppLogger.log('Response Body: ${response.body}');
+      //Response Status: ${response.statusCode}');
+      //Response Body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         return {'success': true, 'data': data};
       } else {
         final error = jsonDecode(response.body);
-        AppLogger.log('Error starting ride: $error');
+        //Error starting ride: $error');
         return {
           'success': false,
           'message':
@@ -937,10 +937,10 @@ class ApiService {
         };
       }
     } catch (e) {
-      AppLogger.log('START RIDE ERROR: $e');
+      //START RIDE ERROR: $e');
       return {'success': false, 'message': 'Network error: $e'};
     } finally {
-      AppLogger.log('=== END START RIDE DEBUG ===\n');
+      //=== END START RIDE DEBUG ===\n');
     }
   }
 
@@ -979,14 +979,14 @@ class ApiService {
     String pointLocation,
   ) async {
     try {
-      AppLogger.log('=== UPDATE DRIVER LOCATION WITH POINT ===');
-      AppLogger.log('URL: $baseUrl${UrlConstants.updateLocation}');
-      AppLogger.log('Token: ${token.substring(0, 20)}...');
-      AppLogger.log('Ride ID: $rideId');
-      AppLogger.log('Point Location: $pointLocation');
+      //=== UPDATE DRIVER LOCATION WITH POINT ===');
+      //URL: $baseUrl${UrlConstants.updateLocation}');
+      //Token: ${token.substring(0, 20)}...');
+      //Ride ID: $rideId');
+      //Point Location: $pointLocation');
 
       final requestBody = {'location': pointLocation};
-      AppLogger.log('Request Body: ${jsonEncode(requestBody)}');
+      //Request Body: ${jsonEncode(requestBody)}');
 
       final response = await http.put(
         Uri.parse('$baseUrl${UrlConstants.updateLocation}'),
@@ -997,26 +997,26 @@ class ApiService {
         body: jsonEncode(requestBody),
       );
 
-      AppLogger.log('Response Status: ${response.statusCode}');
-      AppLogger.log('Response Body: ${response.body}');
+      //Response Status: ${response.statusCode}');
+      //Response Body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        AppLogger.log('Location updated successfully with POINT format');
+        //Location updated successfully with POINT format');
         return {'success': true, 'data': data};
       } else {
         final error = jsonDecode(response.body);
-        AppLogger.log('Location update failed: $error');
+        //Location update failed: $error');
         return {
           'success': false,
           'message': error['message'] ?? 'Failed to update location',
         };
       }
     } catch (e) {
-      AppLogger.log('UPDATE DRIVER LOCATION ERROR: $e');
+      //UPDATE DRIVER LOCATION ERROR: $e');
       return {'success': false, 'message': 'Network error: $e'};
     } finally {
-      AppLogger.log('=== END UPDATE DRIVER LOCATION WITH POINT ===\n');
+      //=== END UPDATE DRIVER LOCATION WITH POINT ===\n');
     }
   }
 
@@ -1029,13 +1029,13 @@ class ApiService {
     try {
       final locationPoint = 'POINT($lng $lat)';
 
-      AppLogger.log('=== GENERAL LOCATION UPDATE ===');
-      AppLogger.log('Raw coordinates: lat=$lat, lng=$lng');
-      AppLogger.log('POINT format: $locationPoint');
-      AppLogger.log('Token: ${token.substring(0, 20)}...');
+      //=== GENERAL LOCATION UPDATE ===');
+      //Raw coordinates: lat=$lat, lng=$lng');
+      //POINT format: $locationPoint');
+      //Token: ${token.substring(0, 20)}...');
 
       final requestBody = {'location': locationPoint};
-      AppLogger.log('Request Body: ${jsonEncode(requestBody)}');
+      //Request Body: ${jsonEncode(requestBody)}');
 
       final response = await http.put(
         Uri.parse('$baseUrl${UrlConstants.updateLocation}'),
@@ -1046,8 +1046,8 @@ class ApiService {
         body: jsonEncode(requestBody),
       );
 
-      AppLogger.log('Response Status: ${response.statusCode}');
-      AppLogger.log('Response Body: ${response.body}');
+      //Response Status: ${response.statusCode}');
+      //Response Body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
@@ -1056,14 +1056,14 @@ class ApiService {
         );
         return {'success': true, 'data': data};
       } else {
-        AppLogger.log('General location update failed');
+        //General location update failed');
         return {'success': false, 'message': 'Failed to update location'};
       }
     } catch (e) {
-      AppLogger.log('GENERAL LOCATION UPDATE ERROR: $e');
+      //GENERAL LOCATION UPDATE ERROR: $e');
       return {'success': false, 'message': 'Network error: $e'};
     } finally {
-      AppLogger.log('=== END GENERAL LOCATION UPDATE ===\n');
+      //=== END GENERAL LOCATION UPDATE ===\n');
     }
   }
 
@@ -1099,10 +1099,10 @@ class ApiService {
     int rideId,
   ) async {
     try {
-      AppLogger.log('=== COMPLETE RIDE DEBUG ===');
-      AppLogger.log('URL: $baseUrl${UrlConstants.completeRide}/$rideId');
-      AppLogger.log('Token: $token');
-      AppLogger.log('Ride ID: $rideId');
+      //=== COMPLETE RIDE DEBUG ===');
+      //URL: $baseUrl${UrlConstants.completeRide}/$rideId');
+      //Token: $token');
+      //Ride ID: $rideId');
 
       // Get current location for end_location
       final position = await LocationService.getCurrentLocation();
@@ -1112,7 +1112,7 @@ class ApiService {
 
       final requestBody = {'end_location': endLocation};
 
-      AppLogger.log('Request Body: ${jsonEncode(requestBody)}');
+      //Request Body: ${jsonEncode(requestBody)}');
 
       final response = await http.post(
         Uri.parse('$baseUrl${UrlConstants.completeRide}/$rideId'),
@@ -1123,15 +1123,15 @@ class ApiService {
         body: jsonEncode(requestBody),
       );
 
-      AppLogger.log('Response Status: ${response.statusCode}');
-      AppLogger.log('Response Body: ${response.body}');
+      //Response Status: ${response.statusCode}');
+      //Response Body: ${response.body}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
         return {'success': true, 'data': data};
       } else {
         final error = jsonDecode(response.body);
-        AppLogger.log('Error completing ride: $error');
+        //Error completing ride: $error');
         return {
           'success': false,
           'message':
@@ -1139,10 +1139,10 @@ class ApiService {
         };
       }
     } catch (e) {
-      AppLogger.log('COMPLETE RIDE ERROR: $e');
+      //COMPLETE RIDE ERROR: $e');
       return {'success': false, 'message': 'Network error: $e'};
     } finally {
-      AppLogger.log('=== END COMPLETE RIDE DEBUG ===\n');
+      //=== END COMPLETE RIDE DEBUG ===\n');
     }
   }
 
@@ -1206,11 +1206,11 @@ class ApiService {
     int userId,
   ) async {
     try {
-      AppLogger.log('=== GET USER RATINGS API ===', tag: 'API');
+      //=== GET USER RATINGS API ===', tag: 'API');
       final endpoint = '$baseUrl/users/$userId/ratings';
-      AppLogger.log('URL: $endpoint', tag: 'API');
-      AppLogger.log('User ID: $userId', tag: 'API');
-      AppLogger.log('Token: ${token.substring(0, 20)}...', tag: 'API');
+      //URL: $endpoint', tag: 'API');
+      //User ID: $userId', tag: 'API');
+      //Token: ${token.substring(0, 20)}...', tag: 'API');
 
       final response = await http.get(
         Uri.parse(endpoint),
@@ -1220,15 +1220,15 @@ class ApiService {
         },
       );
 
-      AppLogger.log('Response Status: ${response.statusCode}', tag: 'API');
-      AppLogger.log('Response Body: ${response.body}', tag: 'API');
+      //Response Status: ${response.statusCode}', tag: 'API');
+      //Response Body: ${response.body}', tag: 'API');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        AppLogger.log('Ratings fetched successfully', tag: 'API');
+        //Ratings fetched successfully', tag: 'API');
         return {'success': true, 'data': data};
       } else {
-        AppLogger.log('Failed to get ratings', tag: 'API');
+        //Failed to get ratings', tag: 'API');
         final error = jsonDecode(response.body);
         return {
           'success': false,
@@ -1236,10 +1236,10 @@ class ApiService {
         };
       }
     } catch (e) {
-      AppLogger.log('Exception in getUserRatings: $e', tag: 'API');
+      //Exception in getUserRatings: $e', tag: 'API');
       return {'success': false, 'message': 'Network error: $e'};
     } finally {
-      AppLogger.log('=== END GET USER RATINGS API ===\n', tag: 'API');
+      //=== END GET USER RATINGS API ===\n', tag: 'API');
     }
   }
 
@@ -1251,12 +1251,12 @@ class ApiService {
     required int rideId,
   }) async {
     try {
-      AppLogger.log('=== SEND SOS ALERT ===', tag: 'SOS');
+      //=== SEND SOS ALERT ===', tag: 'SOS');
       final endpoint = '$baseUrl/sos';
-      AppLogger.log('URL: $endpoint', tag: 'SOS');
-      AppLogger.log('Ride ID: $rideId', tag: 'SOS');
-      AppLogger.log('Location: $location', tag: 'SOS');
-      AppLogger.log('Address: $locationAddress', tag: 'SOS');
+      //URL: $endpoint', tag: 'SOS');
+      //Ride ID: $rideId', tag: 'SOS');
+      //Location: $location', tag: 'SOS');
+      //Address: $locationAddress', tag: 'SOS');
 
       final requestBody = {
         'location': location,
@@ -1264,7 +1264,7 @@ class ApiService {
         'ride_id': rideId,
       };
 
-      AppLogger.log('Request Body sos: ${jsonEncode(requestBody)}', tag: 'SOS');
+      //Request Body sos: ${jsonEncode(requestBody)}', tag: 'SOS');
 
       final response = await http.post(
         Uri.parse(endpoint),
@@ -1275,15 +1275,15 @@ class ApiService {
         body: jsonEncode(requestBody),
       );
 
-      AppLogger.log('Response Status: ${response.statusCode}', tag: 'SOS');
-      AppLogger.log('Response Bodysss: ${response.body}', tag: 'SOS');
+      //Response Status: ${response.statusCode}', tag: 'SOS');
+      //Response Bodysss: ${response.body}', tag: 'SOS');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = jsonDecode(response.body);
-        AppLogger.log('SOS alert sent successfully', tag: 'SOS');
+        //SOS alert sent successfully', tag: 'SOS');
         return {'success': true, 'data': data};
       } else {
-        AppLogger.log('Failed to send SOS alert', tag: 'SOS');
+        //Failed to send SOS alert', tag: 'SOS');
         final error = jsonDecode(response.body);
         return {
           'success': false,
@@ -1292,10 +1292,10 @@ class ApiService {
         };
       }
     } catch (e) {
-      AppLogger.log('Exception in sendSOS: $e', tag: 'SOS');
+      //Exception in sendSOS: $e', tag: 'SOS');
       return {'success': false, 'message': 'Network error: $e'};
     } finally {
-      AppLogger.log('=== END SEND SOS ALERT ===\n', tag: 'SOS');
+      //=== END SEND SOS ALERT ===\n', tag: 'SOS');
     }
   }
 }

@@ -6,11 +6,11 @@ class FirebaseConfigService {
   static Map<String, dynamic>? _cachedConfig;
 
   static Future<Map<String, dynamic>> getServiceAccountConfig() async {
-    AppLogger.log('CONFIG DEBUG: Starting getServiceAccountConfig');
+    //CONFIG DEBUG: Starting getServiceAccountConfig');
 
     // Return cached config if available
     if (_cachedConfig != null) {
-      AppLogger.log('CONFIG DEBUG: Using cached config');
+      //CONFIG DEBUG: Using cached config');
       return _cachedConfig!;
     }
 
@@ -23,7 +23,7 @@ class FirebaseConfigService {
         _cachedConfig = _getConfigFromEnv();
 
         if (_cachedConfig != null && _validateConfig(_cachedConfig!)) {
-          AppLogger.log('CONFIG DEBUG: Successfully loaded from environment');
+          //CONFIG DEBUG: Successfully loaded from environment');
           return _cachedConfig!;
         }
       }
@@ -72,11 +72,11 @@ class FirebaseConfigService {
         }
       }
     } catch (e) {
-      AppLogger.log('CONFIG DEBUG: Error fetching Firebase config: $e');
-      AppLogger.log('CONFIG DEBUG: Stack trace: ${StackTrace.current}');
+      //CONFIG DEBUG: Error fetching Firebase config: $e');
+      //CONFIG DEBUG: Stack trace: ${StackTrace.current}');
     }
 
-    AppLogger.log('CONFIG DEBUG: Failed to load valid config from any source');
+    //CONFIG DEBUG: Failed to load valid config from any source');
     throw Exception(
       'Firebase service account configuration not found. '
       'Please set environment variables or configure Firestore Admin document.',
@@ -112,7 +112,7 @@ class FirebaseConfigService {
             dotenv.env['FIREBASE_UNIVERSE_DOMAIN'] ?? "googleapis.com",
       };
     } catch (e) {
-      AppLogger.log('CONFIG DEBUG: Error loading from environment: $e');
+      //CONFIG DEBUG: Error loading from environment: $e');
       return null;
     }
   }
@@ -128,7 +128,7 @@ class FirebaseConfigService {
 
     for (final field in requiredFields) {
       if (!config.containsKey(field) || (config[field] as String).isEmpty) {
-        AppLogger.log('CONFIG DEBUG: Missing or empty field: $field');
+        //CONFIG DEBUG: Missing or empty field: $field');
         return false;
       }
     }
@@ -136,18 +136,18 @@ class FirebaseConfigService {
     final privateKey = config['private_key'] as String;
     if (!privateKey.contains('BEGIN PRIVATE KEY') ||
         !privateKey.contains('END PRIVATE KEY')) {
-      AppLogger.log('CONFIG DEBUG: Invalid private key format');
+      //CONFIG DEBUG: Invalid private key format');
       return false;
     }
 
-    AppLogger.log('CONFIG DEBUG: Config validation passed');
+    //CONFIG DEBUG: Config validation passed');
     return true;
   }
 
   /// Formats private key to ensure proper PEM format
   static String _formatPrivateKey(String privateKey) {
     if (privateKey.isEmpty) {
-      AppLogger.log('CONFIG DEBUG: Private key is empty');
+      //CONFIG DEBUG: Private key is empty');
       return privateKey;
     }
 
@@ -157,13 +157,13 @@ class FirebaseConfigService {
         .replaceAll('\r', '')
         .trim();
 
-    AppLogger.log('CONFIG DEBUG: Original key length: ${privateKey.length}');
-    AppLogger.log('CONFIG DEBUG: Cleaned key length: ${cleanKey.length}');
+    //CONFIG DEBUG: Original key length: ${privateKey.length}');
+    //CONFIG DEBUG: Cleaned key length: ${cleanKey.length}');
 
     // Check if it already has proper PEM format
     if (cleanKey.startsWith('-----BEGIN PRIVATE KEY-----') &&
         cleanKey.endsWith('-----END PRIVATE KEY-----')) {
-      AppLogger.log('CONFIG DEBUG: Private key already has proper PEM format');
+      //CONFIG DEBUG: Private key already has proper PEM format');
       return cleanKey;
     }
 
@@ -178,7 +178,7 @@ class FirebaseConfigService {
         .trim();
 
     if (cleanKey.isEmpty) {
-      AppLogger.log('CONFIG DEBUG: Private key is empty after cleaning');
+      //CONFIG DEBUG: Private key is empty after cleaning');
       return '';
     }
 
@@ -188,8 +188,8 @@ class FirebaseConfigService {
         _insertLineBreaks(cleanKey, 64) +
         '\n-----END PRIVATE KEY-----';
 
-    AppLogger.log('CONFIG DEBUG: Private key formatted to proper PEM format');
-    AppLogger.log('CONFIG DEBUG: Formatted key length: ${formattedKey.length}');
+    //CONFIG DEBUG: Private key formatted to proper PEM format');
+    //CONFIG DEBUG: Formatted key length: ${formattedKey.length}');
 
     return formattedKey;
   }

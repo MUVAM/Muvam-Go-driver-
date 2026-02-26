@@ -63,7 +63,7 @@ class _HistoryCancelledScreenState extends State<HistoryCancelledScreen> {
                       : null as dynamic,
                 );
 
-            AppLogger.log('get ride address omoooo:${ride.pickupAddress}');
+            //get ride address omoooo:${ride.pickupAddress}');
 
             return Padding(
               padding: EdgeInsets.all(20.w),
