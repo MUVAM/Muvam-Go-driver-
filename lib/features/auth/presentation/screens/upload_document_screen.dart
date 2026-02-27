@@ -196,48 +196,71 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
       // Return to upload documents screen - user will manually tap upload button
     }
   }
-
-  /// Compresses [file] to JPEG at 70% quality if it exceeds 2 MB.
-  /// Returns the original file unchanged if it is already within the limit.
-  Future<File> _compressIfNeeded(File file) async {
+Future<File> _compressIfNeeded(
+    File file, {
+    bool alwaysCompress = false,
+    double maxSizeMB = 1.0,
+    int quality = 60,
+  }) async {
     final sizeInBytes = await file.length();
     final sizeInMB = sizeInBytes / (1024 * 1024);
 
-    if (sizeInMB <= 2) {
-      AppLogger.log(
-        '✅ File is ${sizeInMB.toStringAsFixed(2)} MB — no compression needed',
-      );
+    AppLogger.log(
+      '📁 File: ${file.path.split('/').last} | Size: ${sizeInMB.toStringAsFixed(2)} MB',
+    );
+
+    if (!alwaysCompress && sizeInMB <= maxSizeMB) {
+      AppLogger.log('✅ Within limit — no compression needed');
       return file;
     }
-
-    AppLogger.log(
-      '🗜️ File is ${sizeInMB.toStringAsFixed(2)} MB — compressing to JPEG 70%...',
-    );
 
     final dir = await getTemporaryDirectory();
     final targetPath =
         '${dir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-    final compressedFile = await FlutterImageCompress.compressAndGetFile(
+    AppLogger.log('🗜️ Compressing at quality=$quality...');
+    XFile? compressedFile = await FlutterImageCompress.compressAndGetFile(
       file.path,
       targetPath,
-      quality: 70,
+      quality: quality,
       format: CompressFormat.jpeg,
     );
 
     if (compressedFile == null) {
-      //⚠️ Compression returned null — using original file');
+      AppLogger.log('⚠️ Compression returned null — using original');
       return file;
     }
 
-    final compressedSizeMB =
+    double compressedSizeMB =
         await File(compressedFile.path).length() / (1024 * 1024);
     AppLogger.log(
-      '✅ Compressed to ${compressedSizeMB.toStringAsFixed(2)} MB → ${compressedFile.path}',
+      '📦 After quality=$quality: ${compressedSizeMB.toStringAsFixed(2)} MB',
     );
+
+    // Still too large — compress again more aggressively
+    if (compressedSizeMB > maxSizeMB) {
+      AppLogger.log('🗜️ Still too large, re-compressing at quality=30...');
+      final targetPath2 =
+          '${dir.path}/${DateTime.now().millisecondsSinceEpoch}_v2.jpg';
+      final compressedFile2 = await FlutterImageCompress.compressAndGetFile(
+        file.path,
+        targetPath2,
+        quality: 30,
+        format: CompressFormat.jpeg,
+      );
+      if (compressedFile2 != null) {
+        compressedSizeMB =
+            await File(compressedFile2.path).length() / (1024 * 1024);
+        AppLogger.log(
+          '📦 After quality=30: ${compressedSizeMB.toStringAsFixed(2)} MB',
+        );
+        compressedFile = compressedFile2;
+      }
+    }
+
+    AppLogger.log('✅ Final: ${compressedSizeMB.toStringAsFixed(2)} MB');
     return File(compressedFile.path);
   }
-
   Future<void> _uploadDocuments() async {
     //\n🚀 ========== UPLOAD DOCUMENTS BUTTON TAPPED ==========');
     AppLogger.log(
@@ -275,13 +298,33 @@ class _KycVerificationScreenState extends State<KycVerificationScreen> {
       // ── Step 2a: Compress any files that exceed 2 MB ──────────────────────
       //\n📋 Step 2a: Compressing documents if needed...');
 
-      final compressedLicense = await _compressIfNeeded(driverLicense!);
-      final compressedInsurance = await _compressIfNeeded(insurance!);
+    // Documents — compress if over 1MB
+      final compressedLicense = await _compressIfNeeded(
+        driverLicense!,
+        maxSizeMB: 1.0,
+        quality: 60,
+      );
+      final compressedInsurance = await _compressIfNeeded(
+        insurance!,
+        maxSizeMB: 1.0,
+        quality: 60,
+      );
       final compressedRegistration = await _compressIfNeeded(
         vehicleRegistration!,
+        maxSizeMB: 1.0,
+        quality: 60,
       );
+
+      // Vehicle photos — ALWAYS compress, target 0.8MB each
       final compressedPhotos = await Future.wait(
-        vehiclePhotos.map((photo) => _compressIfNeeded(photo)),
+        vehiclePhotos.map(
+          (photo) => _compressIfNeeded(
+            photo,
+            alwaysCompress: true, // always compress regardless of size
+            maxSizeMB: 0.8,
+            quality: 55,
+          ),
+        ),
       );
 
       //✅ All files compressed/checked successfully');

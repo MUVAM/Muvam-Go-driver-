@@ -688,7 +688,7 @@ class _HomeScreenState extends State<HomeScreen> {
         // Transform WebSocket data to expected format for ride sheet
         final transformedRide = {
           'ID': rideId,
-          'Price': rideData['Price']?.toString()?? '0',
+          'Price': rideData['Price']?.toString() ?? '0',
           'PickupAddress': rideData['PickupAddress'] ?? 'Unknown pickup',
           'DestAddress': rideData['DestAddress'] ?? 'Unknown destination',
           'StopAddress': rideData['StopAddress'] ?? '',
@@ -4396,7 +4396,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 SizedBox(height: 10.h),
                 Text(
-                  '₦${double.tryParse(ride['Price']?.toString() ?? '0')?.toString ?? ride['Price']}',
+                  '₦${double.tryParse(ride['Price']?.toString() ?? '0')?.toString() ?? ride['Price']}',
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w700,

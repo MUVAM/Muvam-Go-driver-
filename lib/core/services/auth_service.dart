@@ -171,17 +171,15 @@ class AuthService {
     await prefs.setInt(_tokenExpiryKey, expiryTime);
   }
 
-  Future<dynamic?> getToken() async {
+Future<dynamic?> getToken() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString(_tokenKey);
 
-    // Safely read expiry — handle legacy String value stored by old code
     int? expiryTime;
     try {
       expiryTime = prefs.getInt(_tokenExpiryKey);
     } catch (e) {
-      // Old code saved a String here — clear it and treat as no expiry
-      AppLogger.log('⚠️ Corrupt expiry value found, clearing...', tag: 'AUTH');
+      AppLogger.log('⚠️ Corrupt expiry value, clearing...', tag: 'AUTH');
       await prefs.remove(_tokenExpiryKey);
       expiryTime = null;
     }
@@ -196,15 +194,13 @@ class AuthService {
       final int bufferTime = 5 * 60 * 1000;
 
       if (currentTime >= expiryTime) {
-        AppLogger.log(
-          '⚠️ Token has expired, attempting refresh...',
-          tag: 'AUTH',
-        );
+        AppLogger.log('⚠️ Token expired, refreshing...', tag: 'AUTH');
         final refreshed = await refreshToken();
         if (refreshed) {
-          return await getToken();
+          // READ DIRECTLY from prefs — no recursive call
+          return prefs.getString(_tokenKey);
         } else {
-          AppLogger.log('❌ Token refresh failed, clearing tokens', tag: 'AUTH');
+          AppLogger.log('❌ Refresh failed, clearing tokens', tag: 'AUTH');
           await clearToken();
           return null;
         }
@@ -214,8 +210,10 @@ class AuthService {
         AppLogger.log('🔄 Token expiring soon, refreshing...', tag: 'AUTH');
         final refreshed = await refreshToken();
         if (refreshed) {
-          return await getToken();
+          // READ DIRECTLY from prefs — no recursive call
+          return prefs.getString(_tokenKey);
         }
+        // Token still valid even if refresh failed, fall through
       }
 
       final remainingTime = (expiryTime - currentTime) / 1000 / 60;
@@ -227,7 +225,6 @@ class AuthService {
 
     return token;
   }
-
   Future<String?> getRefreshToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString(_refreshTokenKey);

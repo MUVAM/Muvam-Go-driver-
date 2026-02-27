@@ -76,12 +76,12 @@ class KycDocumentTile extends StatelessWidget {
                           ),
                         ),
                       ),
-                      SizedBox(width: 12.w),
+                      // SizedBox(width: 12.w),
                       isUploaded
                           ? Icon(
                               Icons.check_circle,
-                              size: 24.sp,
-                              color: Colors.green,
+                              size: 16.sp,
+                              color: Color(0xff2A8359),
                             )
                           : SvgPicture.asset(
                               ConstImages.backChevron,
