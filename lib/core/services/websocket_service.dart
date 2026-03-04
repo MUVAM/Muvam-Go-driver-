@@ -19,7 +19,7 @@ class WebSocketService {
   Function(Map<String, dynamic>)? onRideUpdate;
   Function(Map<String, dynamic>)? onChatMessage;
   Function(Map<String, dynamic>)? onDriverLocation;
-
+Function(Map<String, dynamic>)? onRideCancelled;
   // List of listeners for incoming calls instead of single callback
   final List<Function(Map<String, dynamic>)> _incomingCallListeners = [];
 
@@ -259,8 +259,16 @@ class WebSocketService {
   void _handleMessage(Map<String, dynamic> data) async {
     final type = data['type'];
     //Routing message type: $type');
-
+AppLogger.log('📨 RAW MESSAGE TYPE from driver: "$type" | Full data: $data');
     switch (type) {
+      case 'ride_cancelled':
+      case 'ride_cancel':
+      case 'cancel_ride':
+        AppLogger.log('🚫 Ride cancelled message received: $data');
+        if (onRideCancelled != null) {
+          onRideCancelled!(data);
+        }
+        break;
       case 'ride_accepted':
         //   ride_accepted handler');
         if (onRideAccepted != null) onRideAccepted!(data);

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
@@ -79,7 +80,7 @@ class _HomeScreenState extends State<HomeScreen> {
   // final WebSocketService _webSocketService = WebSocketService();
 
   late final WebSocketService _webSocketService;
-
+  String _rideRequestETA = '--';
   List<Map<String, dynamic>> _nearbyRides = [];
   int _currentRideIndex = 0;
   bool _hasActiveRequest = false;
@@ -217,6 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _webSocketService.onRideCompleted = null;
     _webSocketService.disconnect();
     _rideCheckTimer?.cancel();
+    _webSocketService.onRideCancelled = null;
     _sessionCheckTimer?.cancel();
     _locationUpdateTimer?.cancel();
     _callService.dispose();
@@ -451,23 +453,141 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _fetchAndSetRideETA(Map<String, dynamic> rideData) async {
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      double? pickupLat;
+      double? pickupLng;
+
+      final pickupLocationRaw =
+          rideData['PickupLocation'] ?? rideData['pickup_location'];
+      if (pickupLocationRaw != null) {
+        final coords = _parseWKBHex(pickupLocationRaw.toString());
+        if (coords != null) {
+          pickupLat = coords['lat'];
+          pickupLng = coords['lng'];
+        }
+      }
+
+      pickupLat ??= (rideData['PickupLat'] ?? rideData['pickup_lat'])
+          ?.toDouble();
+      pickupLng ??= (rideData['PickupLng'] ?? rideData['pickup_lng'])
+          ?.toDouble();
+
+      if (pickupLat == null || pickupLng == null) {
+        if (mounted) setState(() => _rideRequestETA = '--');
+        return;
+      }
+
+      final distanceMeters = Geolocator.distanceBetween(
+        position.latitude,
+        position.longitude,
+        pickupLat,
+        pickupLng,
+      );
+
+      final minutes = ((distanceMeters / 1000 / 30) * 60).round();
+      final eta = minutes < 1 ? '<1' : '$minutes';
+
+      if (mounted) setState(() => _rideRequestETA = eta);
+    } catch (e) {
+      AppLogger.log('❌ ETA fetch error: $e');
+      if (mounted) setState(() => _rideRequestETA = '--');
+    }
+  }
+
+  Map<String, double>? _parseWKBHex(String hex) {
+    try {
+      if (hex.length < 50) return null;
+      final byteOrder = int.parse(hex.substring(0, 2), radix: 16);
+      final isLittleEndian = byteOrder == 1;
+      final lngHex = hex.substring(18, 34);
+      final latHex = hex.substring(34, 50);
+      final lng = _hexToDouble(lngHex, isLittleEndian);
+      final lat = _hexToDouble(latHex, isLittleEndian);
+      if (lat == null || lng == null) return null;
+      return {'lat': lat, 'lng': lng};
+    } catch (e) {
+      return null;
+    }
+  }
+
+  double? _hexToDouble(String hex, bool isLittleEndian) {
+    try {
+      if (hex.length != 16) return null;
+      final bytes = List<int>.generate(
+        8,
+        (i) => int.parse(hex.substring(i * 2, i * 2 + 2), radix: 16),
+      );
+      final ordered = isLittleEndian ? bytes.reversed.toList() : bytes;
+      int bits = 0;
+      for (final byte in ordered) bits = (bits << 8) | byte;
+      final byteData = ByteData(8);
+      byteData.setInt64(0, bits);
+      return byteData.getFloat64(0);
+    } catch (e) {
+      return null;
+    }
+  }
+
   void _startRideChecking() {
     // Setup WebSocket ride request listener
     _webSocketService.onRideRequest = (rideData) {
-      //📨 Received ride request via WebSocket: $rideData');
       final driverProvider = Provider.of<DriverProvider>(
         context,
         listen: false,
       );
       if (driverProvider.isOnline && !_hasActiveRequest && mounted) {
+        final data = rideData['data'] ?? rideData;
         setState(() {
           _nearbyRides = [rideData];
           _currentRideIndex = 0;
           _hasActiveRequest = true;
+          _rideRequestETA = '...';
         });
+        _fetchAndSetRideETA(data);
       }
     };
+// Handle ride cancellation from passenger
+    _webSocketService.onRideCancelled = (cancelData) {
+      AppLogger.log('🚫 Ride cancelled by passenger: $cancelData');
+      if (mounted) {
+        final data = cancelData['data'] ?? cancelData;
+        final cancelledRideId = data['RideID'] ?? data['ID'] ?? data['ride_id'];
 
+        // If driver is viewing the request sheet, dismiss it
+        if (_hasActiveRequest && _nearbyRides.isNotEmpty) {
+          setState(() {
+            _hasActiveRequest = false;
+            _nearbyRides.clear();
+            _currentRideIndex = 0;
+            _rideRequestETA = '--';
+          });
+        }
+
+        // If driver already accepted and ride sheet is open, close it
+        if (_activeRide != null) {
+          final activeRideId = _activeRide!['ID'];
+          if (cancelledRideId == null || cancelledRideId == activeRideId) {
+            // Close the bottom sheet
+            if (Navigator.of(context).canPop()) {
+              Navigator.of(context).pop();
+            }
+            // Clear active ride state
+            _onRideStatusChanged({..._activeRide!, 'Status': 'cancelled'});
+          }
+        }
+
+        // Show notification to driver
+        CustomFlushbar.showError(
+          context: context,
+          message: 'Ride was cancelled by the passenger',
+        );
+      }
+    };
     // Check nearby rides every 15 seconds (fallback for missed WebSocket messages)
     _rideCheckTimer = Timer.periodic(Duration(seconds: 15), (timer) {
       final driverProvider = Provider.of<DriverProvider>(
@@ -682,6 +802,7 @@ class _HomeScreenState extends State<HomeScreen> {
           setState(() {
             _hasActiveRequest = false;
             _nearbyRides.clear();
+            _rideRequestETA = '--'; // add this
           });
         }
 
@@ -875,6 +996,7 @@ class _HomeScreenState extends State<HomeScreen> {
           _hasActiveRequest = false;
           _nearbyRides.clear();
           _currentRideIndex = 0;
+          _rideRequestETA = '--'; // add this
         }
       });
     }
@@ -1448,9 +1570,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             // Ride request overlay
-            if (_hasActiveRequest && _nearbyRides.isNotEmpty)
+            // if (_hasActiveRequest && _nearbyRides.isNotEmpty)
+            //   _buildRideRequestSheet(),
+            // Ride request overlay with dark background
+            if (_hasActiveRequest && _nearbyRides.isNotEmpty) ...[
+              // Dark overlay behind the sheet
+              Positioned.fill(
+                child: GestureDetector(
+                  onTap: () {}, // Absorbs taps so map below isn't clickable
+                  child: Container(color: Colors.black.withValues(alpha: 0.5)),
+                ),
+              ),
               _buildRideRequestSheet(),
-
+            ],
             // Navigation widget positioned on top of the ride sheet
 
             // Full-screen incoming call overlay
@@ -3856,7 +3988,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final price = rideData['Price']?.toString() ?? '0';
     final serviceType = rideData['ServiceType'] ?? 'taxi';
     final vehicleType = rideData['VehicleType'] ?? 'regular';
-    final eta = _calculateETA(rideData);
+    // final eta = _calculateETA(rideData);
 
     return Positioned(
       bottom: 0,
@@ -3934,14 +4066,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  // Strip ' mins' / ' min' / '< ' to show just the number
-                                  eta == '--'
-                                      ? '--'
-                                      : eta.startsWith('<')
-                                      ? '<1'
-                                      : eta
-                                            .replaceAll(' mins', '')
-                                            .replaceAll(' min', ''),
+                                  _rideRequestETA,
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontSize: 16.sp,
