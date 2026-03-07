@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:muvam_rider/features/auth/presentation/widgets/service_option.dart';
-import 'package:provider/provider.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
-import 'package:muvam_rider/core/constants/fonts.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/app_routes.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
-import 'package:muvam_rider/shared/presentation/screens/onboarding_screen.dart';
+import 'package:muvam_rider/core/utils/extension.dart';
+import 'package:muvam_rider/features/auth/presentation/widgets/service_option.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
+import 'package:muvam_rider/layouts/presentation/shared/bottom_padding.dart';
+import 'package:provider/provider.dart';
 
 class RiderSignupSelectionScreen extends StatefulWidget {
   const RiderSignupSelectionScreen({super.key});
@@ -22,7 +25,7 @@ class _RiderSignupSelectionScreenState
   @override
   Widget build(BuildContext context) {
     final themeManager = Provider.of<ThemeManager>(context);
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: themeManager.getBackgroundColor(context),
       body: SafeArea(
         child: Padding(
@@ -31,29 +34,19 @@ class _RiderSignupSelectionScreenState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: 60.h),
-              Text(
-                'How do you want to sign up',
-                style: TextStyle(
-                  fontFamily: ConstFonts.inter,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 26.sp,
-                  height: 1.0,
-                  letterSpacing: -0.32,
-                  color: themeManager.getTextColor(context),
-                ),
+              MuvamTexts.headlineSmall24(
+                context,
+                text: 'How do you want to sign up',
+                isTextWidget: true,
+                color: themeManager.getTextColor(context),
+                fontWeight: FontWeight.w600,
               ),
               SizedBox(height: 16.h),
-              Text(
-                'You can select more than one service',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: ConstFonts.inter,
-                  fontWeight: FontWeight.w400,
-                  fontSize: 16.sp,
-                  height: 1.0,
-                  letterSpacing: -0.32,
-                  color: themeManager.getTextColor(context),
-                ),
+              MuvamTexts.bodyLarge16(
+                context,
+                text: 'You can select more than one service',
+                isTextWidget: true,
+                color: themeManager.getTextColor(context),
               ),
               SizedBox(height: 40.h),
               Center(
@@ -77,40 +70,34 @@ class _RiderSignupSelectionScreenState
                   ],
                 ),
               ),
-              Spacer(),
+              const Spacer(),
               GestureDetector(
                 onTap: selectedOptions.isNotEmpty
                     ? () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => OnboardingScreen(),
-                          ),
-                        );
+                        context.pushNamedRoute(AppRoutes.onboarding.name);
                       }
                     : null,
                 child: Container(
                   width: double.infinity,
-                  height: 48.h,
+                  height: 47.h,
                   decoration: BoxDecoration(
                     color: selectedOptions.isNotEmpty
-                        ? Color(ConstColors.mainColor)
-                        : Color(ConstColors.fieldColor),
+                        ? AppColors.kMainColor
+                        : AppColors.kFieldColor,
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Center(
-                    child: Text(
-                      'Continue',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    child: MuvamTexts.button16(
+                      context,
+                      text: 'Continue',
+                      color: AppColors.kWhiteColor,
+                      fontWeight: FontWeight.w600,
+                      isTextWidget: true,
                     ),
                   ),
                 ),
               ),
-              SizedBox(height: 24.h),
+              DeviceBottomPadding(),
             ],
           ),
         ),

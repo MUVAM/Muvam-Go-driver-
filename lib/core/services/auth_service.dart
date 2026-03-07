@@ -24,7 +24,10 @@ class AuthService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to send OTP');
+      final errorBody = jsonDecode(response.body);
+      final message =
+          errorBody['error'] ?? errorBody['message'] ?? 'Failed to send OTP';
+      throw Exception(message);
     }
   }
 
@@ -38,7 +41,10 @@ class AuthService {
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
-      throw Exception('Failed to resend OTP');
+      final errorBody = jsonDecode(response.body);
+      final message =
+          errorBody['error'] ?? errorBody['message'] ?? 'Failed to resend OTP';
+      throw Exception(message);
     }
   }
 
@@ -55,48 +61,21 @@ class AuthService {
     if (response.statusCode == 200) {
       final result = jsonDecode(response.body);
 
-      log('Response Status Codedjkdhe: ${response.statusCode}');
-      log('Response Bodyuuuuu: ${response.body}');
-
-      // Handle the new token structure
       if (result['token'] != null) {
         final tokenData = result['token'];
         if (tokenData is Map<String, dynamic>) {
-          // New structure: token is an object with access_token, refresh_token, expires_in
           final accessToken = tokenData['access_token'];
           final refreshToken = tokenData['refresh_token'];
           final expiresIn = tokenData['expires_in'];
 
-          if (accessToken != null) {
-            await _saveToken(accessToken);
-          }
-          if (refreshToken != null) {
-            await _saveRefreshToken(refreshToken);
-          }
-          if (expiresIn != null) {
-            await _saveTokenExpiry(expiresIn);
-          }
-
-          AppLogger.log('✅ Saved access_token: $accessToken', tag: 'AUTH');
-          AppLogger.log('✅ Saved refresh_token: $refreshToken', tag: 'AUTH');
-          AppLogger.log(
-            '⏰ Access token expires in: $expiresIn seconds (1 hour)',
-            tag: 'AUTH',
-          );
-
-          final expiryTime =
-              DateTime.now().millisecondsSinceEpoch + (expiresIn * 1000);
-          final expiryDate = DateTime.fromMillisecondsSinceEpoch(
-            expiryTime.toInt(),
-          );
-          AppLogger.log('📅 Token will expire at: $expiryDate', tag: 'AUTH');
+          if (accessToken != null) await _saveToken(accessToken);
+          if (refreshToken != null) await _saveRefreshToken(refreshToken);
+          if (expiresIn != null) await _saveTokenExpiry(expiresIn);
         } else {
-          // Old structure: token is a string
           await _saveToken(tokenData.toString());
         }
       }
 
-      // Store user data after successful OTP verification
       if (result['user'] != null) {
         final user = result['user'];
         await _saveUserInfo(
@@ -107,21 +86,16 @@ class AuthService {
         );
       }
 
-      // Save vehicle_submitted status
       final prefs = await SharedPreferences.getInstance();
       final vehicleSubmitted = result['vehicle_submitted'] ?? false;
       await prefs.setBool('vehicle_submitted', vehicleSubmitted);
 
-      AppLogger.log('📊 Backend vehicle_submitted value: $vehicleSubmitted');
-      AppLogger.log('✅ vehicle_submitted saved to SharedPreferences');
-
-      // Verify it was saved
-      final savedValue = prefs.getBool('vehicle_submitted');
-      AppLogger.log('🔍 Immediate verification: $savedValue');
-
       return result;
     } else {
-      throw Exception('Failed to verify OTP');
+      final errorBody = jsonDecode(response.body);
+      final message =
+          errorBody['error'] ?? errorBody['message'] ?? 'Failed to verify OTP';
+      throw Exception(message);
     }
   }
 
@@ -235,76 +209,86 @@ Future<dynamic?> getToken() async {
     return prefs.getString('auth_token');
   }
 
- Future<bool> refreshToken() async {
-  try {
-    final refreshToken = await getRefreshToken();
-    final token = await _getToken();
-    log("this is the refresh token $refreshToken");
-    if (refreshToken == null) {
-      AppLogger.log('❌ No refresh token available', tag: 'AUTH');
-      return false;
-    }
-
-    AppLogger.log('🔄 Attempting to refresh token...', tag: 'AUTH');
-
-    final response = await http
-        .post(
-          Uri.parse('${UrlConstants.baseUrl}${UrlConstants.refreshToken}'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-          body: jsonEncode({'refresh_token': refreshToken}),
-        )
-        .timeout(
-          const Duration(seconds: 10),
-          onTimeout: () {
-            throw Exception('Token refresh request timed out');
-          },
-        );
-
-    AppLogger.log('📡 Refresh response status: ${response.statusCode}', tag: 'AUTH');
-    AppLogger.log('📄 Refresh response body: ${response.body}', tag: 'AUTH');
-
-    if (response.statusCode == 200) {
-      final responseData = jsonDecode(response.body);
-
-      // Backend returns { "access_token": { "access_token": "...", "refresh_token": "...", "expires_in": 3600 } }
-      final tokenWrapper = responseData['access_token'];
-
-      if (tokenWrapper != null && tokenWrapper is Map<String, dynamic>) {
-        final accessToken = tokenWrapper['access_token'];
-        final newRefreshToken = tokenWrapper['refresh_token'];
-        final expiresIn = tokenWrapper['expires_in'];
-
-        if (accessToken != null) {
-          await _saveToken(accessToken);
-          AppLogger.log('✅ New access token saved', tag: 'AUTH');
-        }
-        if (newRefreshToken != null) {
-          await _saveRefreshToken(newRefreshToken);
-          AppLogger.log('✅ New refresh token saved', tag: 'AUTH');
-        }
-        if (expiresIn != null) {
-          await _saveTokenExpiry(expiresIn);
-          AppLogger.log('✅ Token expiry saved: $expiresIn seconds', tag: 'AUTH');
-        }
-
-        AppLogger.log('✅ Token refreshed successfully!', tag: 'AUTH');
-        return true;
+  Future<bool> refreshToken() async {
+    try {
+      final refreshToken = await getRefreshToken();
+      final token = await _getToken();
+      log("this is the refresh token $refreshToken");
+      if (refreshToken == null) {
+        AppLogger.log('❌ No refresh token available', tag: 'AUTH');
+        return false;
       }
 
-      AppLogger.log('❌ Invalid response structure: $responseData', tag: 'AUTH');
-      return false;
-    } else {
-      AppLogger.log('❌ Token refresh failed: ${response.body}', tag: 'AUTH');
+      AppLogger.log('🔄 Attempting to refresh token...', tag: 'AUTH');
+
+      final response = await http
+          .post(
+            Uri.parse('${UrlConstants.baseUrl}${UrlConstants.refreshToken}'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+            body: jsonEncode({'refresh_token': refreshToken}),
+          )
+          .timeout(
+            const Duration(seconds: 10),
+            onTimeout: () {
+              throw Exception('Token refresh request timed out');
+            },
+          );
+
+      AppLogger.log(
+        '📡 Refresh response status: ${response.statusCode}',
+        tag: 'AUTH',
+      );
+      AppLogger.log('📄 Refresh response body: ${response.body}', tag: 'AUTH');
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+
+        // Backend returns { "access_token": { "access_token": "...", "refresh_token": "...", "expires_in": 3600 } }
+        final tokenWrapper = responseData['access_token'];
+
+        if (tokenWrapper != null && tokenWrapper is Map<String, dynamic>) {
+          final accessToken = tokenWrapper['access_token'];
+          final newRefreshToken = tokenWrapper['refresh_token'];
+          final expiresIn = tokenWrapper['expires_in'];
+
+          if (accessToken != null) {
+            await _saveToken(accessToken);
+            AppLogger.log('✅ New access token saved', tag: 'AUTH');
+          }
+          if (newRefreshToken != null) {
+            await _saveRefreshToken(newRefreshToken);
+            AppLogger.log('✅ New refresh token saved', tag: 'AUTH');
+          }
+          if (expiresIn != null) {
+            await _saveTokenExpiry(expiresIn);
+            AppLogger.log(
+              '✅ Token expiry saved: $expiresIn seconds',
+              tag: 'AUTH',
+            );
+          }
+
+          AppLogger.log('✅ Token refreshed successfully!', tag: 'AUTH');
+          return true;
+        }
+
+        AppLogger.log(
+          '❌ Invalid response structure: $responseData',
+          tag: 'AUTH',
+        );
+        return false;
+      } else {
+        AppLogger.log('❌ Token refresh failed: ${response.body}', tag: 'AUTH');
+        return false;
+      }
+    } catch (e) {
+      AppLogger.log('❌ Token refresh error: $e', tag: 'AUTH');
       return false;
     }
-  } catch (e) {
-    AppLogger.log('❌ Token refresh error: $e', tag: 'AUTH');
-    return false;
   }
-}
+
   Future<void> clearToken() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);

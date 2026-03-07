@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:go_router/go_router.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/app_spacings.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
-import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
-import 'package:muvam_rider/features/ratings/data/models/rating_model.dart';
+import 'package:muvam_rider/features/ratings/models/rating_model.dart';
 import 'package:muvam_rider/features/ratings/presentation/widgets/rating_item.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -28,96 +31,38 @@ class _RatingsScreenState extends State<RatingsScreen> {
   }
 
   Future<void> _loadRatings() async {
-    //═══════════════════════════════════════', tag: 'RATINGS');
-    //LOADING RATINGS STARTED', tag: 'RATINGS');
-    //═══════════════════════════════════════', tag: 'RATINGS');
-
     try {
-      //Getting SharedPreferences...', tag: 'RATINGS');
       final prefs = await SharedPreferences.getInstance();
-
       final token = prefs.getString('auth_token');
 
-      // Try to get user_id as int first, then as string
       int? userId;
       try {
         userId = prefs.getInt('user_id');
       } catch (e) {
-        // If getInt fails (because it's stored as String), try getString
         final userIdStr = prefs.getString('user_id');
         if (userIdStr != null) {
           userId = int.tryParse(userIdStr);
         }
       }
 
-      //Token exists: ${token != null}', tag: 'RATINGS');
-      if (token != null) {
-        AppLogger.log(
-          'Token preview: ${token.substring(0, 20)}...',
-          tag: 'RATINGS',
-        );
-      }
-      //User ID: $userId', tag: 'RATINGS');
-      //User ID type: ${userId.runtimeType}', tag: 'RATINGS');
-
       if (token == null || userId == null) {
-        //Missing token or userId - stopping', tag: 'RATINGS');
-        //   Token is null: ${token == null}', tag: 'RATINGS');
-        //   UserId is null: ${userId == null}', tag: 'RATINGS');
         setState(() => isLoading = false);
         return;
       }
 
-      //Calling ApiService.getUserRatings...', tag: 'RATINGS');
-      //   Endpoint: users/$userId/ratings', tag: 'RATINGS');
-
       final response = await ApiService.getUserRatings(token, userId);
 
-      //API Response received:', tag: 'RATINGS');
-      //   Success: ${response['success']}', tag: 'RATINGS');
-      //   Data: ${response['data']}', tag: 'RATINGS');
-      //   Message: ${response['message']}', tag: 'RATINGS');
-
       if (response['success']) {
-        //Response successful, parsing data...', tag: 'RATINGS');
-
         final ratingResponse = RatingResponse.fromJson(response['data']);
-
-        AppLogger.log(
-          'Parsed ${ratingResponse.ratings.length} ratings',
-          tag: 'RATINGS',
-        );
-
         setState(() {
           ratings = ratingResponse.ratings;
           isLoading = false;
         });
-
-        //State updated - isLoading: false', tag: 'RATINGS');
-        //Ratings count: ${ratings.length}', tag: 'RATINGS');
       } else {
-        //API returned success: false', tag: 'RATINGS');
-        AppLogger.log(
-          '   Error message: ${response['message']}',
-          tag: 'RATINGS',
-        );
         setState(() => isLoading = false);
       }
     } catch (e, stackTrace) {
-      //EXCEPTION IN _loadRatings', tag: 'RATINGS');
-      //Error: $e', tag: 'RATINGS');
-      //Error type: ${e.runtimeType}', tag: 'RATINGS');
-      //Stack trace: $stackTrace', tag: 'RATINGS');
       setState(() => isLoading = false);
-    } finally {
-      //═══════════════════════════════════════', tag: 'RATINGS');
-      //LOADING RATINGS COMPLETED', tag: 'RATINGS');
-      //   Final isLoading: $isLoading', tag: 'RATINGS');
-      AppLogger.log(
-        '   Final ratings count: ${ratings.length}',
-        tag: 'RATINGS',
-      );
-      //═══════════════════════════════════════', tag: 'RATINGS');
     }
   }
 
@@ -125,18 +70,18 @@ class _RatingsScreenState extends State<RatingsScreen> {
   Widget build(BuildContext context) {
     return Consumer<ProfileProvider>(
       builder: (context, profileProvider, child) {
-        return Scaffold(
-          backgroundColor: Colors.white,
+        return AppScaffold(
+          backgroundColor: AppColors.kWhiteColor,
           body: SafeArea(
             child: Column(
               children: [
                 SizedBox(height: 20.h),
                 Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w),
+                  padding: EdgeInsets.symmetric(horizontal: AppSpacings.k20.w),
                   child: Row(
                     children: [
                       GestureDetector(
-                        onTap: () => Navigator.pop(context),
+                        onTap: () => context.pop(),
                         child: Image.asset(
                           ConstImages.back,
                           width: 33.w,
@@ -146,14 +91,12 @@ class _RatingsScreenState extends State<RatingsScreen> {
                       ),
                       Expanded(
                         child: Center(
-                          child: Text(
-                            'Ratings',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 18.sp,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black,
-                            ),
+                          child: MuvamTexts.titleMedium18(
+                            context,
+                            text: 'Ratings',
+                            isTextWidget: true,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                       ),
@@ -174,14 +117,12 @@ class _RatingsScreenState extends State<RatingsScreen> {
                         width: 80.w,
                         height: 80.h,
                       ),
-                Text(
-                  profileProvider.userName,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black,
-                  ),
+                MuvamTexts.titleMedium18(
+                  context,
+                  text: profileProvider.userName,
+                  isTextWidget: true,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.kBlackColor,
                 ),
                 SizedBox(height: 5.h),
                 Row(
@@ -195,7 +136,7 @@ class _RatingsScreenState extends State<RatingsScreen> {
                         size: 24.sp,
                         color: index < profileProvider.userRating
                             ? Colors.amber
-                            : Colors.grey.shade300,
+                            : AppColors.kGreyColor.withOpacity(0.3),
                       ),
                     ),
                   ),
@@ -205,16 +146,12 @@ class _RatingsScreenState extends State<RatingsScreen> {
                   padding: EdgeInsets.symmetric(horizontal: 20.w),
                   child: Align(
                     alignment: Alignment.centerLeft,
-                    child: Text(
-                      'What your passengers said',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 20.sp,
-                        fontWeight: FontWeight.w600,
-                        height: 1.0,
-                        letterSpacing: -0.2,
-                        color: Colors.black,
-                      ),
+                    child: MuvamTexts.titleMedium18(
+                      context,
+                      text: 'What your passengers said',
+                      isTextWidget: true,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.kBlackColor,
                     ),
                   ),
                 ),
@@ -223,18 +160,16 @@ class _RatingsScreenState extends State<RatingsScreen> {
                   child: isLoading
                       ? Center(
                           child: CircularProgressIndicator(
-                            color: Color(ConstColors.mainColor),
+                            color: AppColors.kMainColor,
                           ),
                         )
                       : ratings.isEmpty
                       ? Center(
-                          child: Text(
-                            'No ratings yet',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 16.sp,
-                              color: Colors.grey,
-                            ),
+                          child: MuvamTexts.bodyLarge16(
+                            context,
+                            text: 'No ratings yet',
+                            isTextWidget: true,
+                            color: AppColors.kGreyColor,
                           ),
                         )
                       : ListView.separated(

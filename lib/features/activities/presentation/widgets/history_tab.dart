@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/features/activities/data/providers/request_provider.dart';
 import 'package:muvam_rider/features/activities/presentation/widgets/history_item.dart';
-import 'package:muvam_rider/features/trips/presentation/screen/history_cancelled_screen.dart';
-import 'package:muvam_rider/features/trips/presentation/screen/history_completed_screen.dart';
 import 'package:provider/provider.dart';
 
 class HistoryTab extends StatelessWidget {
@@ -36,7 +36,7 @@ class HistoryTab extends StatelessWidget {
     return Consumer<RequestProvider>(
       builder: (context, provider, child) {
         if (provider.isLoading && !provider.hasData) {
-          return Center(child: CircularProgressIndicator.adaptive());
+          return const Center(child: CircularProgressIndicator.adaptive());
         }
 
         if (provider.errorMessage != null && !provider.hasData) {
@@ -44,22 +44,29 @@ class HistoryTab extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.error_outline, size: 48.sp, color: Colors.red),
+                Icon(
+                  Icons.error_outline,
+                  size: 48.sp,
+                  color: AppColors.kFailureColor,
+                ),
                 SizedBox(height: 16.h),
-                Text(
-                  provider.errorMessage ?? 'Failed to load rides',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w500,
-                    color: Theme.of(context).textTheme.bodyMedium?.color,
-                  ),
-                  textAlign: TextAlign.center,
+                MuvamTexts.bodyMedium14(
+                  context,
+                  text: provider.errorMessage ?? 'Failed to load rides',
+                  isTextWidget: true,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.kBlackColor,
+                  center: true,
                 ),
                 SizedBox(height: 8.h),
                 TextButton(
                   onPressed: () => provider.fetchRides(),
-                  child: Text('Retry'),
+                  child: MuvamTexts.button16(
+                    context,
+                    text: 'Retry',
+                    isTextWidget: true,
+                    color: AppColors.kMainColor,
+                  ),
                 ),
               ],
             ),
@@ -81,15 +88,13 @@ class HistoryTab extends StatelessWidget {
                   height: 120.h,
                 ),
                 SizedBox(height: 16.h),
-                Text(
-                  'Nothing here for now. Ready to take \nyour fast ride',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey,
-                  ),
-                  textAlign: TextAlign.center,
+                MuvamTexts.bodyMedium14(
+                  context,
+                  text: 'Nothing here for now. Ready to take \nyour fast ride',
+                  isTextWidget: true,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.kGreyColor,
+                  center: true,
                 ),
                 if (provider.isRefreshing) ...[
                   SizedBox(height: 16.h),
@@ -98,7 +103,7 @@ class HistoryTab extends StatelessWidget {
                     height: 20.h,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Color(ConstColors.mainColor),
+                      color: AppColors.kMainColor,
                     ),
                   ),
                 ],
@@ -125,20 +130,14 @@ class HistoryTab extends StatelessWidget {
                     : null,
                 onTap: () {
                   if (ride.isCompleted) {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            HistoryCompletedScreen(rideId: ride.id),
-                      ),
+                    context.pushNamed(
+                      'historyCompleted',
+                      extra: {'rideId': ride.id},
                     );
                   } else {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            HistoryCancelledScreen(rideId: ride.id),
-                      ),
+                    context.pushNamed(
+                      'historyCancelled',
+                      extra: {'rideId': ride.id},
                     );
                   }
                 },

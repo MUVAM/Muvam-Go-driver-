@@ -3,15 +3,15 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/svg.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
-import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/constants/text_styles.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
 import 'package:muvam_rider/core/constants/url_constants.dart';
+import 'package:muvam_rider/core/constants/app_routes.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
 import 'package:muvam_rider/core/services/call_service.dart';
 import 'package:muvam_rider/core/services/location_service.dart';
@@ -20,28 +20,32 @@ import 'package:muvam_rider/core/services/unified_notifiation_service.dart';
 import 'package:muvam_rider/core/services/websocket_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
+import 'package:muvam_rider/core/utils/extension.dart';
 import 'package:muvam_rider/features/activities/data/providers/request_provider.dart';
-import 'package:muvam_rider/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
 import 'package:muvam_rider/features/communication/data/models/chat_model.dart';
 import 'package:muvam_rider/features/communication/data/providers/chat_provider.dart';
-import 'package:muvam_rider/features/communication/presentation/screens/chat_screen.dart';
 import 'package:muvam_rider/features/communication/presentation/widgets/chat_notification_service.dart';
 import 'package:muvam_rider/features/earnings/data/provider/wallet_provider.dart';
-import 'package:muvam_rider/features/home/data/provider/driver_provider.dart';
 import 'package:muvam_rider/features/home/presentation/screens/ride_accepted_sheet.dart';
 import 'package:muvam_rider/features/home/presentation/widgets/driver_app_drawer.dart';
 import 'package:muvam_rider/features/home/presentation/widgets/ride_info_widget.dart';
+import 'package:muvam_rider/features/home/provider/driver_provider.dart';
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
-import 'package:muvam_rider/features/trips/presentation/screen/history_completed_screen.dart';
-import 'package:muvam_rider/shared/presentation/screens/onboarding_screen.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:muvam_rider/features/home/presentation/widgets/detail_row_widget.dart';
+import 'package:muvam_rider/features/home/presentation/widgets/earnings_section_widget.dart';
+import 'package:muvam_rider/features/home/presentation/widgets/cancel_reason_widget.dart';
+import 'package:muvam_rider/features/home/presentation/widgets/edit_field_widget.dart';
+import 'package:muvam_rider/features/home/presentation/widgets/vehicle_option_widget.dart';
+import 'package:muvam_rider/features/home/presentation/widgets/delivery_option_widget.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final VoidCallback? onOpenDrawer;
+  const HomeScreen({super.key, this.onOpenDrawer});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -63,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
   TimeOfDay selectedTime = TimeOfDay.now();
   int? selectedCancelReason;
   GoogleMapController? _mapController;
-  LatLng _currentLocation = LatLng(6.5244, 3.3792); // Lagos default
+  LatLng _currentLocation = LatLng(6.5244, 3.3792);
   Set<Marker> _mapMarkers = {};
   Set<Polyline> _mapPolylines = {};
   String _currentETA = '';
@@ -77,7 +81,6 @@ class _HomeScreenState extends State<HomeScreen> {
     'Holy ghost Enugu',
     'Abakpa, Enugu',
   ];
-  // final WebSocketService _webSocketService = WebSocketService();
 
   late final WebSocketService _webSocketService;
   String _rideRequestETA = '--';
@@ -94,11 +97,10 @@ class _HomeScreenState extends State<HomeScreen> {
   };
   final CallService _callService = CallService();
   DateTime? _lastBackPress;
-  final String _driverArrivalTime =
-      '5'; // Default driver arrival time in minutes
+  final String _driverArrivalTime = '5';
 
   void _showContactBottomSheet() {
-    Navigator.pop(context); // Close drawer
+    Navigator.pop(context);
     showModalBottomSheet(
       context: context,
       shape: RoundedRectangleBorder(
@@ -107,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (context) => Container(
         padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.kWhiteColor,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
         ),
         child: Column(
@@ -119,7 +121,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 Text('Contact us', style: ConstTextStyles.addHomeTitle),
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
-                  child: Icon(Icons.close, size: 24.sp),
+                  child: Icon(
+                    Icons.close,
+                    size: 24.sp,
+                    color: AppColors.kBlackColor,
+                  ),
                 ),
               ],
             ),
@@ -134,10 +140,10 @@ class _HomeScreenState extends State<HomeScreen> {
               trailing: Icon(
                 Icons.arrow_forward_ios,
                 size: 12.sp,
-                color: Colors.grey,
+                color: AppColors.kGreyColor,
               ),
               onTap: () async {
-                Navigator.pop(context); // Close bottom sheet
+                Navigator.pop(context);
                 final Uri phoneUri = Uri(scheme: 'tel', path: '07032992768');
                 if (await canLaunchUrl(phoneUri)) {
                   await launchUrl(phoneUri);
@@ -151,7 +157,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 }
               },
             ),
-            Divider(thickness: 1, color: Colors.grey.shade300),
+            Divider(thickness: 1, color: AppColors.kGreyColor.withOpacity(0.3)),
             ListTile(
               leading: Image.asset(
                 ConstImages.whatsapp,
@@ -162,13 +168,12 @@ class _HomeScreenState extends State<HomeScreen> {
               trailing: Icon(
                 Icons.arrow_forward_ios,
                 size: 12.sp,
-                color: Colors.grey,
+                color: AppColors.kGreyColor,
               ),
               onTap: () async {
-                Navigator.pop(context); // Close bottom sheet
-                // WhatsApp URL with phone number (remove leading 0, add country code)
+                Navigator.pop(context);
                 final Uri whatsappUri = Uri.parse(
-                  'https://wa.me/2347032992768', // Nigeria country code +234
+                  'https://wa.me/2347032992768',
                 );
                 if (await canLaunchUrl(whatsappUri)) {
                   await launchUrl(
@@ -208,7 +213,6 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     _webSocketService = WebSocketService.instance;
-
     _initializeServices();
   }
 
@@ -228,74 +232,43 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _initializeServices() async {
-    //=== INITIALIZING HOME SCREEN SERVICES ===');
-
-    // Check session expiration first
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final isExpired = await authProvider.isSessionExpired();
 
     if (isExpired) {
-      //🔒 Session expired, attempting token refresh...');
       final refreshed = await authProvider.refreshToken();
       if (!refreshed) {
-        //❌ Token refresh failed, redirecting to login...');
         if (mounted) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => OnboardingScreen()),
-            (route) => false,
-          );
+          context.goNamedRoute(AppRoutes.onboarding.name);
         }
         return;
       }
-      //✅ Token refreshed successfully, continuing...');
     }
 
-    // Fetch user profile
-    //👤 Fetching user profile...');
     final profileProvider = Provider.of<ProfileProvider>(
       context,
       listen: false,
     );
     await profileProvider.fetchUserProfile();
 
-    // Initialize FCM for push notifications
-    //🔔 Initializing FCM notifications...');
     try {
-      // final fcmProvider = Provider.of<FCMProvider>(context, listen: false);
       final userId = profileProvider.userProfile?.id.toString();
-      if (userId != null) {
-        // await fcmProvider.initializeFCM(userId);
-        //✅ FCM initialized for user: $userId');
-      } else {
-        //⚠️ Could not initialize FCM: User ID is null');
-      }
-    } catch (e) {
-      //❌ FCM initialization error: $e');
-    }
+      if (userId != null) {}
+    } catch (e) {}
 
-    //🔌 Connecting WebSocket...');
     try {
       await _webSocketService.connect();
-      //✅ WebSocket connection attempt completed');
 
-      Future.delayed(Duration(seconds: 2), () {
-        //🧪 Testing WebSocket connection...');
-      });
-    } catch (e) {
-      //❌ WebSocket connection failed: $e');
-    }
+      Future.delayed(Duration(seconds: 2), () {});
+    } catch (e) {}
 
-    // CRITICAL: Register chat handler GLOBALLY in HomeScreen
     _webSocketService.onChatMessage = (chatData) {
-      //💬 Global chat handler called in HomeScreen');
       _handleGlobalChatMessage(chatData);
     };
 
-    // NEW: Send "Hello" message to open WebSocket channel
     if (_activeRide != null) {
       AppLogger.log(
-        '📤 Sending initialization message to open WebSocket channel...',
+        'Sending initialization message to open WebSocket channel...',
       );
       Future.delayed(Duration(seconds: 3), () {
         if (_webSocketService.isConnected) {
@@ -303,60 +276,41 @@ class _HomeScreenState extends State<HomeScreen> {
             "type": "chat",
             "data": {"ride_id": _activeRide!['ID'], "message": "Hello"},
           });
-          //✅ Initialization message sent');
         }
       });
     }
 
-    // Setup WebSocket ride completion handler
     _webSocketService.onRideCompleted = (completionData) {
-      AppLogger.log(
-        '🎉 Ride completion received via WebSocket: $completionData',
-      );
+      AppLogger.log('Ride completion received via WebSocket: $completionData');
       if (mounted) {
-        // Close any open sheets first
         if (Navigator.of(context).canPop()) {
           Navigator.of(context).pop();
         }
 
-        // Small delay before showing completion sheet
         Future.delayed(Duration(milliseconds: 300), () {
           if (mounted) {
             _showCompletedSheet(context, _activeRide ?? {});
           }
         });
 
-        // Update local state
         final updatedRide = Map<String, dynamic>.from(_activeRide ?? {});
         updatedRide['Status'] = 'completed';
         _onRideStatusChanged(updatedRide);
       }
     };
 
-    //📍 Getting current location...');
     _getCurrentLocation();
 
-    //👤 Initializing driver status...');
     final driverProvider = Provider.of<DriverProvider>(context, listen: false);
     await driverProvider.initializeDriverStatus();
 
-    //🚗 Checking active rides...');
     _checkActiveRides();
-
-    //💰 Fetching earnings summary...');
     _fetchEarningsSummary();
-
-    //⏰ Starting ride checking timer...');
     _startRideChecking();
-
-    //✅ All services initialized');
-    //=== HOME SCREEN READY ===\n');
   }
 
-  // Add this new method to handle global chat messages
   void _handleGlobalChatMessage(Map<String, dynamic> chatData) async {
     try {
-      //📨 Processing global chat message');
       final data = chatData['data'] ?? {};
       final messageText = data['message'] ?? '';
       final senderName = data['sender_name'] ?? 'Unknown User';
@@ -366,18 +320,9 @@ class _HomeScreenState extends State<HomeScreen> {
       final timestamp =
           chatData['timestamp'] ?? DateTime.now().toIso8601String();
 
-      //   Message: "$messageText"');
-      //   From: $senderName (ID: $senderId)');
-      //   Ride: $rideId');
-
-      // Get current user ID to check if this is our own message
       final prefs = await SharedPreferences.getInstance();
       final currentUserId = prefs.getString('user_id');
 
-      //   Current User ID: $currentUserId');
-      //   Sender ID: $senderId');
-
-      // Add message to ChatProvider so it's available when user opens ChatScreen
       if (mounted && rideId > 0) {
         final chatProvider = Provider.of<ChatProvider>(context, listen: false);
         final message = ChatMessageModel(
@@ -388,21 +333,14 @@ class _HomeScreenState extends State<HomeScreen> {
         );
 
         chatProvider.addMessage(rideId, message);
-        //✅ Message added to ChatProvider');
 
-        // Only show notification if the message is NOT from the current user
         if (senderId != currentUserId) {
-          //📢 Showing notification for message from other user');
-          // Show notification
           ChatNotificationService.showChatNotification(
             context,
             senderName: senderName,
             message: messageText,
             senderImage: senderImage,
             onTap: () {
-              //🔔 Notification tapped, navigating to chat');
-
-              // Navigate to chat screen
               if (_activeRide != null) {
                 final passenger = _activeRide!['Passenger'] ?? {};
                 final passengerName =
@@ -410,46 +348,37 @@ class _HomeScreenState extends State<HomeScreen> {
                 final passengerImage =
                     passenger['profile_image'] ?? passenger['image'];
                 final passengerId = passenger['ID'] ?? 1;
-                final passengerPhone =
-                    passenger['phone'] ?? ''; // Extract phone
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChatScreen(
-                      driverId: passengerId,
-                      rideId: rideId,
-                      driverName: passengerName,
-                      driverImage: passengerImage,
-                      driverPhone: passengerPhone, // Pass phone
-                    ),
-                  ),
+                final passengerPhone = passenger['phone'] ?? '';
+                context.pushNamedRoute(
+                  AppRoutes.chat.name,
+                  extra: {
+                    'driverId': passengerId,
+                    'rideId': rideId,
+                    'driverName': passengerName,
+                    'driverImage': passengerImage,
+                    'driverPhone': passengerPhone,
+                  },
                 );
               } else {
-                // Fallback if no active ride (phone not available in this case)
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ChatScreen(
-                      rideId: rideId,
-                      driverId: senderId,
-                      driverName: senderName,
-                      driverImage: senderImage,
-                      driverPhone: null, // Phone not available in fallback
-                    ),
-                  ),
+                context.pushNamedRoute(
+                  AppRoutes.chat.name,
+                  extra: {
+                    'driverId': senderId,
+                    'rideId': rideId,
+                    'driverName': senderName,
+                    'driverImage': senderImage,
+                    'driverPhone': null,
+                  },
                 );
               }
             },
           );
         } else {
-          AppLogger.log(
-            '🔇 Skipping notification - message is from current user',
-          );
+          AppLogger.log('Skipping notification - message is from current user');
         }
       }
     } catch (e, stack) {
-      //❌ Error handling global chat message: $e');
-      //Stack: $stack');
+      AppLogger.log('Error handling global chat message: $e');
     }
   }
 
@@ -494,7 +423,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       if (mounted) setState(() => _rideRequestETA = eta);
     } catch (e) {
-      AppLogger.log('❌ ETA fetch error: $e');
+      AppLogger.log('ETA fetch error: $e');
       if (mounted) setState(() => _rideRequestETA = '--');
     }
   }
@@ -534,7 +463,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _startRideChecking() {
-    // Setup WebSocket ride request listener
     _webSocketService.onRideRequest = (rideData) {
       final driverProvider = Provider.of<DriverProvider>(
         context,
@@ -551,14 +479,13 @@ class _HomeScreenState extends State<HomeScreen> {
         _fetchAndSetRideETA(data);
       }
     };
-// Handle ride cancellation from passenger
+
     _webSocketService.onRideCancelled = (cancelData) {
-      AppLogger.log('🚫 Ride cancelled by passenger: $cancelData');
+      AppLogger.log('Ride cancelled by passenger: $cancelData');
       if (mounted) {
         final data = cancelData['data'] ?? cancelData;
         final cancelledRideId = data['RideID'] ?? data['ID'] ?? data['ride_id'];
 
-        // If driver is viewing the request sheet, dismiss it
         if (_hasActiveRequest && _nearbyRides.isNotEmpty) {
           setState(() {
             _hasActiveRequest = false;
@@ -568,27 +495,22 @@ class _HomeScreenState extends State<HomeScreen> {
           });
         }
 
-        // If driver already accepted and ride sheet is open, close it
         if (_activeRide != null) {
           final activeRideId = _activeRide!['ID'];
           if (cancelledRideId == null || cancelledRideId == activeRideId) {
-            // Close the bottom sheet
             if (Navigator.of(context).canPop()) {
               Navigator.of(context).pop();
             }
-            // Clear active ride state
             _onRideStatusChanged({..._activeRide!, 'Status': 'cancelled'});
           }
         }
-
-        // Show notification to driver
         CustomFlushbar.showError(
           context: context,
           message: 'Ride was cancelled by the passenger',
         );
       }
     };
-    // Check nearby rides every 15 seconds (fallback for missed WebSocket messages)
+
     _rideCheckTimer = Timer.periodic(Duration(seconds: 15), (timer) {
       final driverProvider = Provider.of<DriverProvider>(
         context,
@@ -598,8 +520,6 @@ class _HomeScreenState extends State<HomeScreen> {
         _checkNearbyRides();
       }
     });
-
-    // Driver location update timer (always when online)
     _locationUpdateTimer = Timer.periodic(Duration(seconds: 30), (timer) async {
       final driverProvider = Provider.of<DriverProvider>(
         context,
@@ -609,28 +529,18 @@ class _HomeScreenState extends State<HomeScreen> {
         _updateDriverLocationToBackend();
       }
     });
-
     _sessionCheckTimer = Timer.periodic(Duration(minutes: 1), (timer) async {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final isExpired = await authProvider.isSessionExpired();
       if (isExpired) {
-        AppLogger.log(
-          '🔒 Session expired in timer, attempting token refresh...',
-        );
+        AppLogger.log('Session expired in timer, attempting token refresh...');
         final refreshed = await authProvider.refreshToken();
         if (!refreshed) {
-          //❌ Token refresh failed, redirecting to login...');
           timer.cancel();
           if (mounted) {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (context) => OnboardingScreen()),
-              (route) => false,
-            );
+            context.goNamedRoute(AppRoutes.onboarding.name);
           }
-        } else {
-          //✅ Token refreshed silently from session timer.');
-        }
+        } else {}
       }
     });
   }
@@ -645,7 +555,6 @@ class _HomeScreenState extends State<HomeScreen> {
       final token = prefs.getString('auth_token');
 
       if (token != null) {
-        // Use ride-specific location update if in active ride, otherwise general update
         Map<String, dynamic> result;
         if (_activeRide != null) {
           result = await ApiService.updateDriverLocation(
@@ -664,13 +573,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
         if (result['success'] == true) {
           AppLogger.log(
-            '✅ Driver location updated: ${position.latitude}, ${position.longitude}',
+            'Driver location updated: ${position.latitude}, ${position.longitude}',
           );
         }
       }
-    } catch (e) {
-      //❌ Failed to update driver location: $e');
-    }
+    } catch (e) {}
   }
 
   Future<void> _checkNearbyRides() async {
@@ -680,12 +587,10 @@ class _HomeScreenState extends State<HomeScreen> {
     if (token != null) {
       final result = await ApiService.getNearbyRides(token);
 
-      // Check for invalid token error
       if (result['success'] == false) {
         final errorMessage = result['message']?.toString().toLowerCase() ?? '';
         if (errorMessage.contains('invalid token') ||
             errorMessage.contains('token')) {
-          //🔒 Invalid token detected, logging out...');
           await _handleInvalidToken();
           return;
         }
@@ -705,12 +610,10 @@ class _HomeScreenState extends State<HomeScreen> {
             'PaymentMethod': ride['PaymentMethod'] ?? 'in_car',
             'Passenger': ride['Passenger'] ?? {},
             'Status': ride['Status'] ?? 'requested',
-            // CRITICAL: Include location data for markers
             'PickupLocation': ride['PickupLocation'],
             'DestLocation': ride['DestLocation'],
           };
         }).toList();
-
         if (transformedRides.isNotEmpty && !_hasActiveRequest && mounted) {
           setState(() {
             _nearbyRides = transformedRides;
@@ -722,91 +625,54 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /// Handles invalid/expired token: first tries to refresh, only logs out if refresh fails.
   Future<void> _handleInvalidToken() async {
     try {
-      //🔄 Invalid token detected - attempting refresh...');
-
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final refreshed = await authProvider.refreshToken();
 
       if (refreshed) {
         AppLogger.log(
-          '✅ Token refreshed successfully after invalid token detection.',
+          'Token refreshed successfully after invalid token detection.',
         );
-        // Token refreshed — no need to log out, continue normally
         return;
       }
-
-      // Refresh failed — log the user out
-      //❌ Token refresh failed - logging out user');
-
-      // Cancel all timers
       _rideCheckTimer?.cancel();
       _sessionCheckTimer?.cancel();
       _locationUpdateTimer?.cancel();
-
-      // Disconnect WebSocket
       _webSocketService.disconnect();
-
-      // Clear all stored data
       final prefs = await SharedPreferences.getInstance();
       await prefs.clear();
-
-      //✅ User data cleared');
-
-      // Show message to user and navigate to login
       if (mounted) {
         CustomFlushbar.showError(
           context: context,
           message: 'Session expired. Please login again.',
         );
-
         await Future.delayed(Duration(seconds: 1));
-
         if (mounted) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => OnboardingScreen()),
-            (route) => false,
-          );
+          context.goNamedRoute(AppRoutes.onboarding.name);
         }
       }
-    } catch (e) {
-      //❌ Error handling invalid token: $e');
-    }
+    } catch (e) {}
   }
-
-  // _updateDriverLocation method removed - will be added back later
 
   Future<void> _acceptRide() async {
     if (_nearbyRides.isEmpty || _currentRideIndex >= _nearbyRides.length)
       return;
-
     final ride = _nearbyRides[_currentRideIndex];
-    // Extract ride ID from WebSocket data structure
     final rideData = ride['data'] ?? ride;
     final rideId = rideData['RideID'] ?? rideData['ID'] ?? 0;
-
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
-
     if (token != null) {
       final result = await ApiService.acceptRide(token, rideId);
-
-      //ACCEPT RIDE RESPONSE: $result');
-
-      //ACCEPT RIDE RESPONSE: $result');
       if (result['success'] == true) {
         if (mounted) {
           setState(() {
             _hasActiveRequest = false;
             _nearbyRides.clear();
-            _rideRequestETA = '--'; // add this
+            _rideRequestETA = '--';
           });
         }
-
-        // Transform WebSocket data to expected format for ride sheet
         final transformedRide = {
           'ID': rideId,
           'Price': rideData['Price']?.toString() ?? '0',
@@ -826,22 +692,16 @@ class _HomeScreenState extends State<HomeScreen> {
               },
           'ServiceType': rideData['ServiceType'] ?? 'taxi',
           'VehicleType': rideData['VehicleType'] ?? 'regular',
-          // CRITICAL: Include location data for ride tracking
           'PickupLocation': rideData['PickupLocation'],
           'DestLocation': rideData['DestLocation'],
           'PickupAddress': rideData['PickupAddress'] ?? 'Unknown pickup',
           'DestAddress': rideData['DestAddress'] ?? 'Unknown destination',
-          // Keep original data structure for tracking service
           'data': rideData,
         };
-
-        // Get passenger ID for notification
         final passengerId =
             transformedRide['Passenger']['ID']?.toString() ??
             rideData['Passenger']?['ID']?.toString() ??
             rideData['PassengerID']?.toString();
-
-        // Send notification to passenger about ride acceptance
         if (passengerId != null) {
           try {
             await UnifiedNotificationService.sendRideNotification(
@@ -851,40 +711,17 @@ class _HomeScreenState extends State<HomeScreen> {
               chatRoomId: rideId.toString(),
             );
             AppLogger.log(
-              '✅ Ride accepted notification sent to passenger $passengerId',
+              'Ride accepted notification sent to passenger $passengerId',
             );
-          } catch (e) {
-            //❌ Failed to send ride accepted notification: $e');
-          }
+          } catch (e) {}
         }
-
         AppLogger.log("PASSENGER ID ${transformedRide['Passenger']['ID']}");
-        //🔄 TRANSFORMED RIDE DATA:');
-        //   Transformed keys: ${transformedRide.keys.toList()}');
         AppLogger.log(
           '   PickupLocation: ${transformedRide['PickupLocation']}',
         );
-        //   DestLocation: ${transformedRide['DestLocation']}');
-        //   Has data field: ${transformedRide['data'] != null}');
-
-        // CRITICAL DEBUG: Log ALL location-related fields from rideData
-        //🚨 LOCATION DATA DEBUG (from rideData):');
-        //   rideData keys: ${rideData.keys.toList()}');
-        //   PickupLocation: ${rideData['PickupLocation']}');
-        //   DestLocation: ${rideData['DestLocation']}');
-        //   PickupLat: ${rideData['PickupLat']}');
-        //   PickupLng: ${rideData['PickupLng']}');
-        //   DestLat: ${rideData['DestLat']}');
-        //   DestLng: ${rideData['DestLng']}');
-        //   pickup_location: ${rideData['pickup_location']}');
-        //   dest_location: ${rideData['dest_location']}');
-
-        // If location coordinates are missing, geocode the addresses
         if (transformedRide['PickupLocation'] == null ||
             transformedRide['DestLocation'] == null) {
-          AppLogger.log(
-            '🌍 Location coordinates missing, geocoding addresses...',
-          );
+          AppLogger.log('Location coordinates missing, geocoding addresses...');
           await _geocodeAndShowRide(transformedRide, result['data']);
         } else {
           _showRideAcceptedSheet(transformedRide, result['data']);
@@ -905,26 +742,16 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final pickupAddress = ride['PickupAddress'] ?? '';
       final destAddress = ride['DestAddress'] ?? '';
-
-      //📍 Geocoding pickup address: $pickupAddress');
-      //📍 Geocoding dest address: $destAddress');
-
-      // Geocode pickup address
       final pickupUrl = Uri.parse(
         'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(pickupAddress)}&key=${UrlConstants.googleMapsApiKey}',
       );
-
       final pickupResponse = await http.get(pickupUrl);
       final pickupData = json.decode(pickupResponse.body);
-
-      // Geocode destination address
       final destUrl = Uri.parse(
         'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(destAddress)}&key=${UrlConstants.googleMapsApiKey}',
       );
-
       final destResponse = await http.get(destUrl);
       final destData = json.decode(destResponse.body);
-
       if (pickupData['status'] == 'OK' &&
           pickupData['results'].isNotEmpty &&
           destData['status'] == 'OK' &&
@@ -935,34 +762,22 @@ class _HomeScreenState extends State<HomeScreen> {
             pickupData['results'][0]['geometry']['location']['lng'];
         final destLat = destData['results'][0]['geometry']['location']['lat'];
         final destLng = destData['results'][0]['geometry']['location']['lng'];
-
-        //✅ Geocoded pickup: $pickupLat, $pickupLng');
-        //✅ Geocoded dest: $destLat, $destLng');
-
-        // Convert to WKB format (POINT format) for compatibility
         final pickupWKB = 'POINT($pickupLng $pickupLat)';
         final destWKB = 'POINT($destLng $destLat)';
 
-        // Update ride data with geocoded locations
         ride['PickupLocation'] = pickupWKB;
         ride['DestLocation'] = destWKB;
 
-        // Also update the nested data object
         if (ride['data'] != null) {
           ride['data']['PickupLocation'] = pickupWKB;
           ride['data']['DestLocation'] = destWKB;
         }
 
-        //✅ Updated ride with geocoded locations');
         _showRideAcceptedSheet(ride, acceptedData);
       } else {
-        //❌ Geocoding failed, showing ride without markers');
-        //   Pickup status: ${pickupData['status']}');
-        //   Dest status: ${destData['status']}');
         _showRideAcceptedSheet(ride, acceptedData);
       }
     } catch (e) {
-      //❌ Error geocoding addresses: $e');
       _showRideAcceptedSheet(ride, acceptedData);
     }
   }
@@ -970,25 +785,16 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _declineRide() async {
     if (_nearbyRides.isEmpty || _currentRideIndex >= _nearbyRides.length)
       return;
-
     final ride = _nearbyRides[_currentRideIndex];
-    // Extract ride ID from WebSocket data structure
     final rideData = ride['data'] ?? ride;
     final rideId = rideData['RideID'] ?? rideData['ID'] ?? 0;
-
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
-
     if (token != null) {
       final result = await ApiService.rejectRide(token, rideId);
-      //REJECT RIDE RESPONSE: $result');
       if (result['success'] == true) {
-        //Ride rejected successfully');
-      } else {
-        //Failed to reject ride: ${result['message']}');
-      }
+      } else {}
     }
-
     if (mounted) {
       setState(() {
         _currentRideIndex++;
@@ -996,27 +802,19 @@ class _HomeScreenState extends State<HomeScreen> {
           _hasActiveRequest = false;
           _nearbyRides.clear();
           _currentRideIndex = 0;
-          _rideRequestETA = '--'; // add this
+          _rideRequestETA = '--';
         }
       });
     }
   }
 
   String _calculateETA(Map<String, dynamic> ride) {
-    // The driver's current location is tracked in _currentLocation.
-    // Extract the pickup coordinates from the ride data so we can compute
-    // the real distance — and therefore a real ETA — to the passenger.
-
     try {
       final rideData = ride['data'] ?? ride;
-
       double? pickupLat;
       double? pickupLng;
-
-      // Try to extract lat/lng from the WKB POINT string (e.g. "POINT(3.123 6.456)")
       final pickupLocationRaw =
           rideData['PickupLocation'] ?? rideData['pickup_location'];
-
       if (pickupLocationRaw != null) {
         final pointStr = pickupLocationRaw.toString();
         final match = RegExp(
@@ -1027,42 +825,33 @@ class _HomeScreenState extends State<HomeScreen> {
           pickupLat = double.tryParse(match.group(2) ?? '');
         }
       }
-
-      // Fallback: separate lat/lng fields
       pickupLat ??= double.tryParse(
         (rideData['PickupLat'] ?? rideData['pickup_lat'] ?? '').toString(),
       );
       pickupLng ??= double.tryParse(
         (rideData['PickupLng'] ?? rideData['pickup_lng'] ?? '').toString(),
       );
-
       if (pickupLat == null ||
           pickupLng == null ||
           pickupLat == 0.0 ||
           pickupLng == 0.0) {
         AppLogger.log(
-          '⚠️ ETA: No valid pickup coordinates found, showing placeholder',
+          'ETA: No valid pickup coordinates found, showing placeholder',
         );
         return '--';
       }
-
-      // Calculate distance in metres between driver and pickup
       final distanceMeters = Geolocator.distanceBetween(
         _currentLocation.latitude,
         _currentLocation.longitude,
         pickupLat,
         pickupLng,
       );
-
-      // Assume city speed of 30 km/h
       final distanceKm = distanceMeters / 1000;
       final timeMinutes = ((distanceKm / 30) * 60).round();
-
       if (timeMinutes < 1) return '< 1 min';
       if (timeMinutes == 1) return '1 min';
       return '$timeMinutes mins';
     } catch (e) {
-      //❌ ETA calculation error: $e');
       return '--';
     }
   }
@@ -1085,13 +874,11 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _updateDriverStatus(bool online) async {
     final driverProvider = Provider.of<DriverProvider>(context, listen: false);
     bool success;
-
     if (online) {
       success = await driverProvider.setOnline();
     } else {
       success = await driverProvider.setOffline();
     }
-
     if (!success) {
       CustomFlushbar.showError(
         context: context,
@@ -1124,15 +911,11 @@ class _HomeScreenState extends State<HomeScreen> {
   void _centerMapOnActiveRide() {
     if (_activeRide == null || _mapController == null) {
       AppLogger.log(
-        '⚠️ Cannot center map: activeRide=${_activeRide != null}, mapController=${_mapController != null}',
+        'Cannot center map: activeRide=${_activeRide != null}, mapController=${_mapController != null}',
       );
       return;
     }
-
-    //🎯 Attempting to center map on active ride');
-
     try {
-      // If we have markers, use them to center the map
       if (_mapMarkers.isNotEmpty) {
         Marker? pickupMarker;
         try {
@@ -1142,31 +925,24 @@ class _HomeScreenState extends State<HomeScreen> {
         } catch (e) {
           pickupMarker = null;
         }
-
         if (pickupMarker != null) {
           _mapController!.animateCamera(
             CameraUpdate.newLatLngZoom(pickupMarker.position, 14),
           );
           AppLogger.log(
-            '✅ Map centered on pickup marker: ${pickupMarker.position}',
+            'Map centered on pickup marker: ${pickupMarker.position}',
           );
           return;
         }
-
-        // Fallback to any available marker
         final anyMarker = _mapMarkers.first;
         _mapController!.animateCamera(
           CameraUpdate.newLatLngZoom(anyMarker.position, 14),
         );
         AppLogger.log(
-          '✅ Map centered on available marker: ${anyMarker.position}',
+          'Map centered on available marker: ${anyMarker.position}',
         );
-      } else {
-        //⚠️ No markers available for centering');
-      }
-    } catch (e) {
-      //❌ Error centering map on active ride: $e');
-    }
+      } else {}
+    } catch (e) {}
   }
 
   @override
@@ -1199,12 +975,10 @@ class _HomeScreenState extends State<HomeScreen> {
         drawer: DriverAppDrawer(onContactUsTap: _showContactBottomSheet),
         body: Stack(
           children: [
-            // Google Map
             GoogleMap(
               onMapCreated: (GoogleMapController controller) {
                 _mapController = controller;
                 RideTrackingService.setMapController(controller);
-                // If there's an active ride when map is created, center on it
                 if (_activeRide != null) {
                   _centerMapOnActiveRide();
                 }
@@ -1220,15 +994,6 @@ class _HomeScreenState extends State<HomeScreen> {
               markers: _mapMarkers,
               polylines: _mapPolylines,
             ),
-            // Center location pin
-            // Center(
-            //   child: Icon(
-            //     Icons.location_on,
-            //     color: Color(ConstColors.mainColor),
-            //     size: 40.sp,
-            //   ),
-            // ),
-            // Online/Offline Toggle
             Positioned(
               top: 60.h,
               left: 109.w,
@@ -1250,8 +1015,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Container(
                               decoration: BoxDecoration(
                                 color: driverProvider.isOnline
-                                    ? Color(ConstColors.mainColor)
-                                    : Color(0xFFB1B1B1).withOpacity(0.3),
+                                    ? AppColors.kMainColor
+                                    : AppColors.kGreyColor.withOpacity(0.3),
                                 borderRadius: BorderRadius.only(
                                   topLeft: Radius.circular(15.r),
                                   bottomLeft: Radius.circular(15.r),
@@ -1266,14 +1031,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                           strokeWidth: 2,
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
-                                                Colors.white,
+                                                AppColors.kWhiteColor,
                                               ),
                                         ),
                                       )
                                     : Text(
                                         'Online',
                                         style: TextStyle(
-                                          color: Colors.white,
+                                          color: AppColors.kWhiteColor,
                                           fontSize: 14.sp,
                                           fontWeight: FontWeight.w500,
                                         ),
@@ -1290,8 +1055,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Container(
                               decoration: BoxDecoration(
                                 color: !driverProvider.isOnline
-                                    ? Colors.red
-                                    : Color(0xFFB1B1B1).withOpacity(0.3),
+                                    ? AppColors.kError
+                                    : AppColors.kGreyColor.withOpacity(0.3),
                                 borderRadius: BorderRadius.only(
                                   topRight: Radius.circular(15.r),
                                   bottomRight: Radius.circular(15.r),
@@ -1306,14 +1071,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                           strokeWidth: 2,
                                           valueColor:
                                               AlwaysStoppedAnimation<Color>(
-                                                Colors.white,
+                                                AppColors.kWhiteColor,
                                               ),
                                         ),
                                       )
                                     : Text(
                                         'Offline',
                                         style: TextStyle(
-                                          color: Colors.white,
+                                          color: AppColors.kWhiteColor,
                                           fontSize: 14.sp,
                                           fontWeight: FontWeight.w500,
                                         ),
@@ -1332,18 +1097,20 @@ class _HomeScreenState extends State<HomeScreen> {
               top: 50.h,
               left: 20.w,
               child: GestureDetector(
-                onTap: () {
-                  Scaffold.of(context).openDrawer();
-                },
+                onTap: () => widget.onOpenDrawer?.call(),
                 child: Container(
                   width: 45.w,
                   height: 45.h,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.kWhiteColor,
                     borderRadius: BorderRadius.circular(25.r),
                   ),
                   padding: EdgeInsets.all(10.w),
-                  child: Icon(Icons.menu, size: 24.sp),
+                  child: Icon(
+                    Icons.menu,
+                    size: 24.sp,
+                    color: AppColors.kBlackColor,
+                  ),
                 ),
               ),
             ),
@@ -1353,10 +1120,8 @@ class _HomeScreenState extends State<HomeScreen> {
               child: GestureDetector(
                 onTap: () {
                   if (_activeRide != null) {
-                    // If there's an active ride, center on it
                     _centerMapOnActiveRide();
                   } else {
-                    // Otherwise center on current location
                     _getCurrentLocation();
                   }
                 },
@@ -1364,7 +1129,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   width: 50.w,
                   height: 50.h,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.kWhiteColor,
                     borderRadius: BorderRadius.circular(25.r),
                   ),
                   padding: EdgeInsets.all(10.w),
@@ -1373,11 +1138,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         ? Icons.directions_car
                         : Icons.my_location,
                     size: 24.sp,
+                    color: AppColors.kMainColor,
                   ),
                 ),
               ),
             ),
-            // Stop Address Marker (if exists)
             if (_activeRide != null &&
                 _activeRide!['StopAddress'] != null &&
                 _activeRide!['StopAddress'].toString().isNotEmpty)
@@ -1412,7 +1177,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           height: 5.h,
                           margin: EdgeInsets.symmetric(vertical: 11.75.h),
                           decoration: BoxDecoration(
-                            color: Colors.grey.shade300,
+                            color: AppColors.kGreyColor.withOpacity(0.3),
                             borderRadius: BorderRadius.circular(2.5.r),
                           ),
                         ),
@@ -1426,7 +1191,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               height: 50.h,
                               padding: EdgeInsets.symmetric(horizontal: 10.w),
                               decoration: BoxDecoration(
-                                color: Color(0xFFB1B1B1).withOpacity(0.12),
+                                color: AppColors.kGreyColor.withOpacity(0.12),
                                 borderRadius: BorderRadius.circular(8.r),
                               ),
                               child: Row(
@@ -1486,36 +1251,34 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             ),
                             SizedBox(height: 20.h),
-                            _buildEarningsSection(
-                              'Today\'s earning',
-                              '₦${_earningsData['total_earnings']}',
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => AnalyticsScreen(),
-                                ),
+                            EarningsSectionWidget(
+                              title: 'Today\'s earning',
+                              value: '₦${_earningsData['total_earnings']}',
+                              onTap: () => context.pushNamedRoute(
+                                AppRoutes.analytics.name,
                               ),
                             ),
-                            Divider(color: Color(0xFFE0E0E0), thickness: 1),
-                            _buildEarningsSection(
-                              'Today\'s rides',
-                              '${_earningsData['total_rides']}',
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => AnalyticsScreen(),
-                                ),
+                            Divider(
+                              color: AppColors.kGreyColor.withOpacity(0.3),
+                              thickness: 1,
+                            ),
+                            EarningsSectionWidget(
+                              title: 'Today\'s rides',
+                              value: '${_earningsData['total_rides']}',
+                              onTap: () => context.pushNamedRoute(
+                                AppRoutes.analytics.name,
                               ),
                             ),
-                            Divider(color: Color(0xFFE0E0E0), thickness: 1),
-                            _buildEarningsSection(
-                              'Total ride completed',
-                              '${_earningsData['total_rides_completed']}',
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => AnalyticsScreen(),
-                                ),
+                            Divider(
+                              color: AppColors.kGreyColor.withOpacity(0.3),
+                              thickness: 1,
+                            ),
+                            EarningsSectionWidget(
+                              title: 'Total ride completed',
+                              value:
+                                  '${_earningsData['total_rides_completed']}',
+                              onTap: () => context.pushNamedRoute(
+                                AppRoutes.analytics.name,
                               ),
                             ),
                             SizedBox(height: 20.h),
@@ -1527,14 +1290,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               },
             ),
-            // Ride info widget
             if (_activeRide != null && _currentETA.isNotEmpty)
               RideInfoWidget(
                 eta: _currentETA,
                 location: _currentLocationName,
                 rideStatus: _activeRide!['Status'] ?? 'accepted',
               ),
-            // Floating button to reopen ride sheet when dismissed
             if (_activeRide != null && !_isRideSheetVisible)
               Positioned(
                 bottom: 120.h,
@@ -1543,7 +1304,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   width: 56.w,
                   height: 56.h,
                   decoration: BoxDecoration(
-                    color: Color(ConstColors.mainColor),
+                    color: AppColors.kMainColor,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
@@ -1561,7 +1322,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Center(
                         child: Icon(
                           Icons.directions_car,
-                          color: Colors.white,
+                          color: AppColors.kWhiteColor,
                           size: 28.sp,
                         ),
                       ),
@@ -1569,23 +1330,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-            // Ride request overlay
-            // if (_hasActiveRequest && _nearbyRides.isNotEmpty)
-            //   _buildRideRequestSheet(),
-            // Ride request overlay with dark background
             if (_hasActiveRequest && _nearbyRides.isNotEmpty) ...[
-              // Dark overlay behind the sheet
               Positioned.fill(
                 child: GestureDetector(
-                  onTap: () {}, // Absorbs taps so map below isn't clickable
-                  child: Container(color: Colors.black.withValues(alpha: 0.5)),
+                  onTap: () {},
+                  child: Container(
+                    color: AppColors.kBlackColor.withOpacity(0.5),
+                  ),
                 ),
               ),
               _buildRideRequestSheet(),
             ],
-            // Navigation widget positioned on top of the ride sheet
-
-            // Full-screen incoming call overlay
           ],
         ),
       ),
@@ -1604,7 +1359,7 @@ class _HomeScreenState extends State<HomeScreen> {
           height: 600.h,
           padding: EdgeInsets.all(20.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.kWhiteColor,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
           ),
           child: SingleChildScrollView(
@@ -1616,7 +1371,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 5.h,
                   margin: EdgeInsets.only(bottom: 20.h),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color: AppColors.kGreyColor.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(2.5.r),
                   ),
                 ),
@@ -1629,64 +1384,113 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     GestureDetector(
                       onTap: () => Navigator.pop(context),
-                      child: Icon(Icons.close, size: 24.sp),
+                      child: Icon(
+                        Icons.close,
+                        size: 24.sp,
+                        color: AppColors.kBlackColor,
+                      ),
                     ),
                   ],
                 ),
                 SizedBox(height: 20.h),
-                Divider(thickness: 1, color: Colors.grey.shade300),
+                Divider(
+                  thickness: 1,
+                  color: AppColors.kGreyColor.withOpacity(0.3),
+                ),
                 SizedBox(height: 20.h),
-                _buildVehicleOption(
-                  0,
-                  'Regular vehicle',
-                  '20 min | 4 passengers',
-                  '₦12,000',
-                  setModalState,
+                VehicleOptionWidget(
+                  index: 0,
+                  title: 'Regular vehicle',
+                  subtitle: '20 min | 4 passengers',
+                  price: '₦12,000',
+                  selectedVehicle: selectedVehicle,
+                  onTap: () {
+                    setState(() {
+                      selectedVehicle = 0;
+                      selectedDelivery = null;
+                    });
+                    setModalState(() {});
+                  },
                 ),
                 SizedBox(height: 15.h),
-                _buildVehicleOption(
-                  1,
-                  'Fancy vehicle',
-                  '20 min | 4 passengers',
-                  '₦12,000',
-                  setModalState,
+                VehicleOptionWidget(
+                  index: 1,
+                  title: 'Fancy vehicle',
+                  subtitle: '20 min | 4 passengers',
+                  price: '₦12,000',
+                  selectedVehicle: selectedVehicle,
+                  onTap: () {
+                    setState(() {
+                      selectedVehicle = 1;
+                      selectedDelivery = null;
+                    });
+                    setModalState(() {});
+                  },
                 ),
                 SizedBox(height: 15.h),
-                _buildVehicleOption(
-                  2,
-                  'VIP',
-                  '20 min | 4 passengers',
-                  '₦12,000',
-                  setModalState,
+                VehicleOptionWidget(
+                  index: 2,
+                  title: 'VIP',
+                  subtitle: '20 min | 4 passengers',
+                  price: '₦12,000',
+                  selectedVehicle: selectedVehicle,
+                  onTap: () {
+                    setState(() {
+                      selectedVehicle = 2;
+                      selectedDelivery = null;
+                    });
+                    setModalState(() {});
+                  },
                 ),
                 SizedBox(height: 30.h),
                 Text('Delivery service', style: ConstTextStyles.deliveryTitle),
                 SizedBox(height: 20.h),
-                _buildDeliveryOption(
-                  0,
-                  'Bicycle',
-                  '20 min',
-                  '₦12,000',
-                  ConstImages.bike,
-                  setModalState,
+                DeliveryOptionWidget(
+                  index: 0,
+                  title: 'Bicycle',
+                  subtitle: '20 min',
+                  price: '₦12,000',
+                  imagePath: ConstImages.bike,
+                  selectedDelivery: selectedDelivery,
+                  onTap: () {
+                    setState(() {
+                      selectedDelivery = 0;
+                      selectedVehicle = null;
+                    });
+                    setModalState(() {});
+                  },
                 ),
                 SizedBox(height: 15.h),
-                _buildDeliveryOption(
-                  1,
-                  'Vehicle',
-                  '20 min',
-                  '₦12,000',
-                  ConstImages.car,
-                  setModalState,
+                DeliveryOptionWidget(
+                  index: 1,
+                  title: 'Vehicle',
+                  subtitle: '20 min',
+                  price: '₦12,000',
+                  imagePath: ConstImages.car,
+                  selectedDelivery: selectedDelivery,
+                  onTap: () {
+                    setState(() {
+                      selectedDelivery = 1;
+                      selectedVehicle = null;
+                    });
+                    setModalState(() {});
+                  },
                 ),
                 SizedBox(height: 15.h),
-                _buildDeliveryOption(
-                  2,
-                  'Motor bike',
-                  '20 min',
-                  '₦12,000',
-                  ConstImages.car,
-                  setModalState,
+                DeliveryOptionWidget(
+                  index: 2,
+                  title: 'Motor bike',
+                  subtitle: '20 min',
+                  price: '₦12,000',
+                  imagePath: ConstImages.car,
+                  selectedDelivery: selectedDelivery,
+                  onTap: () {
+                    setState(() {
+                      selectedDelivery = 2;
+                      selectedVehicle = null;
+                    });
+                    setModalState(() {});
+                  },
                 ),
                 SizedBox(height: 30.h),
                 Container(
@@ -1694,8 +1498,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 48.h,
                   decoration: BoxDecoration(
                     color: (selectedVehicle != null || selectedDelivery != null)
-                        ? Color(ConstColors.mainColor)
-                        : Color(ConstColors.fieldColor),
+                        ? AppColors.kMainColor
+                        : AppColors.kGreyColor,
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: GestureDetector(
@@ -1709,7 +1513,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Text(
                         'Select vehicle',
                         style: TextStyle(
-                          color: Colors.white,
+                          color: AppColors.kWhiteColor,
                           fontSize: 16.sp,
                           fontWeight: FontWeight.w600,
                         ),
@@ -1720,139 +1524,6 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildVehicleOption(
-    int index,
-    String title,
-    String subtitle,
-    String price,
-    StateSetter setModalState,
-  ) {
-    final isSelected = selectedVehicle == index;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedVehicle = index;
-          selectedDelivery = null;
-        });
-        setModalState(() {});
-      },
-      child: Container(
-        width: 353.w,
-        height: 65.h,
-        padding: EdgeInsets.symmetric(horizontal: 8.w),
-        decoration: BoxDecoration(
-          color: isSelected ? Color(ConstColors.mainColor) : Colors.transparent,
-          border: Border.all(
-            color: isSelected
-                ? Color(ConstColors.mainColor)
-                : Colors.grey.shade300,
-            width: 0.7,
-          ),
-          borderRadius: BorderRadius.circular(12.r),
-        ),
-        child: Row(
-          children: [
-            Image.asset(ConstImages.car, width: 55.w, height: 26.h),
-            SizedBox(width: 15.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    title,
-                    style: ConstTextStyles.vehicleTitle.copyWith(
-                      color: isSelected ? Colors.white : Colors.black,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: ConstTextStyles.vehicleSubtitle.copyWith(
-                      color: isSelected ? Colors.white : Colors.black,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Text(
-              price,
-              style: ConstTextStyles.vehicleTitle.copyWith(
-                color: isSelected ? Colors.white : Colors.black,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDeliveryOption(
-    int index,
-    String title,
-    String subtitle,
-    String price,
-    String imagePath,
-    StateSetter setModalState,
-  ) {
-    final isSelected = selectedDelivery == index;
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedDelivery = index;
-          selectedVehicle = null;
-        });
-        setModalState(() {});
-      },
-      child: Container(
-        width: 353.w,
-        height: 65.h,
-        padding: EdgeInsets.symmetric(horizontal: 8.w),
-        decoration: BoxDecoration(
-          color: isSelected ? Color(ConstColors.mainColor) : Colors.transparent,
-          border: Border.all(
-            color: isSelected
-                ? Color(ConstColors.mainColor)
-                : Colors.grey.shade300,
-            width: 0.7,
-          ),
-          borderRadius: BorderRadius.circular(12.r),
-        ),
-        child: Row(
-          children: [
-            Image.asset(imagePath, width: 55.w, height: 26.h),
-            SizedBox(width: 15.w),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    title,
-                    style: ConstTextStyles.vehicleTitle.copyWith(
-                      color: isSelected ? Colors.white : Colors.black,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: ConstTextStyles.vehicleSubtitle.copyWith(
-                      color: isSelected ? Colors.white : Colors.black,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Text(
-              price,
-              style: ConstTextStyles.vehicleTitle.copyWith(
-                color: isSelected ? Colors.white : Colors.black,
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -1874,7 +1545,7 @@ class _HomeScreenState extends State<HomeScreen> {
           height: 400.h,
           padding: EdgeInsets.all(20.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.kWhiteColor,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
           ),
           child: Column(
@@ -1884,7 +1555,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 5.h,
                 margin: EdgeInsets.only(bottom: 20.h),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: AppColors.kGreyColor.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2.5.r),
                 ),
               ),
@@ -1892,7 +1563,11 @@ class _HomeScreenState extends State<HomeScreen> {
                 onTap: () => _showAddNoteSheet(),
                 child: Column(
                   children: [
-                    Icon(Icons.message, size: 25.67.w),
+                    Icon(
+                      Icons.message,
+                      size: 25.67.w,
+                      color: AppColors.kBlackColor,
+                    ),
                     SizedBox(height: 4.67.h),
                     Text(
                       'Add note',
@@ -1903,14 +1578,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         fontWeight: FontWeight.w400,
                         height: 22 / 16,
                         letterSpacing: -0.41,
-                        color: Colors.black,
+                        color: AppColors.kBlackColor,
                       ),
                     ),
                   ],
                 ),
               ),
               SizedBox(height: 20.h),
-              Divider(thickness: 1, color: Colors.grey.shade300),
+              Divider(
+                thickness: 1,
+                color: AppColors.kGreyColor.withOpacity(0.3),
+              ),
               SizedBox(height: 20.h),
               Row(
                 children: [
@@ -1944,7 +1622,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Text(
                         'Fixed',
                         style: ConstTextStyles.fixedPrice.copyWith(
-                          color: Color(ConstColors.recentLocationColor),
+                          color: AppColors.kGreyColor,
                         ),
                       ),
                     ],
@@ -1955,12 +1633,19 @@ class _HomeScreenState extends State<HomeScreen> {
                       Navigator.pop(context);
                       _showVehicleSelection();
                     },
-                    child: Icon(Icons.arrow_forward_ios, size: 16.sp),
+                    child: Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16.sp,
+                      color: AppColors.kGreyColor,
+                    ),
                   ),
                 ],
               ),
               SizedBox(height: 20.h),
-              Divider(thickness: 1, color: Colors.grey.shade300),
+              Divider(
+                thickness: 1,
+                color: AppColors.kGreyColor.withOpacity(0.3),
+              ),
               SizedBox(height: 20.h),
               GestureDetector(
                 onTap: () => _showPaymentMethods(),
@@ -1974,7 +1659,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         style: ConstTextStyles.vehicleTitle,
                       ),
                     ),
-                    Icon(Icons.arrow_forward_ios, size: 16.sp),
+                    Icon(
+                      Icons.arrow_forward_ios,
+                      size: 16.sp,
+                      color: AppColors.kGreyColor,
+                    ),
                   ],
                 ),
               ),
@@ -1991,15 +1680,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       height: 47.h,
                       padding: EdgeInsets.all(10.w),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: Color(ConstColors.mainColor)),
+                        color: AppColors.kWhiteColor,
+                        border: Border.all(color: AppColors.kMainColor),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Center(
                         child: Text(
                           'Book Later',
                           style: TextStyle(
-                            color: Color(ConstColors.mainColor),
+                            color: AppColors.kMainColor,
                             fontSize: 16.sp,
                             fontWeight: FontWeight.w600,
                           ),
@@ -2018,14 +1707,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       height: 47.h,
                       padding: EdgeInsets.all(10.w),
                       decoration: BoxDecoration(
-                        color: Color(ConstColors.mainColor),
+                        color: AppColors.kMainColor,
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Center(
                         child: Text(
                           'Book Now',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: AppColors.kWhiteColor,
                             fontSize: 16.sp,
                             fontWeight: FontWeight.w600,
                           ),
@@ -2058,7 +1747,7 @@ class _HomeScreenState extends State<HomeScreen> {
               height: 5.h,
               margin: EdgeInsets.only(bottom: 20.h),
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: AppColors.kGreyColor.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(2.5.r),
               ),
             ),
@@ -2071,22 +1760,26 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontFamily: 'Inter',
                     fontSize: 18.sp,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black,
+                    color: AppColors.kBlackColor,
                   ),
                 ),
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
-                  child: Icon(Icons.close, size: 24.sp),
+                  child: Icon(
+                    Icons.close,
+                    size: 24.sp,
+                    color: AppColors.kBlackColor,
+                  ),
                 ),
               ],
             ),
             SizedBox(height: 20.h),
             _buildPaymentOption('Pay with wallet'),
-            Divider(thickness: 1, color: Colors.grey.shade300),
+            Divider(thickness: 1, color: AppColors.kGreyColor.withOpacity(0.3)),
             _buildPaymentOption('Pay with card'),
-            Divider(thickness: 1, color: Colors.grey.shade300),
+            Divider(thickness: 1, color: AppColors.kGreyColor.withOpacity(0.3)),
             _buildPaymentOption('pay4me'),
-            Divider(thickness: 1, color: Colors.grey.shade300),
+            Divider(thickness: 1, color: AppColors.kGreyColor.withOpacity(0.3)),
             _buildPaymentOption('Pay in car'),
           ],
         ),
@@ -2108,7 +1801,8 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Row(
           children: [
             Expanded(child: Text(method, style: ConstTextStyles.vehicleTitle)),
-            if (isSelected) Icon(Icons.check, color: Colors.green, size: 20.sp),
+            if (isSelected)
+              Icon(Icons.check, color: AppColors.kSuccessColor, size: 20.sp),
           ],
         ),
       ),
@@ -2127,7 +1821,7 @@ class _HomeScreenState extends State<HomeScreen> {
           height: 300.h,
           padding: EdgeInsets.all(20.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.kWhiteColor,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
           ),
           child: Column(
@@ -2137,7 +1831,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 5.h,
                 margin: EdgeInsets.only(bottom: 20.h),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: AppColors.kGreyColor.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2.5.r),
                 ),
               ),
@@ -2147,7 +1841,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   fontFamily: 'Inter',
                   fontSize: 18.sp,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black,
+                  color: AppColors.kBlackColor,
                 ),
               ),
               SizedBox(height: 20.h),
@@ -2156,7 +1850,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 111.h,
                 padding: EdgeInsets.all(10.w),
                 decoration: BoxDecoration(
-                  color: Color(0xFFB1B1B1).withOpacity(0.2),
+                  color: AppColors.kGreyColor.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: TextField(
@@ -2179,8 +1873,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 48.h,
                 decoration: BoxDecoration(
                   color: noteController.text.isNotEmpty
-                      ? Color(ConstColors.mainColor)
-                      : Color(ConstColors.fieldColor),
+                      ? AppColors.kMainColor
+                      : AppColors.kGreyColor,
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: GestureDetector(
@@ -2193,7 +1887,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Text(
                       'Submit',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: AppColors.kWhiteColor,
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w600,
                       ),
@@ -2220,7 +1914,7 @@ class _HomeScreenState extends State<HomeScreen> {
           height: 450.h,
           padding: EdgeInsets.all(20.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.kWhiteColor,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
           ),
           child: SingleChildScrollView(
@@ -2231,7 +1925,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 5.h,
                   margin: EdgeInsets.only(bottom: 20.h),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color: AppColors.kGreyColor.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(2.5.r),
                   ),
                 ),
@@ -2243,7 +1937,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       fontFamily: 'Inter',
                       fontSize: 18.sp,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black,
+                      color: AppColors.kBlackColor,
                     ),
                   ),
                 ),
@@ -2254,11 +1948,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontFamily: 'Inter',
                     fontSize: 14.sp,
                     fontWeight: FontWeight.w400,
-                    color: Colors.black,
+                    color: AppColors.kBlackColor,
                   ),
                 ),
                 SizedBox(height: 20.h),
-                Divider(thickness: 1, color: Colors.grey.shade300),
+                Divider(
+                  thickness: 1,
+                  color: AppColors.kGreyColor.withOpacity(0.3),
+                ),
                 ListTile(
                   leading: Image.asset(
                     ConstImages.activities,
@@ -2273,14 +1970,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       fontWeight: FontWeight.w400,
                       height: 1.0,
                       letterSpacing: -0.32,
-                      color: Color(0xFFB1B1B1),
+                      color: AppColors.kGreyColor,
                     ),
                   ),
                   subtitle: Text(
                     '${_getWeekday(selectedDate.weekday)} ${_getMonth(selectedDate.month)} ${selectedDate.day}, ${selectedDate.year}',
                     style: ConstTextStyles.vehicleTitle,
                   ),
-                  trailing: Icon(Icons.arrow_forward_ios, size: 16.sp),
+                  trailing: Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16.sp,
+                    color: AppColors.kGreyColor,
+                  ),
                   onTap: () async {
                     final DateTime? picked = await showDatePicker(
                       context: context,
@@ -2295,7 +1996,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     }
                   },
                 ),
-                Divider(thickness: 1, color: Colors.grey.shade300),
+                Divider(
+                  thickness: 1,
+                  color: AppColors.kGreyColor.withOpacity(0.3),
+                ),
                 ListTile(
                   leading: Image.asset(
                     'assets/images/time.png',
@@ -2310,14 +2014,18 @@ class _HomeScreenState extends State<HomeScreen> {
                       fontWeight: FontWeight.w400,
                       height: 1.0,
                       letterSpacing: -0.32,
-                      color: Color(0xFFB1B1B1),
+                      color: AppColors.kGreyColor,
                     ),
                   ),
                   subtitle: Text(
                     selectedTime.format(context),
                     style: ConstTextStyles.vehicleTitle,
                   ),
-                  trailing: Icon(Icons.arrow_forward_ios, size: 16.sp),
+                  trailing: Icon(
+                    Icons.arrow_forward_ios,
+                    size: 16.sp,
+                    color: AppColors.kGreyColor,
+                  ),
                   onTap: () async {
                     final TimeOfDay? picked = await showTimePicker(
                       context: context,
@@ -2337,8 +2045,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       width: 353.w,
                       height: 48.h,
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: Color(ConstColors.mainColor)),
+                        color: AppColors.kWhiteColor,
+                        border: Border.all(color: AppColors.kMainColor),
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: GestureDetector(
@@ -2352,7 +2060,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Text(
                             'Reset to now',
                             style: TextStyle(
-                              color: Color(ConstColors.mainColor),
+                              color: AppColors.kMainColor,
                               fontSize: 16.sp,
                               fontWeight: FontWeight.w600,
                             ),
@@ -2365,7 +2073,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       width: 353.w,
                       height: 48.h,
                       decoration: BoxDecoration(
-                        color: Color(ConstColors.mainColor),
+                        color: AppColors.kMainColor,
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: GestureDetector(
@@ -2377,7 +2085,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: Text(
                             'Set pick date and time',
                             style: TextStyle(
-                              color: Colors.white,
+                              color: AppColors.kWhiteColor,
                               fontSize: 16.sp,
                               fontWeight: FontWeight.w600,
                             ),
@@ -2437,7 +2145,7 @@ class _HomeScreenState extends State<HomeScreen> {
         height: 380.h,
         padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.kWhiteColor,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
         ),
         child: SingleChildScrollView(
@@ -2448,7 +2156,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 5.h,
                 margin: EdgeInsets.only(bottom: 20.h),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: AppColors.kGreyColor.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2.5.r),
                 ),
               ),
@@ -2458,7 +2166,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   fontFamily: 'Inter',
                   fontSize: 18.sp,
                   fontWeight: FontWeight.w600,
-                  color: Colors.black,
+                  color: AppColors.kBlackColor,
                 ),
               ),
               SizedBox(height: 10.h),
@@ -2471,16 +2179,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   fontWeight: FontWeight.w400,
                   height: 1.0,
                   letterSpacing: -0.32,
-                  color: Colors.black,
+                  color: AppColors.kBlackColor,
                 ),
               ),
               SizedBox(height: 20.h),
-              Divider(thickness: 1, color: Colors.grey.shade300),
+              Divider(
+                thickness: 1,
+                color: AppColors.kGreyColor.withOpacity(0.3),
+              ),
               SizedBox(height: 20.h),
               Container(
                 padding: EdgeInsets.all(15.w),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
+                  color: AppColors.kGreyColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Column(
@@ -2491,7 +2202,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           width: 6.w,
                           height: 6.h,
                           decoration: BoxDecoration(
-                            color: Color(ConstColors.mainColor),
+                            color: AppColors.kMainColor,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -2504,7 +2215,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.w500,
                             height: 1.0,
                             letterSpacing: -0.32,
-                            color: Colors.black,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                       ],
@@ -2522,13 +2233,16 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.w600,
                             height: 1.0,
                             letterSpacing: -0.32,
-                            color: Colors.black,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                       ),
                     ),
                     SizedBox(height: 15.h),
-                    Divider(thickness: 1, color: Colors.grey.shade300),
+                    Divider(
+                      thickness: 1,
+                      color: AppColors.kGreyColor.withOpacity(0.3),
+                    ),
                     SizedBox(height: 15.h),
                     Row(
                       children: [
@@ -2536,7 +2250,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           width: 6.w,
                           height: 6.h,
                           decoration: BoxDecoration(
-                            color: Colors.red,
+                            color: AppColors.kError,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -2549,7 +2263,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.w500,
                             height: 1.0,
                             letterSpacing: -0.32,
-                            color: Colors.black,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                       ],
@@ -2567,7 +2281,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.w600,
                             height: 1.0,
                             letterSpacing: -0.32,
-                            color: Colors.black,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                       ),
@@ -2580,7 +2294,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: 353.w,
                 height: 48.h,
                 decoration: BoxDecoration(
-                  color: Color(ConstColors.mainColor),
+                  color: AppColors.kMainColor,
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: GestureDetector(
@@ -2592,7 +2306,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Text(
                       'View Trip',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: AppColors.kWhiteColor,
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w600,
                       ),
@@ -2618,7 +2332,7 @@ class _HomeScreenState extends State<HomeScreen> {
         height: 300.h,
         padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.kWhiteColor,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
         ),
         child: Column(
@@ -2628,7 +2342,7 @@ class _HomeScreenState extends State<HomeScreen> {
               height: 5.h,
               margin: EdgeInsets.only(bottom: 20.h),
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: AppColors.kGreyColor.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(2.5.r),
               ),
             ),
@@ -2640,7 +2354,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 fontWeight: FontWeight.w600,
                 height: 1.0,
                 letterSpacing: -0.32,
-                color: Colors.black,
+                color: AppColors.kBlackColor,
               ),
             ),
             SizedBox(height: 10.h),
@@ -2653,20 +2367,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 fontWeight: FontWeight.w400,
                 height: 1.0,
                 letterSpacing: -0.32,
-                color: Colors.black,
+                color: AppColors.kBlackColor,
               ),
             ),
             SizedBox(height: 20.h),
-            Divider(thickness: 1, color: Colors.grey.shade300),
+            Divider(thickness: 1, color: AppColors.kGreyColor.withOpacity(0.3)),
             SizedBox(height: 20.h),
             SizedBox(
               width: 353.w,
               height: 10.h,
               child: LinearProgressIndicator(
-                backgroundColor: Colors.grey.shade300,
-                valueColor: AlwaysStoppedAnimation<Color>(
-                  Color(ConstColors.mainColor),
-                ),
+                backgroundColor: AppColors.kGreyColor.withOpacity(0.3),
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.kMainColor),
               ),
             ),
             Spacer(),
@@ -2674,7 +2386,7 @@ class _HomeScreenState extends State<HomeScreen> {
               width: 353.w,
               height: 48.h,
               decoration: BoxDecoration(
-                color: Color(ConstColors.mainColor),
+                color: AppColors.kMainColor,
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: GestureDetector(
@@ -2686,7 +2398,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Text(
                     'Trip Details',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: AppColors.kWhiteColor,
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w600,
                     ),
@@ -2705,10 +2417,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ? ['Regular vehicle', 'Fancy vehicle', 'VIP'][selectedVehicle!]
         : ['Bicycle', 'Vehicle', 'Motor bike'][selectedDelivery!];
 
-    // Extract ride data at the beginning of the method
     final ride = _activeRide;
 
-    // Return early if no active ride
     if (ride == null) {
       CustomFlushbar.showError(
         context: context,
@@ -2721,7 +2431,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final passengerFirstName = passenger['first_name'] ?? 'Unknown';
     final passengerLastName = passenger['last_name'] ?? '';
     final passengerID = passenger['ID'] ?? 1;
-    final passengerPhone = passenger['phone'] ?? ''; // Extract phone number
+    final passengerPhone = passenger['phone'] ?? '';
 
     final passengerName = '$passengerFirstName $passengerLastName'.trim();
     final passengerImage =
@@ -2733,16 +2443,13 @@ class _HomeScreenState extends State<HomeScreen> {
     final paymentMethod = ride['PaymentMethod'] ?? 'in_car';
     final createdAt = ride['CreatedAt'] ?? ride['created_at'] ?? '';
 
-    // Format date
     String formattedDate = 'Unknown date';
     if (createdAt.isNotEmpty) {
       try {
         final dateTime = DateTime.parse(createdAt);
         formattedDate =
             '${_getMonth(dateTime.month)} ${dateTime.day}, ${dateTime.year} at ${TimeOfDay.fromDateTime(dateTime).format(context)}';
-      } catch (e) {
-        //Error parsing date: $e');
-      }
+      } catch (e) {}
     }
 
     showModalBottomSheet(
@@ -2755,7 +2462,7 @@ class _HomeScreenState extends State<HomeScreen> {
         height: 600.h,
         padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.kWhiteColor,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
         ),
         child: SingleChildScrollView(
@@ -2766,7 +2473,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 5.h,
                 margin: EdgeInsets.only(bottom: 20.h),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: AppColors.kGreyColor.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2.5.r),
                 ),
               ),
@@ -2779,22 +2486,29 @@ class _HomeScreenState extends State<HomeScreen> {
                       fontFamily: 'Inter',
                       fontSize: 18.sp,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black,
+                      color: AppColors.kBlackColor,
                     ),
                   ),
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Icon(Icons.close, size: 24.sp, color: Colors.black),
+                    child: Icon(
+                      Icons.close,
+                      size: 24.sp,
+                      color: AppColors.kBlackColor,
+                    ),
                   ),
                 ],
               ),
               SizedBox(height: 20.h),
-              Divider(thickness: 1, color: Colors.grey.shade300),
+              Divider(
+                thickness: 1,
+                color: AppColors.kGreyColor.withOpacity(0.3),
+              ),
               SizedBox(height: 20.h),
               Container(
                 padding: EdgeInsets.all(15.w),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
+                  color: AppColors.kGreyColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Column(
@@ -2805,7 +2519,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           width: 6.w,
                           height: 6.h,
                           decoration: BoxDecoration(
-                            color: Color(ConstColors.mainColor),
+                            color: AppColors.kMainColor,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -2818,7 +2532,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.w500,
                             height: 1.0,
                             letterSpacing: -0.32,
-                            color: Colors.black,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                       ],
@@ -2836,13 +2550,16 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.w600,
                             height: 1.0,
                             letterSpacing: -0.32,
-                            color: Colors.black,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                       ),
                     ),
                     SizedBox(height: 15.h),
-                    Divider(thickness: 1, color: Colors.grey.shade300),
+                    Divider(
+                      thickness: 1,
+                      color: AppColors.kGreyColor.withOpacity(0.3),
+                    ),
                     SizedBox(height: 15.h),
                     Row(
                       children: [
@@ -2850,7 +2567,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           width: 6.w,
                           height: 6.h,
                           decoration: BoxDecoration(
-                            color: Colors.red,
+                            color: AppColors.kError,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -2863,7 +2580,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.w500,
                             height: 1.0,
                             letterSpacing: -0.32,
-                            color: Colors.black,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                       ],
@@ -2881,7 +2598,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.w600,
                             height: 1.0,
                             letterSpacing: -0.32,
-                            color: Colors.black,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                       ),
@@ -2890,7 +2607,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               SizedBox(height: 20.h),
-              Divider(thickness: 1, color: Colors.grey.shade300),
+              Divider(
+                thickness: 1,
+                color: AppColors.kGreyColor.withOpacity(0.3),
+              ),
               SizedBox(height: 20.h),
               Row(
                 children: [
@@ -2902,7 +2622,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       fontWeight: FontWeight.w500,
                       height: 1.0,
                       letterSpacing: -0.32,
-                      color: Colors.black,
+                      color: AppColors.kBlackColor,
                     ),
                   ),
                 ],
@@ -2918,12 +2638,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontWeight: FontWeight.w600,
                     height: 1.0,
                     letterSpacing: -0.32,
-                    color: Colors.black,
+                    color: AppColors.kBlackColor,
                   ),
                 ),
               ),
               SizedBox(height: 20.h),
-              Divider(thickness: 1, color: Colors.grey.shade300),
+              Divider(
+                thickness: 1,
+                color: AppColors.kGreyColor.withOpacity(0.3),
+              ),
               SizedBox(height: 20.h),
               Row(
                 children: [
@@ -2939,7 +2662,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.w500,
                             height: 1.0,
                             letterSpacing: -0.32,
-                            color: Colors.black,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                         SizedBox(height: 5.h),
@@ -2951,7 +2674,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.w600,
                             height: 1.0,
                             letterSpacing: -0.32,
-                            color: Colors.black,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                       ],
@@ -2960,7 +2683,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Container(
                     width: 1.w,
                     height: 40.h,
-                    color: Colors.grey.shade300,
+                    color: AppColors.kGreyColor.withOpacity(0.3),
                   ),
                   SizedBox(width: 20.w),
                   Expanded(
@@ -2975,7 +2698,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.w500,
                             height: 1.0,
                             letterSpacing: -0.32,
-                            color: Colors.black,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                         SizedBox(height: 5.h),
@@ -2987,7 +2710,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.w600,
                             height: 1.0,
                             letterSpacing: -0.32,
-                            color: Colors.black,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                       ],
@@ -2996,7 +2719,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               SizedBox(height: 20.h),
-              Divider(thickness: 1, color: Colors.grey.shade300),
+              Divider(
+                thickness: 1,
+                color: AppColors.kGreyColor.withOpacity(0.3),
+              ),
               SizedBox(height: 20.h),
               Align(
                 alignment: Alignment.centerLeft,
@@ -3011,7 +2737,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         fontWeight: FontWeight.w500,
                         height: 1.0,
                         letterSpacing: -0.32,
-                        color: Colors.black,
+                        color: AppColors.kBlackColor,
                       ),
                     ),
                     SizedBox(height: 5.h),
@@ -3021,7 +2747,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         fontFamily: 'Inter',
                         fontSize: 18.sp,
                         fontWeight: FontWeight.w700,
-                        color: Colors.black,
+                        color: AppColors.kBlackColor,
                       ),
                     ),
                   ],
@@ -3039,7 +2765,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.edit, size: 16.sp, color: Colors.black),
+                            Icon(
+                              Icons.edit,
+                              size: 16.sp,
+                              color: AppColors.kBlackColor,
+                            ),
                             SizedBox(width: 8.w),
                             Text(
                               'Modify Trip',
@@ -3049,7 +2779,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 fontWeight: FontWeight.w400,
                                 height: 22 / 16,
                                 letterSpacing: -0.41,
-                                color: Colors.black,
+                                color: AppColors.kBlackColor,
                               ),
                             ),
                           ],
@@ -3059,31 +2789,32 @@ class _HomeScreenState extends State<HomeScreen> {
                     Container(
                       width: 1.w,
                       height: 30.h,
-                      color: Colors.grey.shade300,
+                      color: AppColors.kGreyColor.withOpacity(0.3),
                     ),
                     Expanded(
                       child: GestureDetector(
                         onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ChatScreen(
-                                driverId: passengerID,
-                                rideId: rideId,
-                                driverName: passengerName,
-                                driverImage: passengerImage.isNotEmpty
-                                    ? passengerImage
-                                    : null,
-                                driverPhone:
-                                    passengerPhone, // Pass phone number
-                              ),
-                            ),
+                          context.pushNamedRoute(
+                            AppRoutes.chat.name,
+                            extra: {
+                              'driverId': passengerID,
+                              'rideId': rideId,
+                              'driverName': passengerName,
+                              'driverImage': passengerImage.isNotEmpty
+                                  ? passengerImage
+                                  : null,
+                              'driverPhone': passengerPhone,
+                            },
                           );
                         },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.chat, size: 16.sp, color: Colors.black),
+                            Icon(
+                              Icons.chat,
+                              size: 16.sp,
+                              color: AppColors.kBlackColor,
+                            ),
                             SizedBox(width: 8.w),
                             Text(
                               'Chat Passenger',
@@ -3093,7 +2824,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 fontWeight: FontWeight.w400,
                                 height: 22 / 16,
                                 letterSpacing: -0.41,
-                                color: Colors.black,
+                                color: AppColors.kBlackColor,
                               ),
                             ),
                           ],
@@ -3115,10 +2846,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ? ['Regular vehicle', 'Fancy vehicle', 'VIP'][selectedVehicle!]
         : ['Bicycle', 'Vehicle', 'Motor bike'][selectedDelivery!];
 
-    // Extract ride data
     final ride = _activeRide;
 
-    // Return early if no active ride
     if (ride == null) {
       CustomFlushbar.showError(
         context: context,
@@ -3133,16 +2862,13 @@ class _HomeScreenState extends State<HomeScreen> {
     final paymentMethod = ride['PaymentMethod'] ?? 'in_car';
     final scheduledAt = ride['ScheduledAt'] ?? ride['scheduled_at'] ?? '';
 
-    // Format scheduled date
     String formattedDate = 'Unknown date';
     if (scheduledAt.isNotEmpty) {
       try {
         final dateTime = DateTime.parse(scheduledAt);
         formattedDate =
             '${_getMonth(dateTime.month)} ${dateTime.day}, ${dateTime.year} at ${TimeOfDay.fromDateTime(dateTime).format(context)}';
-      } catch (e) {
-        //Error parsing scheduled date: $e');
-      }
+      } catch (e) {}
     }
 
     showModalBottomSheet(
@@ -3155,7 +2881,7 @@ class _HomeScreenState extends State<HomeScreen> {
         height: 500.h,
         padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.kWhiteColor,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
         ),
         child: SingleChildScrollView(
@@ -3166,7 +2892,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 5.h,
                 margin: EdgeInsets.only(bottom: 20.h),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: AppColors.kGreyColor.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2.5.r),
                 ),
               ),
@@ -3178,17 +2904,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontFamily: 'Inter',
                     fontSize: 18.sp,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black,
+                    color: AppColors.kBlackColor,
                   ),
                 ),
               ),
               SizedBox(height: 20.h),
-              Divider(thickness: 1, color: Colors.grey.shade300),
+              Divider(
+                thickness: 1,
+                color: AppColors.kGreyColor.withOpacity(0.3),
+              ),
               SizedBox(height: 20.h),
               Container(
                 padding: EdgeInsets.all(15.w),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade50,
+                  color: AppColors.kGreyColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Column(
@@ -3199,7 +2928,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           width: 6.w,
                           height: 6.h,
                           decoration: BoxDecoration(
-                            color: Color(ConstColors.mainColor),
+                            color: AppColors.kMainColor,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -3212,7 +2941,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.w500,
                             height: 1.0,
                             letterSpacing: -0.32,
-                            color: Colors.black,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                       ],
@@ -3230,13 +2959,16 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.w600,
                             height: 1.0,
                             letterSpacing: -0.32,
-                            color: Colors.black,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                       ),
                     ),
                     SizedBox(height: 15.h),
-                    Divider(thickness: 1, color: Colors.grey.shade300),
+                    Divider(
+                      thickness: 1,
+                      color: AppColors.kGreyColor.withOpacity(0.3),
+                    ),
                     SizedBox(height: 15.h),
                     Row(
                       children: [
@@ -3244,7 +2976,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           width: 6.w,
                           height: 6.h,
                           decoration: BoxDecoration(
-                            color: Colors.red,
+                            color: AppColors.kError,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -3257,7 +2989,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.w500,
                             height: 1.0,
                             letterSpacing: -0.32,
-                            color: Colors.black,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                       ],
@@ -3275,7 +3007,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.w600,
                             height: 1.0,
                             letterSpacing: -0.32,
-                            color: Colors.black,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                       ),
@@ -3284,7 +3016,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               SizedBox(height: 20.h),
-              Divider(thickness: 1, color: Colors.grey.shade300),
+              Divider(
+                thickness: 1,
+                color: AppColors.kGreyColor.withOpacity(0.3),
+              ),
               SizedBox(height: 20.h),
               Row(
                 children: [
@@ -3296,7 +3031,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       fontWeight: FontWeight.w500,
                       height: 1.0,
                       letterSpacing: -0.32,
-                      color: Colors.black,
+                      color: AppColors.kBlackColor,
                     ),
                   ),
                 ],
@@ -3312,12 +3047,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontWeight: FontWeight.w600,
                     height: 1.0,
                     letterSpacing: -0.32,
-                    color: Colors.black,
+                    color: AppColors.kBlackColor,
                   ),
                 ),
               ),
               SizedBox(height: 20.h),
-              Divider(thickness: 1, color: Colors.grey.shade300),
+              Divider(
+                thickness: 1,
+                color: AppColors.kGreyColor.withOpacity(0.3),
+              ),
               SizedBox(height: 20.h),
               Row(
                 children: [
@@ -3333,7 +3071,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.w500,
                             height: 1.0,
                             letterSpacing: -0.32,
-                            color: Colors.black,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                         SizedBox(height: 5.h),
@@ -3345,7 +3083,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.w600,
                             height: 1.0,
                             letterSpacing: -0.32,
-                            color: Colors.black,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                       ],
@@ -3354,7 +3092,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   Container(
                     width: 1.w,
                     height: 40.h,
-                    color: Colors.grey.shade300,
+                    color: AppColors.kGreyColor.withOpacity(0.3),
                   ),
                   SizedBox(width: 20.w),
                   Expanded(
@@ -3369,7 +3107,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.w500,
                             height: 1.0,
                             letterSpacing: -0.32,
-                            color: Colors.black,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                         SizedBox(height: 5.h),
@@ -3381,7 +3119,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             fontWeight: FontWeight.w600,
                             height: 1.0,
                             letterSpacing: -0.32,
-                            color: Colors.black,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                       ],
@@ -3390,7 +3128,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               SizedBox(height: 20.h),
-              Divider(thickness: 1, color: Colors.grey.shade300),
+              Divider(
+                thickness: 1,
+                color: AppColors.kGreyColor.withOpacity(0.3),
+              ),
               SizedBox(height: 20.h),
               Align(
                 alignment: Alignment.centerLeft,
@@ -3405,7 +3146,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         fontWeight: FontWeight.w500,
                         height: 1.0,
                         letterSpacing: -0.32,
-                        color: Colors.black,
+                        color: AppColors.kBlackColor,
                       ),
                     ),
                     SizedBox(height: 5.h),
@@ -3415,7 +3156,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         fontFamily: 'Inter',
                         fontSize: 18.sp,
                         fontWeight: FontWeight.w700,
-                        color: Colors.black,
+                        color: AppColors.kBlackColor,
                       ),
                     ),
                   ],
@@ -3426,7 +3167,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: 353.w,
                 height: 48.h,
                 decoration: BoxDecoration(
-                  color: Color(ConstColors.mainColor),
+                  color: AppColors.kMainColor,
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: GestureDetector(
@@ -3438,7 +3179,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Text(
                       'Edit pre booking',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: AppColors.kWhiteColor,
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w600,
                       ),
@@ -3454,10 +3195,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showEditPrebookingSheet() {
-    // Extract ride data
     final ride = _activeRide;
 
-    // Return early if no active ride
     if (ride == null) {
       CustomFlushbar.showError(context: context, message: 'No ride to edit');
       return;
@@ -3468,16 +3207,13 @@ class _HomeScreenState extends State<HomeScreen> {
     final paymentMethod = ride['PaymentMethod'] ?? 'in_car';
     final scheduledAt = ride['ScheduledAt'] ?? ride['scheduled_at'] ?? '';
 
-    // Format scheduled date
     String formattedDate = 'Unknown date';
     if (scheduledAt.isNotEmpty) {
       try {
         final dateTime = DateTime.parse(scheduledAt);
         formattedDate =
             '${_getMonth(dateTime.month)} ${dateTime.day}, ${dateTime.year} at ${TimeOfDay.fromDateTime(dateTime).format(context)}';
-      } catch (e) {
-        //Error parsing scheduled date: $e');
-      }
+      } catch (e) {}
     }
 
     final vehicleType =
@@ -3496,7 +3232,7 @@ class _HomeScreenState extends State<HomeScreen> {
         height: 600.h,
         padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.kWhiteColor,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
         ),
         child: SingleChildScrollView(
@@ -3507,7 +3243,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 5.h,
                 margin: EdgeInsets.only(bottom: 20.h),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: AppColors.kGreyColor.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2.5.r),
                 ),
               ),
@@ -3520,28 +3256,32 @@ class _HomeScreenState extends State<HomeScreen> {
                       fontFamily: 'Inter',
                       fontSize: 26.sp,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black,
+                      color: AppColors.kBlackColor,
                     ),
                   ),
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Icon(Icons.close, size: 24.sp, color: Colors.black),
+                    child: Icon(
+                      Icons.close,
+                      size: 24.sp,
+                      color: AppColors.kBlackColor,
+                    ),
                   ),
                 ],
               ),
               SizedBox(height: 30.h),
-              _buildEditField('PICK UP', pickupAddress),
+              EditFieldWidget(label: 'PICK UP', value: pickupAddress),
               SizedBox(height: 15.h),
-              _buildEditField('DESTINATION', destAddress),
+              EditFieldWidget(label: 'DESTINATION', value: destAddress),
               SizedBox(height: 15.h),
-              _buildEditField('WHEN', formattedDate),
+              EditFieldWidget(label: 'WHEN', value: formattedDate),
               SizedBox(height: 15.h),
-              _buildEditField(
-                'PAYMENT METHOD',
-                _formatPaymentMethod(paymentMethod),
+              EditFieldWidget(
+                label: 'PAYMENT METHOD',
+                value: _formatPaymentMethod(paymentMethod),
               ),
               SizedBox(height: 15.h),
-              _buildEditField('VEHICLE', vehicleType),
+              EditFieldWidget(label: 'VEHICLE', value: vehicleType),
               SizedBox(height: 40.h),
               Column(
                 children: [
@@ -3549,8 +3289,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     width: 353.w,
                     height: 48.h,
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      border: Border.all(color: Colors.red),
+                      color: AppColors.kWhiteColor,
+                      border: Border.all(color: AppColors.kError),
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: GestureDetector(
@@ -3562,7 +3302,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Text(
                           'Cancel prebooking',
                           style: TextStyle(
-                            color: Colors.red,
+                            color: AppColors.kError,
                             fontSize: 16.sp,
                             fontWeight: FontWeight.w600,
                           ),
@@ -3575,13 +3315,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     width: 353.w,
                     height: 48.h,
                     decoration: BoxDecoration(
-                      color: Color(ConstColors.mainColor),
+                      color: AppColors.kMainColor,
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: GestureDetector(
                       onTap: () {
                         Navigator.pop(context);
-                        // TODO: Implement save functionality with API call
                         CustomFlushbar.showSuccess(
                           context: context,
                           message: 'Prebooking updated successfully',
@@ -3591,7 +3330,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Text(
                           'Save prebooking',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: AppColors.kWhiteColor,
                             fontSize: 16.sp,
                             fontWeight: FontWeight.w600,
                           ),
@@ -3605,45 +3344,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildEditField(String label, String value) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 12.sp,
-            fontWeight: FontWeight.w500,
-            color: Colors.black,
-          ),
-        ),
-        SizedBox(height: 8.h),
-        Container(
-          width: 353.w,
-          height: 50.h,
-          padding: EdgeInsets.symmetric(horizontal: 10.w),
-          decoration: BoxDecoration(
-            color: Color(0xFFB1B1B1).withOpacity(0.12),
-            borderRadius: BorderRadius.circular(2.r),
-          ),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: Text(
-              value,
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w400,
-                color: Colors.black,
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -3659,7 +3359,7 @@ class _HomeScreenState extends State<HomeScreen> {
           height: 450.h,
           padding: EdgeInsets.all(20.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.kWhiteColor,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
           ),
           child: Column(
@@ -3669,7 +3369,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 height: 5.h,
                 margin: EdgeInsets.only(bottom: 20.h),
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
+                  color: AppColors.kGreyColor.withOpacity(0.3),
                   borderRadius: BorderRadius.circular(2.5.r),
                 ),
               ),
@@ -3681,7 +3381,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontFamily: 'Inter',
                     fontSize: 18.sp,
                     fontWeight: FontWeight.w600,
-                    color: Colors.black,
+                    color: AppColors.kBlackColor,
                   ),
                 ),
               ),
@@ -3696,38 +3396,62 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontWeight: FontWeight.w400,
                     height: 1.0,
                     letterSpacing: -0.32,
-                    color: Colors.black,
+                    color: AppColors.kBlackColor,
                   ),
                 ),
               ),
               SizedBox(height: 30.h),
-              _buildCancelReason(
-                0,
-                'I am taking alternative transport',
-                setCancelState,
+              CancelReasonWidget(
+                index: 0,
+                reason: 'I am taking alternative transport',
+                selectedCancelReason: selectedCancelReason,
+                onReasonSelected: (index) {
+                  setCancelState(() {
+                    selectedCancelReason = index;
+                  });
+                },
               ),
               SizedBox(height: 10.h),
-              _buildCancelReason(
-                1,
-                'It is taking too long to get a driver',
-                setCancelState,
+              CancelReasonWidget(
+                index: 1,
+                reason: 'It is taking too long to get a driver',
+                selectedCancelReason: selectedCancelReason,
+                onReasonSelected: (index) {
+                  setCancelState(() {
+                    selectedCancelReason = index;
+                  });
+                },
               ),
               SizedBox(height: 10.h),
-              _buildCancelReason(
-                2,
-                'I have to attend to something',
-                setCancelState,
+              CancelReasonWidget(
+                index: 2,
+                reason: 'I have to attend to something',
+                selectedCancelReason: selectedCancelReason,
+                onReasonSelected: (index) {
+                  setCancelState(() {
+                    selectedCancelReason = index;
+                  });
+                },
               ),
               SizedBox(height: 10.h),
-              _buildCancelReason(3, 'Others', setCancelState),
+              CancelReasonWidget(
+                index: 3,
+                reason: 'Others',
+                selectedCancelReason: selectedCancelReason,
+                onReasonSelected: (index) {
+                  setCancelState(() {
+                    selectedCancelReason = index;
+                  });
+                },
+              ),
               Spacer(),
               Container(
                 width: 353.w,
                 height: 48.h,
                 decoration: BoxDecoration(
                   color: selectedCancelReason != null
-                      ? Color(ConstColors.mainColor)
-                      : Color(ConstColors.fieldColor),
+                      ? AppColors.kMainColor
+                      : AppColors.kGreyColor,
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: GestureDetector(
@@ -3741,7 +3465,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Text(
                       'Submit',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: AppColors.kWhiteColor,
                         fontSize: 16.sp,
                         fontWeight: FontWeight.w600,
                       ),
@@ -3750,42 +3474,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCancelReason(
-    int index,
-    String reason,
-    StateSetter setCancelState,
-  ) {
-    final isSelected = selectedCancelReason == index;
-    return GestureDetector(
-      onTap: () {
-        setCancelState(() {
-          selectedCancelReason = index;
-        });
-      },
-      child: Container(
-        width: 353.w,
-        height: 40.h,
-        padding: EdgeInsets.all(10.w),
-        decoration: BoxDecoration(
-          color: isSelected ? Color(ConstColors.mainColor) : Colors.white,
-          border: Border.all(color: Color(ConstColors.mainColor)),
-          borderRadius: BorderRadius.circular(15.r),
-        ),
-        child: Center(
-          child: Text(
-            reason,
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w400,
-              color: isSelected ? Colors.white : Colors.black,
-            ),
           ),
         ),
       ),
@@ -3803,7 +3491,7 @@ class _HomeScreenState extends State<HomeScreen> {
         height: 400.h,
         padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.kWhiteColor,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
         ),
         child: Column(
@@ -3813,7 +3501,7 @@ class _HomeScreenState extends State<HomeScreen> {
               height: 5.h,
               margin: EdgeInsets.only(bottom: 30.h),
               decoration: BoxDecoration(
-                color: Colors.grey.shade300,
+                color: AppColors.kGreyColor.withOpacity(0.3),
                 borderRadius: BorderRadius.circular(2.5.r),
               ),
             ),
@@ -3831,7 +3519,7 @@ class _HomeScreenState extends State<HomeScreen> {
               width: 353.w,
               height: 48.h,
               decoration: BoxDecoration(
-                color: Color(ConstColors.mainColor),
+                color: AppColors.kMainColor,
                 borderRadius: BorderRadius.circular(8.r),
               ),
               child: GestureDetector(
@@ -3842,7 +3530,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Text(
                     'GO HOME',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: AppColors.kWhiteColor,
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w600,
                     ),
@@ -3877,62 +3565,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Widget _buildEarningsSection(
-    String title,
-    String value, {
-    required VoidCallback onTap,
-  }) {
-    final themeManager = Provider.of<ThemeManager>(context);
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 12.h, horizontal: 5.w),
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w400,
-                      fontSize: 12.sp,
-                      height: 1.0,
-                      letterSpacing: -0.41,
-                      color: themeManager.getTextColor(context),
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    value,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w600,
-                      fontSize: 24.sp,
-                      height: 1.0,
-                      letterSpacing: -0.41,
-                      color: themeManager.getTextColor(context),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SvgPicture.asset(
-              ConstImages.chevronBack,
-              width: 20.w,
-              height: 20.h,
-              fit: BoxFit.scaleDown,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // Widget for stop marker
   Widget _buildStopMarkerWidget() {
     String stopText = _activeRide?['StopAddress']?.toString() ?? 'Stop';
 
@@ -3950,7 +3582,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.stop_circle, color: Colors.white, size: 16.sp),
+          Icon(Icons.stop_circle, color: AppColors.kWhiteColor, size: 16.sp),
           SizedBox(width: 4.w),
           Expanded(
             child: Text(
@@ -3959,7 +3591,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 fontFamily: 'Inter',
                 fontSize: 10.sp,
                 fontWeight: FontWeight.w600,
-                color: Colors.white,
+                color: AppColors.kWhiteColor,
               ),
               overflow: TextOverflow.ellipsis,
               maxLines: 1,
@@ -3976,8 +3608,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     final ride = _nearbyRides[_currentRideIndex];
-    // Extract data from WebSocket message format
-    final rideData = ride['data'] ?? ride; // Handle both formats
+    final rideData = ride['data'] ?? ride;
     final rideId = rideData['RideID'] ?? rideData['ID'] ?? 0;
     final passengerName = rideData['PassengerName'] ?? 'Passenger';
     final pickupAddress =
@@ -3988,7 +3619,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final price = rideData['Price']?.toString() ?? '0';
     final serviceType = rideData['ServiceType'] ?? 'taxi';
     final vehicleType = rideData['VehicleType'] ?? 'regular';
-    // final eta = _calculateETA(rideData);
 
     return Positioned(
       bottom: 0,
@@ -3998,7 +3628,7 @@ class _HomeScreenState extends State<HomeScreen> {
         width: 393.w,
         padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.kWhiteColor,
           borderRadius: BorderRadius.only(
             topLeft: Radius.circular(20.r),
             topRight: Radius.circular(20.r),
@@ -4010,42 +3640,6 @@ class _HomeScreenState extends State<HomeScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Driver Arrival Time Timer (Left)
-                // Stack(
-                //   children: [
-                //     Container(
-                //       width: 60.w,
-                //       height: 60.h,
-                //       decoration: BoxDecoration(
-                //         color: Color(ConstColors.mainColor),
-                //         shape: BoxShape.circle,
-                //       ),
-                //       child: Center(
-                //         child: Text(
-                //           _driverArrivalTime,
-                //           style: TextStyle(
-                //             fontFamily: 'Inter',
-                //             fontSize: 18.sp,
-                //             fontWeight: FontWeight.w600,
-                //             color: Colors.white,
-                //           ),
-                //         ),
-                //       ),
-                //     ),
-                // White line decoration at top left
-                // Positioned(
-                //   top: 0,
-                //   left: 0,
-                //   child: Image.asset(
-                //     'assets/images/whiteline.png',
-                //     width: 20.w,
-                //     height: 20.h,
-                //     fit: BoxFit.contain,
-                //   ),
-                // ),
-                //   ],
-                // ),
-                // ETA Timer and "New Order" Text (Right)
                 Row(
                   children: [
                     SizedBox(
@@ -4054,12 +3648,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
-                          // Inner circle with ETA time
                           Container(
                             width: 60.w,
                             height: 60.h,
                             decoration: BoxDecoration(
-                              color: Color(ConstColors.mainColor),
+                              color: AppColors.kMainColor,
                               shape: BoxShape.circle,
                             ),
                             child: Column(
@@ -4068,7 +3661,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Text(
                                   _rideRequestETA,
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    color: AppColors.kWhiteColor,
                                     fontSize: 16.sp,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -4076,7 +3669,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 Text(
                                   'min',
                                   style: TextStyle(
-                                    color: Colors.white,
+                                    color: AppColors.kWhiteColor,
                                     fontSize: 10.sp,
                                     fontWeight: FontWeight.w400,
                                   ),
@@ -4084,16 +3677,14 @@ class _HomeScreenState extends State<HomeScreen> {
                               ],
                             ),
                           ),
-                          // Rotating white arc indicator
                           Container(
                             margin: EdgeInsets.all(8),
                             width: 60.w,
                             height: 60.h,
                             child: CircularProgressIndicator(
-                              // value: 0.25, // Shows only a quarter arc
                               strokeWidth: 2.0,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
+                                AppColors.kWhiteColor,
                               ),
                               backgroundColor: Colors.transparent,
                             ),
@@ -4108,6 +3699,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         fontFamily: 'Inter',
                         fontSize: 18.sp,
                         fontWeight: FontWeight.w600,
+                        color: AppColors.kBlackColor,
                       ),
                     ),
                   ],
@@ -4115,7 +3707,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             SizedBox(height: 15.h),
-            Divider(thickness: 1, color: Colors.grey.shade300),
+            Divider(thickness: 1, color: AppColors.kGreyColor.withOpacity(0.3)),
             SizedBox(height: 15.h),
             Text(
               '₦$price',
@@ -4125,6 +3717,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 fontSize: 36.sp,
                 height: 1.0,
                 letterSpacing: -0.32,
+                color: AppColors.kBlackColor,
               ),
             ),
             SizedBox(height: 15.h),
@@ -4138,6 +3731,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   fontSize: 24.sp,
                   height: 1.0,
                   letterSpacing: -0.32,
+                  color: AppColors.kBlackColor,
                 ),
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
@@ -4154,6 +3748,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   fontSize: 24.sp,
                   height: 1.0,
                   letterSpacing: -0.32,
+                  color: AppColors.kBlackColor,
                 ),
               ),
             ),
@@ -4168,6 +3763,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   fontSize: 24.sp,
                   height: 1.0,
                   letterSpacing: -0.32,
+                  color: AppColors.kBlackColor,
                 ),
               ),
             ),
@@ -4183,6 +3779,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontSize: 24.sp,
                     height: 1.0,
                     letterSpacing: -0.32,
+                    color: AppColors.kBlackColor,
                   ),
                 ),
               ),
@@ -4202,6 +3799,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           fontFamily: 'Inter',
                           fontSize: 24.sp,
                           fontWeight: FontWeight.w600,
+                          color: AppColors.kBlackColor,
                         ),
                       ),
                     ),
@@ -4211,6 +3809,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         fontFamily: 'Inter',
                         fontSize: 14.sp,
                         fontWeight: FontWeight.w400,
+                        color: AppColors.kBlackColor,
                       ),
                     ),
                   ],
@@ -4224,15 +3823,22 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 6.h),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(4.r),
-                border: Border.all(width: 0.6, color: Colors.grey.shade300),
+                border: Border.all(
+                  width: 0.6,
+                  color: AppColors.kGreyColor.withOpacity(0.3),
+                ),
               ),
               child: Row(
                 children: [
                   Image.asset(ConstImages.wallet, width: 20.w, height: 20.h),
                   SizedBox(width: 8.w),
                   Text(
-                    'Pay in car', // Default payment method for new requests
-                    style: TextStyle(fontFamily: 'Inter', fontSize: 14.sp),
+                    'Pay in car',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontSize: 14.sp,
+                      color: AppColors.kBlackColor,
+                    ),
                   ),
                   Spacer(),
                   Text(
@@ -4240,7 +3846,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(
                       fontFamily: 'Inter',
                       fontSize: 12.sp,
-                      color: Colors.grey[600],
+                      color: AppColors.kSubtitleColor,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -4256,14 +3862,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Container(
                       height: 48.h,
                       decoration: BoxDecoration(
-                        color: Colors.red,
+                        color: AppColors.kError,
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Center(
                         child: Text(
                           'Decline',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: AppColors.kWhiteColor,
                             fontSize: 16.sp,
                             fontWeight: FontWeight.w600,
                           ),
@@ -4279,14 +3885,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: Container(
                       height: 48.h,
                       decoration: BoxDecoration(
-                        color: Color(ConstColors.mainColor),
+                        color: AppColors.kMainColor,
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Center(
                         child: Text(
                           'Accept',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: AppColors.kWhiteColor,
                             fontSize: 16.sp,
                             fontWeight: FontWeight.w600,
                           ),
@@ -4304,41 +3910,26 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _checkActiveRides() async {
-    //=== CHECKING ACTIVE RIDES ===');
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
 
     if (token != null) {
-      //Token found, calling getActiveRides API');
       final result = await ApiService.getActiveRides(token);
-      //API Result: $result');
 
       if (result['success'] == true) {
         final rides = result['data']['rides'] as List;
-        //Number of active rides: ${rides.length}');
 
         if (rides.isNotEmpty) {
           final activeRide = rides.first;
-          //Active ride found: $activeRide');
-          //Ride Status: ${activeRide['Status']}');
-          //Ride ID: ${activeRide['ID']}');
 
-          // Small delay to ensure map is initialized before showing ride
           Future.delayed(Duration(milliseconds: 1000), () {
             if (mounted) {
               _showRideAcceptedSheet(activeRide, {});
             }
           });
-        } else {
-          //No active rides found');
-        }
-      } else {
-        //Failed to get active rides: ${result['message']}');
-      }
-    } else {
-      //No auth token found');
-    }
-    //=== END CHECKING ACTIVE RIDES ===\n');
+        } else {}
+      } else {}
+    } else {}
   }
 
   void _showRideAcceptedSheet(
@@ -4352,8 +3943,6 @@ class _HomeScreenState extends State<HomeScreen> {
       });
     }
 
-    // Always start/restart ride tracking to ensure markers are displayed
-    //🗺️ Starting ride tracking for accepted ride');
     RideTrackingService.startRideTracking(
       ride: ride,
       onUpdate: (markers, polylines) {
@@ -4388,42 +3977,30 @@ class _HomeScreenState extends State<HomeScreen> {
         ride: ride,
         acceptedData: acceptedData,
         onRideStatusChanged: (updatedRide) {
-          //🔔 onRideStatusChanged callback triggered');
-          //   Updated Status: ${updatedRide['Status']}');
-
           _onRideStatusChanged(updatedRide);
 
-          //📤 Closing current sheet...');
           Navigator.of(context).pop();
 
-          //🔍 Checking status for next action...');
           if (updatedRide['Status'] == 'completed') {
             AppLogger.log(
-              '✅ Status is completed, scheduling completion sheet...',
+              'Status is completed, scheduling completion sheet...',
             );
             Future.delayed(Duration(milliseconds: 400), () {
-              //⏰ Delay elapsed, checking mounted state...');
               if (mounted) {
-                AppLogger.log(
-                  '✅ Still mounted, calling _showCompletedSheet...',
-                );
+                AppLogger.log('Still mounted, calling _showCompletedSheet...');
                 _showCompletedSheet(context, updatedRide);
-              } else {
-                //❌ Widget no longer mounted!');
-              }
+              } else {}
             });
           } else if (updatedRide['Status'] != 'cancelled') {
             AppLogger.log(
-              '🔄 Status is ${updatedRide['Status']}, reopening sheet...',
+              'Status is ${updatedRide['Status']}, reopening sheet...',
             );
             Future.delayed(Duration(milliseconds: 300), () {
               if (mounted) {
                 _showRideAcceptedSheet(updatedRide, acceptedData);
               }
             });
-          } else {
-            //🚫 Status is cancelled, no further action');
-          }
+          } else {}
         },
       ),
     ).whenComplete(() {
@@ -4436,12 +4013,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showCompletedSheet(BuildContext context, Map<String, dynamic> ride) {
-    //🎉 === _showCompletedSheet CALLED ===');
-    //   Mounted: $mounted');
-    //   Ride data: $ride');
-
     if (!mounted) {
-      //❌ Widget not mounted, cannot show sheet');
       return;
     }
 
@@ -4451,9 +4023,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final note = ride['Note'] ?? '';
     final stopAddress = ride['StopAddress'];
     final hasStop = stopAddress != null && stopAddress.toString().isNotEmpty;
-
-    //   Passenger: $passengerName');
-    //   Price: ${ride['Price']}');
 
     final parentContext = context;
 
@@ -4470,7 +4039,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Container(
           padding: EdgeInsets.all(20.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.kWhiteColor,
             borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
           ),
           child: SingleChildScrollView(
@@ -4482,7 +4051,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   height: 5.h,
                   margin: EdgeInsets.only(bottom: 20.h),
                   decoration: BoxDecoration(
-                    color: Colors.grey.shade300,
+                    color: AppColors.kGreyColor.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(2.5.r),
                   ),
                 ),
@@ -4490,12 +4059,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   width: 80.w,
                   height: 80.h,
                   decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.1),
+                    color: AppColors.kSuccessColor.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.check_circle,
-                    color: Colors.green,
+                    color: AppColors.kSuccessColor,
                     size: 50.sp,
                   ),
                 ),
@@ -4506,7 +4075,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w700,
                     fontSize: 28.sp,
-                    color: Colors.green,
+                    color: AppColors.kSuccessColor,
                   ),
                 ),
                 SizedBox(height: 20.h),
@@ -4516,7 +4085,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w500,
                     fontSize: 16.sp,
-                    color: Colors.grey[600],
+                    color: AppColors.kSubtitleColor,
                   ),
                 ),
                 SizedBox(height: 10.h),
@@ -4528,39 +4097,49 @@ class _HomeScreenState extends State<HomeScreen> {
                     fontSize: 36.sp,
                     height: 1.0,
                     letterSpacing: -0.32,
-                    color: Color(ConstColors.mainColor),
+                    color: AppColors.kMainColor,
                   ),
                 ),
                 SizedBox(height: 20.h),
-                Divider(thickness: 1, color: Colors.grey.shade300),
+                Divider(
+                  thickness: 1,
+                  color: AppColors.kGreyColor.withOpacity(0.3),
+                ),
                 SizedBox(height: 20.h),
-                _buildDetailRow('Passenger', passengerName),
+                DetailRowWidget(label: 'Passenger', value: passengerName),
                 SizedBox(height: 15.h),
-                _buildDetailRow('Pickup', ride['PickupAddress'] ?? 'Unknown'),
+                DetailRowWidget(
+                  label: 'Pickup',
+                  value: ride['PickupAddress'] ?? 'Unknown',
+                ),
                 if (hasStop) ...[
                   SizedBox(height: 15.h),
-                  _buildDetailRow('Stop', stopAddress, isStop: true),
+                  DetailRowWidget(
+                    label: 'Stop',
+                    value: stopAddress,
+                    isStop: true,
+                  ),
                 ],
                 SizedBox(height: 15.h),
-                _buildDetailRow(
-                  'Destination',
-                  ride['DestAddress'] ?? 'Unknown',
+                DetailRowWidget(
+                  label: 'Destination',
+                  value: ride['DestAddress'] ?? 'Unknown',
                 ),
                 if (note.isNotEmpty) ...[
                   SizedBox(height: 15.h),
-                  _buildDetailRow('Note', note),
+                  DetailRowWidget(label: 'Note', value: note),
                 ],
                 SizedBox(height: 15.h),
-                _buildDetailRow(
-                  'Payment',
-                  _formatPaymentMethod(ride['PaymentMethod']),
+                DetailRowWidget(
+                  label: 'Payment',
+                  value: _formatPaymentMethod(ride['PaymentMethod']),
                 ),
                 SizedBox(height: 30.h),
                 Container(
                   width: 353.w,
                   height: 48.h,
                   decoration: BoxDecoration(
-                    color: Color(ConstColors.mainColor),
+                    color: AppColors.kMainColor,
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Material(
@@ -4570,12 +4149,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       onTap: () {
                         Navigator.of(sheetContext).pop();
                         Future.delayed(Duration(milliseconds: 200), () {
-                          Navigator.push(
-                            parentContext,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  HistoryCompletedScreen(rideId: ride['ID']),
-                            ),
+                          parentContext.pushNamedRoute(
+                            AppRoutes.historyCompleted.name,
+                            extra: {'rideId': ride['ID']},
                           );
                         });
                       },
@@ -4583,7 +4159,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Text(
                           'View History',
                           style: TextStyle(
-                            color: Colors.white,
+                            color: AppColors.kWhiteColor,
                             fontSize: 16.sp,
                             fontWeight: FontWeight.w600,
                           ),
@@ -4599,7 +4175,10 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                   child: Text(
                     'Close',
-                    style: TextStyle(color: Colors.grey[600], fontSize: 14.sp),
+                    style: TextStyle(
+                      color: AppColors.kSubtitleColor,
+                      fontSize: 14.sp,
+                    ),
                   ),
                 ),
                 SizedBox(height: 20.h),
@@ -4611,77 +4190,27 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildDetailRow(String label, String value, {bool isStop = false}) {
-    return Container(
-      padding: EdgeInsets.symmetric(vertical: 8.h, horizontal: 12.w),
-      decoration: BoxDecoration(
-        color: isStop ? Colors.yellow.withOpacity(0.1) : Colors.transparent,
-        borderRadius: BorderRadius.circular(8.r),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              if (isStop)
-                Icon(Icons.location_on, size: 16.sp, color: Colors.orange),
-              if (isStop) SizedBox(width: 5.w),
-              Text(
-                label,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w500,
-                  fontSize: 14.sp,
-                  color: isStop ? Colors.orange : Colors.grey[600],
-                ),
-              ),
-            ],
-          ),
-          SizedBox(height: 5.h),
-          Text(
-            value,
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w600,
-              fontSize: 16.sp,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   void _onRideStatusChanged(Map<String, dynamic> updatedRide) {
-    //=== RIDE STATUS CHANGED ===');
-    //Updated Ride Status: ${updatedRide['Status']}');
-
     if (mounted) {
       setState(() {
         _activeRide = updatedRide;
       });
     }
 
-    // Update the tracking service with new ride status
     RideTrackingService.updateRideStatus(updatedRide);
 
     if (updatedRide['Status'] == 'completed' ||
         updatedRide['Status'] == 'cancelled') {
-      // Clear chat messages when ride ends
       final rideId = updatedRide['ID'];
       if (rideId != null) {
         final chatProvider = Provider.of<ChatProvider>(context, listen: false);
         chatProvider.clearMessages(rideId);
-        //🗑️ Cleared chat messages for ride $rideId');
       }
 
-      // Stop tracking when ride is completed or cancelled
-      //Stopping tracking for completed/cancelled ride');
       RideTrackingService.stopTracking();
 
-      // Clear the map display after completion sheet is shown
       Future.delayed(Duration(milliseconds: 1000), () {
         if (mounted) {
-          //Clearing map markers and polylines');
           setState(() {
             _activeRide = null;
             _isRideSheetVisible = false;
@@ -4693,14 +4222,10 @@ class _HomeScreenState extends State<HomeScreen> {
         }
       });
     }
-
-    //=== RIDE STATUS CHANGE HANDLED ===\n');
   }
 
   Future<void> _handleEmergencySOS() async {
     try {
-      //🚨 Emergency SOS button tapped', tag: 'SOS');
-
       if (_activeRide == null) {
         CustomFlushbar.showError(
           context: context,
@@ -4711,24 +4236,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
       final rideId = _activeRide!['ID'];
 
-      // Get current location
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
 
-      // Convert to POINT format
       final location = 'POINT(${position.longitude} ${position.latitude})';
 
-      // Get location address (you can use reverse geocoding here if needed)
       final locationAddress = _currentLocationName.isNotEmpty
           ? _currentLocationName
           : 'Lat: ${position.latitude}, Lng: ${position.longitude}';
 
-      //📍 SOS Location: $location', tag: 'SOS');
-      //📍 SOS Address: $locationAddress', tag: 'SOS');
-      //🚗 SOS Ride ID: $rideId', tag: 'SOS');
-
-      // Get auth token
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
 
@@ -4740,13 +4257,11 @@ class _HomeScreenState extends State<HomeScreen> {
         return;
       }
 
-      // Show loading indicator
       CustomFlushbar.showInfo(
         context: context,
         message: 'Sending emergency alert...',
       );
 
-      // Send SOS alert
       final result = await ApiService.sendSOS(
         token: token,
         location: location,
@@ -4755,8 +4270,6 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
       if (result['success'] == true) {
-        //✅ SOS alert sent successfully', tag: 'SOS');
-        // Show success dialog
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -4764,14 +4277,21 @@ class _HomeScreenState extends State<HomeScreen> {
             return AlertDialog(
               title: Row(
                 children: [
-                  Icon(Icons.check_circle, color: Colors.green, size: 28.sp),
+                  Icon(
+                    Icons.check_circle,
+                    color: AppColors.kSuccessColor,
+                    size: 28.sp,
+                  ),
                   SizedBox(width: 10.w),
-                  Text('SOS Alert Sent'),
+                  Text(
+                    'SOS Alert Sent',
+                    style: TextStyle(color: AppColors.kBlackColor),
+                  ),
                 ],
               ),
               content: Text(
                 'Emergency alert sent successfully! Help is on the way.',
-                style: TextStyle(fontSize: 16.sp),
+                style: TextStyle(fontSize: 16.sp, color: AppColors.kBlackColor),
               ),
               actions: [
                 TextButton(
@@ -4779,7 +4299,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Text(
                     'OK',
                     style: TextStyle(
-                      color: Color(ConstColors.mainColor),
+                      color: AppColors.kMainColor,
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w600,
                     ),
@@ -4791,10 +4311,9 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       } else {
         AppLogger.log(
-          '❌ Failed to send SOS alert: ${result['message']}',
+          'Failed to send SOS alert: ${result['message']}',
           tag: 'SOS',
         );
-        // Show error dialog
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -4802,15 +4321,18 @@ class _HomeScreenState extends State<HomeScreen> {
             return AlertDialog(
               title: Row(
                 children: [
-                  Icon(Icons.error, color: Colors.red, size: 28.sp),
+                  Icon(Icons.error, color: AppColors.kError, size: 28.sp),
                   SizedBox(width: 10.w),
-                  Text('Alert Failed'),
+                  Text(
+                    'Alert Failed',
+                    style: TextStyle(color: AppColors.kBlackColor),
+                  ),
                 ],
               ),
               content: Text(
                 result['message'] ??
                     'Failed to send emergency alert. Please try again.',
-                style: TextStyle(fontSize: 16.sp),
+                style: TextStyle(fontSize: 16.sp, color: AppColors.kBlackColor),
               ),
               actions: [
                 TextButton(
@@ -4818,7 +4340,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Text(
                     'OK',
                     style: TextStyle(
-                      color: Colors.red,
+                      color: AppColors.kError,
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w600,
                     ),
@@ -4830,8 +4352,6 @@ class _HomeScreenState extends State<HomeScreen> {
         );
       }
     } catch (e) {
-      //❌ Error handling emergency SOS: $e', tag: 'SOS');
-      // Show error dialog
       showDialog(
         context: context,
         barrierDismissible: false,
@@ -4839,14 +4359,14 @@ class _HomeScreenState extends State<HomeScreen> {
           return AlertDialog(
             title: Row(
               children: [
-                Icon(Icons.error, color: Colors.red, size: 28.sp),
+                Icon(Icons.error, color: AppColors.kError, size: 28.sp),
                 SizedBox(width: 10.w),
-                Text('Error'),
+                Text('Error', style: TextStyle(color: AppColors.kBlackColor)),
               ],
             ),
             content: Text(
               'Failed to send emergency alert. Please try again.',
-              style: TextStyle(fontSize: 16.sp),
+              style: TextStyle(fontSize: 16.sp, color: AppColors.kBlackColor),
             ),
             actions: [
               TextButton(
@@ -4854,7 +4374,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 child: Text(
                   'OK',
                   style: TextStyle(
-                    color: Colors.red,
+                    color: AppColors.kError,
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w600,
                   ),

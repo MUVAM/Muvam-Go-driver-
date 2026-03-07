@@ -1,10 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/app_routes.dart';
+import 'package:muvam_rider/core/constants/app_spacings.dart';
 import 'package:muvam_rider/core/constants/images.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
+import 'package:muvam_rider/core/utils/extension.dart';
 import 'package:muvam_rider/features/auth/data/provider/%20delete_account_provider.dart';
 import 'package:muvam_rider/features/auth/presentation/widgets/reason_item.dart';
-import 'package:muvam_rider/shared/presentation/screens/onboarding_screen.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
+import 'package:muvam_rider/layouts/presentation/shared/bottom_padding.dart';
 import 'package:provider/provider.dart';
 
 class DeleteAccountScreen extends StatefulWidget {
@@ -28,50 +34,46 @@ class DeleteAccountScreenState extends State<DeleteAccountScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return AppScaffold(
+      backgroundColor: AppColors.kWhiteColor,
       body: SafeArea(
         child: Consumer<DeleteAccountProvider>(
           builder: (context, deleteProvider, child) {
             return Padding(
-              padding: EdgeInsets.all(20.w),
+              padding: EdgeInsets.symmetric(horizontal: AppSpacings.k20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  SizedBox(height: AppSpacings.k20),
                   Row(
                     children: [
                       GestureDetector(
-                        onTap: () => Navigator.pop(context),
+                        onTap: () => context.pop(),
                         child: Image.asset(
                           ConstImages.back,
                           width: 33.w,
                           height: 33.h,
                         ),
                       ),
-                      Spacer(),
-                      Text(
-                        'Delete Account',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
-                        ),
+                      const Spacer(),
+                      MuvamTexts.titleMedium18(
+                        context,
+                        text: 'Delete Account',
+                        isTextWidget: true,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.kBlackColor,
                       ),
-                      Spacer(),
+                      const Spacer(),
                     ],
                   ),
                   SizedBox(height: 30.h),
-                  Text(
-                    'We\'re really sorry to see you go 😢 Are you sure you want to delete your account? Once you confirm, your data will be gone.',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w400,
-                      height: 1.3,
-                      letterSpacing: -0.41,
-                      color: Colors.black,
-                    ),
+                  MuvamTexts.bodyMedium14(
+                    context,
+                    text:
+                        'We\'re really sorry to see you go. Are you sure you want to delete your account? Once you confirm, your data will be gone.',
+                    isTextWidget: true,
+                    color: AppColors.kBlackColor,
+                    height: 1.3,
                   ),
                   SizedBox(height: 30.h),
                   Expanded(
@@ -87,12 +89,12 @@ class DeleteAccountScreenState extends State<DeleteAccountScreen> {
                     ),
                   ),
                   Container(
-                    width: 353.w,
+                    width: double.infinity,
                     height: 47.h,
                     decoration: BoxDecoration(
                       color: deleteProvider.isDeleting
-                          ? Colors.grey
-                          : Colors.red,
+                          ? AppColors.kGreyColor
+                          : AppColors.kError,
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: Material(
@@ -116,23 +118,23 @@ class DeleteAccountScreenState extends State<DeleteAccountScreen> {
                               ? SizedBox(
                                   width: 20.w,
                                   height: 20.h,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
+                                  child: const CircularProgressIndicator(
+                                    color: AppColors.kWhiteColor,
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : Text(
-                                  'Delete my account',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16.sp,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              : MuvamTexts.button16(
+                                  context,
+                                  text: 'Delete my account',
+                                  color: AppColors.kWhiteColor,
+                                  fontWeight: FontWeight.w600,
+                                  isTextWidget: true,
                                 ),
                         ),
                       ),
                     ),
                   ),
+                  DeviceBottomPadding(),
                 ],
               ),
             );
@@ -153,7 +155,7 @@ class DeleteAccountScreenState extends State<DeleteAccountScreen> {
       builder: (context) => Container(
         padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.kWhiteColor,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
         ),
         child: Column(
@@ -168,25 +170,21 @@ class DeleteAccountScreenState extends State<DeleteAccountScreen> {
                 borderRadius: BorderRadius.circular(2.5.r),
               ),
             ),
-            Text(
-              'Delete Account',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w600,
-                color: Colors.black,
-              ),
+            MuvamTexts.titleMedium18(
+              context,
+              text: 'Delete Account',
+              isTextWidget: true,
+              fontWeight: FontWeight.w600,
+              color: AppColors.kBlackColor,
             ),
             SizedBox(height: 20.h),
-            Text(
-              'Are you sure you want to delete your account? This action cannot be undone.',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w400,
-                color: Colors.black,
-              ),
+            MuvamTexts.bodyMedium14(
+              context,
+              text:
+                  'Are you sure you want to delete your account? This action cannot be undone.',
+              isTextWidget: true,
+              center: true,
+              color: AppColors.kBlackColor,
             ),
             SizedBox(height: 30.h),
             Row(
@@ -195,7 +193,7 @@ class DeleteAccountScreenState extends State<DeleteAccountScreen> {
                   child: Container(
                     height: 47.h,
                     decoration: BoxDecoration(
-                      color: Color(0xFFB1B1B1),
+                      color: AppColors.kGreyColor,
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: Material(
@@ -204,13 +202,12 @@ class DeleteAccountScreenState extends State<DeleteAccountScreen> {
                         borderRadius: BorderRadius.circular(8.r),
                         onTap: () => Navigator.pop(context),
                         child: Center(
-                          child: Text(
-                            'Cancel',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          child: MuvamTexts.button16(
+                            context,
+                            text: 'Cancel',
+                            color: AppColors.kWhiteColor,
+                            fontWeight: FontWeight.w600,
+                            isTextWidget: true,
                           ),
                         ),
                       ),
@@ -222,7 +219,7 @@ class DeleteAccountScreenState extends State<DeleteAccountScreen> {
                   child: Container(
                     height: 47.h,
                     decoration: BoxDecoration(
-                      color: Colors.red,
+                      color: AppColors.kError,
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: Material(
@@ -230,25 +227,21 @@ class DeleteAccountScreenState extends State<DeleteAccountScreen> {
                       child: InkWell(
                         borderRadius: BorderRadius.circular(8.r),
                         onTap: () async {
-                          // Close bottom sheet first
-                          Navigator.pop(context);
-
-                          // Wait a frame to ensure context is valid
-                          await Future.delayed(Duration(milliseconds: 100));
-
-                          // Now delete with the main screen context
+                          context.pop();
+                          await Future.delayed(
+                            const Duration(milliseconds: 100),
+                          );
                           if (mounted) {
                             _deleteAccount();
                           }
                         },
                         child: Center(
-                          child: Text(
-                            'Delete account',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          child: MuvamTexts.button16(
+                            context,
+                            text: 'Delete account',
+                            color: AppColors.kWhiteColor,
+                            fontWeight: FontWeight.w600,
+                            isTextWidget: true,
                           ),
                         ),
                       ),
@@ -278,14 +271,11 @@ class DeleteAccountScreenState extends State<DeleteAccountScreen> {
             deleteProvider.successMessage ?? 'Account deleted successfully',
       );
 
-      await Future.delayed(Duration(seconds: 2));
+      await Future.delayed(const Duration(seconds: 2));
 
       if (!mounted) return;
 
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const OnboardingScreen()),
-        (route) => false,
-      );
+      context.goNamedRoute(AppRoutes.onboarding.name);
     } else {
       CustomFlushbar.showError(
         context: context,

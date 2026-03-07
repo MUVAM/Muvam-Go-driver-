@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:muvam_rider/core/constants/images.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
 import 'package:provider/provider.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
-import 'package:muvam_rider/core/constants/theme_manager.dart';
 import 'package:muvam_rider/features/earnings/data/models/bank.dart';
 import 'package:muvam_rider/features/earnings/data/provider/withdrawal_provider.dart';
 
@@ -45,7 +47,6 @@ class _BankSelectionScreenState extends State<BankSelectionScreen> {
         header = '#';
       } else {
         final firstChar = bank.name[0].toUpperCase();
-        // Check if first character is a digit
         if (RegExp(r'[0-9]').hasMatch(firstChar)) {
           header = '#';
         } else if (RegExp(r'[A-Z]').hasMatch(firstChar)) {
@@ -95,11 +96,10 @@ class _BankSelectionScreenState extends State<BankSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeManager = Provider.of<ThemeManager>(context);
     final withdrawalProvider = Provider.of<WithdrawalProvider>(context);
 
-    return Scaffold(
-      backgroundColor: themeManager.getBackgroundColor(context),
+    return AppScaffold(
+      backgroundColor: AppColors.kWhiteColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -108,24 +108,22 @@ class _BankSelectionScreenState extends State<BankSelectionScreen> {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: () => context.pop(),
                     child: Image.asset(
                       ConstImages.back,
                       width: 33.w,
                       height: 33.h,
                     ),
                   ),
-                  Spacer(),
-                  Text(
-                    'Select Bank',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w600,
-                      fontSize: 20.sp,
-                      color: themeManager.getTextColor(context),
-                    ),
+                  const Spacer(),
+                  MuvamTexts.headlineSmall24(
+                    context,
+                    text: 'Select Bank',
+                    isTextWidget: true,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.kBlackColor,
                   ),
-                  Spacer(),
+                  const Spacer(),
                 ],
               ),
             ),
@@ -135,29 +133,31 @@ class _BankSelectionScreenState extends State<BankSelectionScreen> {
               child: Container(
                 height: 48.h,
                 decoration: BoxDecoration(
-                  color: Color(ConstColors.fieldColor).withOpacity(0.12),
+                  color: AppColors.kFieldColor.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: TextField(
                   controller: _searchController,
                   onChanged: _filterBanks,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 14.sp,
-                    color: themeManager.getTextColor(context),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.kBlackColor,
                   ),
                   decoration: InputDecoration(
                     hintText: 'Search bank',
-                    hintStyle: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 14.sp,
-                      color: Colors.grey,
+                    hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w400,
+                      color: AppColors.kGreyColor,
                     ),
-                    prefixIcon: SvgPicture.asset(
-                      ConstImages.search,
-                      width: 20.w,
-                      height: 20.h,
-                      fit: BoxFit.scaleDown,
+                    prefixIcon: Padding(
+                      padding: EdgeInsets.all(12.w),
+                      child: SvgPicture.asset(
+                        ConstImages.search,
+                        width: 20.w,
+                        height: 20.h,
+                        fit: BoxFit.scaleDown,
+                        color: AppColors.kGreyColor,
+                      ),
                     ),
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.symmetric(
@@ -173,18 +173,16 @@ class _BankSelectionScreenState extends State<BankSelectionScreen> {
               child: withdrawalProvider.isLoading
                   ? Center(
                       child: CircularProgressIndicator(
-                        color: Color(ConstColors.mainColor),
+                        color: AppColors.kMainColor,
                       ),
                     )
                   : _filteredBanks.isEmpty
                   ? Center(
-                      child: Text(
-                        'No banks found',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 14.sp,
-                          color: themeManager.getSecondaryTextColor(context),
-                        ),
+                      child: MuvamTexts.bodyMedium14(
+                        context,
+                        text: 'No banks found',
+                        isTextWidget: true,
+                        color: AppColors.kGreyColor,
                       ),
                     )
                   : ListView.builder(
@@ -197,21 +195,15 @@ class _BankSelectionScreenState extends State<BankSelectionScreen> {
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            if (index > 0) SizedBox(height: 24.h),
                             Padding(
-                              padding: EdgeInsets.only(
-                                top: index == 0 ? 0 : 24.h,
-                                bottom: 8.h,
-                              ),
-                              child: Text(
-                                header,
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 14.sp,
-                                  color: themeManager.getSecondaryTextColor(
-                                    context,
-                                  ),
-                                ),
+                              padding: EdgeInsets.only(bottom: 8.h),
+                              child: MuvamTexts.bodyMedium14(
+                                context,
+                                text: header,
+                                isTextWidget: true,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.kGreyColor,
                               ),
                             ),
                             ...banksInGroup.map((bank) {
@@ -231,14 +223,12 @@ class _BankSelectionScreenState extends State<BankSelectionScreen> {
                                       ),
                                     ),
                                   ),
-                                  child: Text(
-                                    bank.name,
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontWeight: FontWeight.w400,
-                                      fontSize: 16.sp,
-                                      color: themeManager.getTextColor(context),
-                                    ),
+                                  child: MuvamTexts.bodyLarge16(
+                                    context,
+                                    text: bank.name,
+                                    isTextWidget: true,
+                                    fontWeight: FontWeight.w400,
+                                    color: AppColors.kBlackColor,
                                   ),
                                 ),
                               );

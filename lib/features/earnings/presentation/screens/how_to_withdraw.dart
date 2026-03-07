@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
 
 class HowToWithdraw extends StatelessWidget {
   const HowToWithdraw({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return AppScaffold(
+      backgroundColor: AppColors.kWhiteColor,
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.all(20.w),
@@ -21,20 +23,18 @@ class HowToWithdraw extends StatelessWidget {
                     onTap: () => Navigator.pop(context),
                     child: Image.asset(
                       ConstImages.back,
-                      width: 24.w,
-                      height: 24.h,
+                      width: 35.w,
+                      height: 35.h,
                     ),
                   ),
                   Expanded(
                     child: Center(
-                      child: Text(
-                        'Withdrawal',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
-                        ),
+                      child: MuvamTexts.titleLarge22(
+                        context,
+                        text: 'Withdrawal',
+                        isTextWidget: true,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.kBlackColor,
                       ),
                     ),
                   ),
@@ -45,7 +45,7 @@ class HowToWithdraw extends StatelessWidget {
               Container(
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: AppColors.kWhiteColor,
                   borderRadius: BorderRadius.circular(10.r),
                   border: Border.all(color: Colors.grey.shade300),
                 ),
@@ -54,17 +54,13 @@ class HowToWithdraw extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Center(
-                      child: Text(
-                        'How to withdraw',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.w600,
-                          height: 1.0,
-                          letterSpacing: -0.41,
-                          color: Color(ConstColors.mainColor),
-                        ),
+                      child: MuvamTexts.titleMedium18(
+                        context,
+                        text: 'How to withdraw',
+                        isTextWidget: true,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.kMainColor,
+                        center: true,
                       ),
                     ),
                     SizedBox(height: 20.h),
@@ -75,32 +71,28 @@ class HowToWithdraw extends StatelessWidget {
                           width: 20.w,
                           height: 20.h,
                           decoration: BoxDecoration(
-                            color: Color(ConstColors.mainColor),
+                            color: AppColors.kMainColor,
                             shape: BoxShape.circle,
                           ),
                           child: Center(
-                            child: Text(
-                              '1',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            child: MuvamTexts.bodySmall12(
+                              context,
+                              text: '1',
+                              isTextWidget: true,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.kWhiteColor,
                             ),
                           ),
                         ),
                         SizedBox(width: 10.w),
                         Expanded(
-                          child: Text(
-                            'Once you reach the earning dashboard, click the withdrawal button on the earning card.',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w400,
-                              height: 1.0,
-                              letterSpacing: -0.41,
-                              color: Colors.black,
-                            ),
+                          child: MuvamTexts.bodySmall12(
+                            context,
+                            text:
+                                'Once you reach the earning dashboard, click the withdrawal button on the earning card.',
+                            isTextWidget: true,
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                       ],
@@ -113,32 +105,28 @@ class HowToWithdraw extends StatelessWidget {
                           width: 20.w,
                           height: 20.h,
                           decoration: BoxDecoration(
-                            color: Color(ConstColors.mainColor),
+                            color: AppColors.kMainColor,
                             shape: BoxShape.circle,
                           ),
                           child: Center(
-                            child: Text(
-                              '2',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            child: MuvamTexts.bodySmall12(
+                              context,
+                              text: '2',
+                              isTextWidget: true,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.kWhiteColor,
                             ),
                           ),
                         ),
                         SizedBox(width: 10.w),
                         Expanded(
-                          child: Text(
-                            'While you are at the withdrawal form screen, enter your correct details so as not to result in money loss.',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w400,
-                              height: 1.0,
-                              letterSpacing: -0.41,
-                              color: Colors.black,
-                            ),
+                          child: MuvamTexts.bodySmall12(
+                            context,
+                            text:
+                                'While you are at the withdrawal form screen, enter your correct details so as not to result in money loss.',
+                            isTextWidget: true,
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                       ],

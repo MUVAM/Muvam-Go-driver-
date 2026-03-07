@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:muvam_rider/core/services/request_service.dart';
-import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/features/activities/data/models/ride_data.dart';
 
 class RequestProvider extends ChangeNotifier {

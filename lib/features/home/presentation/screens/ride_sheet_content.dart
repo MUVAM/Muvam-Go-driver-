@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/app_routes.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/utils/currency_formatter.dart';
-import 'package:muvam_rider/features/communication/presentation/screens/call_screen.dart';
-import 'package:muvam_rider/features/communication/presentation/screens/chat_screen.dart';
 
 class RideSheetContent {
   static Widget buildActiveRideContent({
@@ -18,11 +20,10 @@ class RideSheetContent {
     required Function formatPaymentMethod,
   }) {
     return Column(
-      crossAxisAlignment:
-          CrossAxisAlignment.start, // Align everything to the left
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Price centered
         Center(
+<<<<<<< HEAD
           child: Text(
             '₦${CurrencyFormatter.format(ride['Price'].toString())}',
             style: TextStyle(
@@ -32,6 +33,15 @@ class RideSheetContent {
               height: 1.0,
               letterSpacing: -0.32,
             ),
+=======
+          child: MuvamTexts.headlineMedium28(
+            context,
+            text:
+                '₦${CurrencyFormatter.format(ride['Price'].toStringAsFixed(1))}',
+            isTextWidget: true,
+            fontWeight: FontWeight.w700,
+            color: AppColors.kBlackColor,
+>>>>>>> cbc7bf1 (feat: code refactoring)
           ),
         ),
         SizedBox(height: 15.h),
@@ -39,123 +49,96 @@ class RideSheetContent {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(
-                'Extra(tip): ₦$tip',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w500,
-                  fontSize: 16.sp,
-                  height: 1.0,
-                  letterSpacing: -0.32,
-                  color: Colors.grey,
-                ),
+              MuvamTexts.bodyLarge16(
+                context,
+                text: 'Extra(tip): ₦$tip',
+                isTextWidget: true,
+                fontWeight: FontWeight.w500,
+                color: AppColors.kGreyColor,
               ),
-              SizedBox(width: 8.w), // Add spacing before divider
+              SizedBox(width: 8.w),
               Container(width: 1.w, height: 20.h, color: Colors.grey.shade300),
               SizedBox(width: 8.w),
-              Text(
-                'Wait: ₦$waitFee',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w500,
-                  fontSize: 16.sp,
-                  height: 1.0,
-                  letterSpacing: -0.32,
-                  color: Colors.grey,
-                ),
+              MuvamTexts.bodyLarge16(
+                context,
+                text: 'Wait: ₦$waitFee',
+                isTextWidget: true,
+                fontWeight: FontWeight.w500,
+                color: AppColors.kGreyColor,
               ),
             ],
           ),
         ),
         SizedBox(height: 20.h),
         if (rideStatus != 'started') ...[
-          // Passenger name aligned to the left
-          Text(
-            passengerName,
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w600,
-              fontSize: 24.sp,
-              height: 1.0,
-              letterSpacing: -0.32,
-            ),
+          MuvamTexts.headlineSmall24(
+            context,
+            text: passengerName,
+            isTextWidget: true,
+            fontWeight: FontWeight.w600,
+            color: AppColors.kBlackColor,
           ),
           SizedBox(height: 15.h),
-          // Pickup address aligned to the left
-          Text(
-            'Pick up: ${ride['PickupAddress'] ?? 'Unknown location'}',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w600,
-              fontSize: 24.sp,
-              height: 1.0,
-              letterSpacing: -0.32,
-            ),
+          MuvamTexts.headlineSmall24(
+            context,
+            text: 'Pick up: ${ride['PickupAddress'] ?? 'Unknown location'}',
+            isTextWidget: true,
+            fontWeight: FontWeight.w600,
+            color: AppColors.kBlackColor,
           ),
           if (ride['StopAddress'].trim().isNotEmpty) SizedBox(height: 15.h),
         ],
-        // Destination aligned to the left
         if (ride['StopAddress'].trim().isNotEmpty)
-          Text(
-            'Stop: ${ride['StopAddress'] ?? ride['stopAddress']}',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w600,
-              fontSize: 24.sp,
-              height: 1.0,
-              letterSpacing: -0.32,
-            ),
+          MuvamTexts.headlineSmall24(
+            context,
+            text: 'Stop: ${ride['StopAddress'] ?? ride['stopAddress'] ?? ''}',
+            isTextWidget: true,
+            fontWeight: FontWeight.w600,
+            color: AppColors.kBlackColor,
           ),
         SizedBox(height: 15.h),
-        Text(
-          'Destination: ${ride['DestAddress'] ?? 'Unknown destination'}',
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontWeight: FontWeight.w600,
-            fontSize: 24.sp,
-            height: 1.0,
-            letterSpacing: -0.32,
-          ),
+        MuvamTexts.headlineSmall24(
+          context,
+          text: 'Destination: ${ride['DestAddress'] ?? 'Unknown destination'}',
+          isTextWidget: true,
+          fontWeight: FontWeight.w600,
+          color: AppColors.kBlackColor,
         ),
         SizedBox(height: 15.h),
-        Divider(color: Color(0xffB1B1B1)),
+        Divider(color: AppColors.kGreyColor),
         SizedBox(height: 15.h),
         if (ride['Note'].trim().isNotEmpty)
           Column(
             children: [
               Align(
                 alignment: Alignment.centerLeft,
-                child: Text(
-                  'Note:',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 24.sp,
-                    height: 1.0,
-                    letterSpacing: -0.32,
-                  ),
+                child: MuvamTexts.headlineSmall24(
+                  context,
+                  text: 'Note:',
+                  isTextWidget: true,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.kBlackColor,
                 ),
               ),
-              Align(alignment:Alignment.centerLeft,
+              Align(
+                alignment: Alignment.centerLeft,
                 child: Container(
                   width: 331.w,
-                  child: Text(
+                  child: MuvamTexts.bodyLarge16(
+                    context,
+                    text:
+                        '${ride['note'] ?? ride['Note'] ?? 'No note provided'}',
+                    isTextWidget: true,
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.kBlackColor,
                     maxLines: 2,
-                    '${ride['note'] ?? ride['Note'] ?? 'No note provided'}',
-                    style: TextStyle(
-                      overflow: TextOverflow.ellipsis,
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w400,
-                      fontSize: 18.sp,
-                      height: 1.0,
-                      letterSpacing: -0.32,
-                    ),
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ),
             ],
           ),
-          SizedBox(height:15.h),
+        SizedBox(height: 15.h),
         Container(
           width: 353.w,
           height: 42.h,
@@ -166,17 +149,17 @@ class RideSheetContent {
           ),
           child: Row(
             children: [
-              // Icon(Ico, size: 20.sp),
               Image.asset(
                 'assets/images/payincar1.png',
                 width: 55.w,
                 height: 30.h,
-                // fit: BoxFit.contain,
               ),
               SizedBox(width: 8.w),
-              Text(
-                formatPaymentMethod(ride['PaymentMethod']),
-                style: TextStyle(fontFamily: 'Inter', fontSize: 14.sp),
+              MuvamTexts.bodyMedium14(
+                context,
+                text: formatPaymentMethod(ride['PaymentMethod']),
+                isTextWidget: true,
+                color: AppColors.kBlackColor,
               ),
             ],
           ),
@@ -188,35 +171,34 @@ class RideSheetContent {
               Expanded(
                 child: GestureDetector(
                   onTap: () {
-                    // Navigate to ChatScreen
-                    // You'll need to import and use your ChatScreen here
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ChatScreen(
-                          driverName: passengerName,
-                          driverId: passengerID,
-                          rideId: ride['ID'],
-                          driverPhone: passengerPhone,
-                        ),
-                      ),
+                    context.pushNamed(
+                      AppRoutes.chat.name,
+                      extra: {
+                        'rideId': ride['ID'],
+                        'driverName': passengerName,
+                        'driverId': passengerID,
+                        'driverImage': null,
+                        'driverPhone': passengerPhone,
+                      },
                     );
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.chat, size: 16.sp),
+                      Icon(
+                        Icons.chat,
+                        size: 16.sp,
+                        color: AppColors.kBlackColor,
+                      ),
                       SizedBox(width: 8.w),
                       Flexible(
-                        child: Text(
-                          'Chat ${passenger['first_name'] ?? 'Passenger'}',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.w600,
-                            height: 22 / 16,
-                            letterSpacing: -0.41,
-                          ),
+                        child: MuvamTexts.titleMedium18(
+                          context,
+                          text:
+                              'Chat ${passenger['first_name'] ?? 'Passenger'}',
+                          isTextWidget: true,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.kBlackColor,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -228,33 +210,31 @@ class RideSheetContent {
               Expanded(
                 child: GestureDetector(
                   onTap: () {
-                    // Navigate to CallScreen
-                    // You'll need to import and use your CallScreen here
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => CallScreen(
-                          driverName: passengerName,
-                          rideId: ride['ID'],
-                        ),
-                      ),
+                    context.pushNamed(
+                      AppRoutes.call.name,
+                      extra: {
+                        'driverName': passengerName,
+                        'rideId': ride['ID'],
+                      },
                     );
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.call, size: 16.sp),
+                      Icon(
+                        Icons.call,
+                        size: 16.sp,
+                        color: AppColors.kBlackColor,
+                      ),
                       SizedBox(width: 8.w),
                       Flexible(
-                        child: Text(
-                          'Call ${passenger['first_name'] ?? 'Passenger'}',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.w600,
-                            height: 22 / 16,
-                            letterSpacing: -0.41,
-                          ),
+                        child: MuvamTexts.titleMedium18(
+                          context,
+                          text:
+                              'Call ${passenger['first_name'] ?? 'Passenger'}',
+                          isTextWidget: true,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.kBlackColor,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
@@ -279,25 +259,20 @@ class RideSheetContent {
     final note = ride['Note'] ?? '';
 
     return Column(
-      crossAxisAlignment:
-          CrossAxisAlignment.start, // Align everything to the left
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Amount label centered
         Center(
-          child: Text(
-            'Amount',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w600,
-              fontSize: 24.sp,
-              height: 1.0,
-              letterSpacing: -0.32,
-            ),
+          child: MuvamTexts.headlineSmall24(
+            context,
+            text: 'Amount',
+            isTextWidget: true,
+            fontWeight: FontWeight.w600,
+            color: AppColors.kBlackColor,
           ),
         ),
         SizedBox(height: 10.h),
-        // Price centered
         Center(
+<<<<<<< HEAD
           child: Text(
             '₦${ride['Price'].toString()}',
             style: TextStyle(
@@ -307,144 +282,123 @@ class RideSheetContent {
               height: 1.0,
               letterSpacing: -0.32,
             ),
+=======
+          child: MuvamTexts.headlineMedium28(
+            context,
+            text: '₦${ride['Price'].toStringAsFixed(1)}',
+            isTextWidget: true,
+            fontWeight: FontWeight.w700,
+            color: AppColors.kBlackColor,
+>>>>>>> cbc7bf1 (feat: code refactoring)
           ),
         ),
         SizedBox(height: 20.h),
-        // Passenger name section - aligned to the left
-        Text(
-          'Passenger name',
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontWeight: FontWeight.w600,
-            fontSize: 24.sp,
-            height: 1.0,
-            letterSpacing: -0.32,
-          ),
+        MuvamTexts.headlineSmall24(
+          context,
+          text: 'Passenger name',
+          isTextWidget: true,
+          fontWeight: FontWeight.w600,
+          color: AppColors.kBlackColor,
         ),
         SizedBox(height: 10.h),
-        Text(
-          passengerName,
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontWeight: FontWeight.w400,
-            fontSize: 16.sp,
-          ),
+        MuvamTexts.bodyLarge16(
+          context,
+          text: passengerName,
+          isTextWidget: true,
+          fontWeight: FontWeight.w400,
+          color: AppColors.kBlackColor,
         ),
         SizedBox(height: 20.h),
-        // Destination section - aligned to the left
-        Text(
-          'Destination',
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontWeight: FontWeight.w600,
-            fontSize: 24.sp,
-            height: 1.0,
-            letterSpacing: -0.32,
-          ),
+        MuvamTexts.headlineSmall24(
+          context,
+          text: 'Destination',
+          isTextWidget: true,
+          fontWeight: FontWeight.w600,
+          color: AppColors.kBlackColor,
         ),
         SizedBox(height: 10.h),
-        Text(
-          ride['DestAddress'] ?? 'Unknown destination',
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontWeight: FontWeight.w400,
-            fontSize: 16.sp,
-          ),
+        MuvamTexts.bodyLarge16(
+          context,
+          text: ride['DestAddress'] ?? 'Unknown destination',
+          isTextWidget: true,
+          fontWeight: FontWeight.w400,
+          color: AppColors.kBlackColor,
         ),
-        // Stop section - aligned to the left
         if (ride['StopAddress'] != null &&
             ride['StopAddress'].toString().isNotEmpty) ...[
           SizedBox(height: 20.h),
-          Text(
-            'Stop',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w600,
-              fontSize: 24.sp,
-              height: 1.0,
-              letterSpacing: -0.32,
-            ),
+          MuvamTexts.headlineSmall24(
+            context,
+            text: 'Stop',
+            isTextWidget: true,
+            fontWeight: FontWeight.w600,
+            color: AppColors.kBlackColor,
           ),
           SizedBox(height: 10.h),
-          Text(
-            ride['StopAddress'],
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w400,
-              fontSize: 16.sp,
-            ),
+          MuvamTexts.bodyLarge16(
+            context,
+            text: ride['StopAddress'],
+            isTextWidget: true,
+            fontWeight: FontWeight.w400,
+            color: AppColors.kBlackColor,
           ),
         ],
         if (note.isNotEmpty) ...[
           SizedBox(height: 20.h),
-          Text(
-            'Note',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w600,
-              fontSize: 24.sp,
-              height: 1.0,
-              letterSpacing: -0.32,
-            ),
+          MuvamTexts.headlineSmall24(
+            context,
+            text: 'Note',
+            isTextWidget: true,
+            fontWeight: FontWeight.w600,
+            color: AppColors.kBlackColor,
           ),
           SizedBox(height: 10.h),
-          Text(
-            note,
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w400,
-              fontSize: 16.sp,
-            ),
+          MuvamTexts.bodyLarge16(
+            context,
+            text: note,
+            isTextWidget: true,
+            fontWeight: FontWeight.w400,
+            color: AppColors.kBlackColor,
           ),
         ],
         SizedBox(height: 20.h),
-        Text(
-          'Payment Method',
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontWeight: FontWeight.w600,
-            fontSize: 24.sp,
-            height: 1.0,
-            letterSpacing: -0.32,
-          ),
+        MuvamTexts.headlineSmall24(
+          context,
+          text: 'Payment Method',
+          isTextWidget: true,
+          fontWeight: FontWeight.w600,
+          color: AppColors.kBlackColor,
         ),
         SizedBox(height: 10.h),
-        Text(
-          formatPaymentMethod(ride['PaymentMethod']),
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontWeight: FontWeight.w400,
-            fontSize: 16.sp,
-          ),
+        MuvamTexts.bodyLarge16(
+          context,
+          text: formatPaymentMethod(ride['PaymentMethod']),
+          isTextWidget: true,
+          fontWeight: FontWeight.w400,
+          color: AppColors.kBlackColor,
         ),
         SizedBox(height: 30.h),
         Container(
           width: 353.w,
           height: 48.h,
           decoration: BoxDecoration(
-            color: Color(0xFF000000), // Replace with your ConstColors.mainColor
+            color: AppColors.kMainColor,
             borderRadius: BorderRadius.circular(8.r),
           ),
           child: GestureDetector(
             onTap: () {
-              // Navigate to HistoryCompletedScreen
-              // You'll need to import and use your HistoryCompletedScreen here
-              // Navigator.push(
-              //   context,
-              //   MaterialPageRoute(
-              //     builder: (context) =>
-              //         HistoryCompletedScreen(rideId: ride['ride_id']),
-              //   ),
-              // );
+              context.pushNamed(
+                AppRoutes.historyCompleted.name,
+                extra: {'rideId': ride['ride_id']},
+              );
             },
             child: Center(
-              child: Text(
-                'History',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w600,
-                ),
+              child: MuvamTexts.button16(
+                context,
+                text: 'History',
+                isTextWidget: true,
+                fontWeight: FontWeight.w600,
+                color: AppColors.kWhiteColor,
               ),
             ),
           ),

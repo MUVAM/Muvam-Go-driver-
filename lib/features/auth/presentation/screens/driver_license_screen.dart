@@ -2,12 +2,15 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
-import 'package:muvam_rider/core/constants/fonts.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/app_spacings.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
-import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
+import 'package:muvam_rider/core/utils/extension.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
+import 'package:muvam_rider/layouts/presentation/shared/bottom_padding.dart';
 import 'package:provider/provider.dart';
 
 class DriverLicenseScreen extends StatefulWidget {
@@ -52,7 +55,6 @@ class _DriverLicenseScreenState extends State<DriverLicenseScreen> {
   }
 
   Future<void> _pickDriverLicense() async {
-    //📸 User tapped to pick driver license image');
     try {
       final XFile? pickedFile = await _picker.pickImage(
         source: ImageSource.gallery,
@@ -63,16 +65,12 @@ class _DriverLicenseScreenState extends State<DriverLicenseScreen> {
         setState(() {
           driverLicenseFile = File(pickedFile.path);
         });
-        //✅ Driver license image selected: ${pickedFile.path}');
         CustomFlushbar.showSuccess(
           context: context,
           message: 'Driver license image selected',
         );
-      } else {
-        //❌ No image selected');
       }
     } catch (e) {
-      //❌ Error picking driver license image: $e');
       CustomFlushbar.showError(
         context: context,
         message: 'Failed to pick image: $e',
@@ -81,13 +79,7 @@ class _DriverLicenseScreenState extends State<DriverLicenseScreen> {
   }
 
   Future<void> _submitDriverLicense() async {
-    AppLogger.log(
-      '\n🚀 ========== STARTING DRIVER LICENSE VERIFICATION ==========',
-    );
-    //📋 Step 1: Validating driver license fields...');
-
     if (driverLicenseNumberController.text.isEmpty) {
-      //❌ Validation failed: Driver license number is empty');
       CustomFlushbar.showError(
         context: context,
         message: 'Please enter your driver license number',
@@ -96,7 +88,6 @@ class _DriverLicenseScreenState extends State<DriverLicenseScreen> {
     }
 
     if (driverLicenseFile == null) {
-      //❌ Validation failed: Driver license file not uploaded');
       CustomFlushbar.showError(
         context: context,
         message: 'Please upload your driver license photo',
@@ -104,68 +95,33 @@ class _DriverLicenseScreenState extends State<DriverLicenseScreen> {
       return;
     }
 
-    //✅ All fields validated successfully');
-    AppLogger.log(
-      '📝 Driver License Number: ${driverLicenseNumberController.text}',
-    );
-    //📝 Driver License File: ${driverLicenseFile!.path}');
-
     setState(() => isLoading = true);
 
     try {
-      AppLogger.log(
-        '\n📋 Step 2: Calling uploadVerificationDocuments endpoint...',
-      );
-      //🌐 Endpoint: /users/verification');
-      //📤 Uploading driver license for verification...');
-
       final verificationResult = await ApiService.uploadVerificationDocuments(
         driverLicenseFile: driverLicenseFile!,
         driverLicenseNumber: driverLicenseNumberController.text,
         token: widget.token,
       );
 
-      //\n📥 Verification API Response received');
-      //Response: $verificationResult');
-
-      if (!mounted) {
-        //⚠️ Widget unmounted, stopping flow');
-        return;
-      }
+      if (!mounted) return;
 
       if (verificationResult['success'] == true) {
-        // //✅ Driver license verification SUCCESSFUL!');
-        // //\n📋 Step 3: Returning to Upload Documents Screen...');
-        // //🎯 Returning with driver license file');
-
-        // Return to upload documents screen with the driver license file
         Navigator.pop(context, driverLicenseFile);
-
-        //✅ Returned to Upload Documents Screen successfully');
-        AppLogger.log(
-          '========== DRIVER LICENSE VERIFICATION COMPLETE ==========\n',
-        );
       } else {
-        //❌ Driver license verification FAILED');
         String errorMessage =
             verificationResult['message'] ??
             'Driver license verification failed';
-        //Error message: $errorMessage');
 
         CustomFlushbar.showError(context: context, message: errorMessage);
       }
     } catch (e, stackTrace) {
-      //❌ CRITICAL ERROR in driver license verification flow');
-      //Error: $e');
-      //Stack trace: $stackTrace');
-
       if (mounted) {
         CustomFlushbar.showError(context: context, message: 'Error: $e');
       }
     } finally {
       if (mounted) {
         setState(() => isLoading = false);
-        //🔄 Loading state reset');
       }
     }
   }
@@ -174,13 +130,13 @@ class _DriverLicenseScreenState extends State<DriverLicenseScreen> {
   Widget build(BuildContext context) {
     final themeManager = Provider.of<ThemeManager>(context);
 
-    return Scaffold(
+    return AppScaffold(
       backgroundColor: themeManager.getBackgroundColor(context),
       body: SafeArea(
         child: Column(
           children: [
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              padding: EdgeInsets.symmetric(horizontal: AppSpacings.k20),
               child: Column(
                 children: [
                   SizedBox(height: 20.h),
@@ -191,33 +147,28 @@ class _DriverLicenseScreenState extends State<DriverLicenseScreen> {
                           Icons.arrow_back,
                           color: themeManager.getTextColor(context),
                         ),
-                        onPressed: () => Navigator.pop(context),
+                        onPressed: () => context.pop(),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                       ),
                       const Spacer(),
-                      Text(
-                        'Driver License',
-                        style: TextStyle(
-                          fontFamily: ConstFonts.inter,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 20.sp,
-                          color: themeManager.getTextColor(context),
-                        ),
+                      MuvamTexts.titleLarge22(
+                        context,
+                        text: 'Driver License',
+                        isTextWidget: true,
+                        fontWeight: FontWeight.w700,
+                        color: themeManager.getTextColor(context),
                       ),
                       const Spacer(),
                     ],
                   ),
                   SizedBox(height: 10.h),
-                  Text(
-                    'Please provide your driver license details',
-                    style: TextStyle(
-                      fontFamily: ConstFonts.inter,
-                      fontWeight: FontWeight.w400,
-                      fontSize: 14.sp,
-                      color: themeManager.getSecondaryTextColor(context),
-                    ),
-                    textAlign: TextAlign.center,
+                  MuvamTexts.bodyMedium14(
+                    context,
+                    text: 'Please provide your driver license details',
+                    isTextWidget: true,
+                    center: true,
+                    color: themeManager.getSecondaryTextColor(context),
                   ),
                   SizedBox(height: 30.h),
                 ],
@@ -230,14 +181,12 @@ class _DriverLicenseScreenState extends State<DriverLicenseScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Driver License Number TextField
-                      Text(
-                        'Driver License Number',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w500,
-                          color: themeManager.getTextColor(context),
-                        ),
+                      MuvamTexts.bodyMedium14(
+                        context,
+                        text: 'Driver License Number',
+                        isTextWidget: true,
+                        fontWeight: FontWeight.w500,
+                        color: themeManager.getTextColor(context),
                       ),
                       SizedBox(height: 8.h),
                       TextField(
@@ -266,8 +215,8 @@ class _DriverLicenseScreenState extends State<DriverLicenseScreen> {
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8.r),
-                            borderSide: BorderSide(
-                              color: Color(ConstColors.mainColor),
+                            borderSide: const BorderSide(
+                              color: AppColors.kMainColor,
                               width: 1.5,
                             ),
                           ),
@@ -278,14 +227,12 @@ class _DriverLicenseScreenState extends State<DriverLicenseScreen> {
                         ),
                       ),
                       SizedBox(height: 20.h),
-                      // Driver License Photo
-                      Text(
-                        'Driver License Photo',
-                        style: TextStyle(
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w500,
-                          color: themeManager.getTextColor(context),
-                        ),
+                      MuvamTexts.bodyMedium14(
+                        context,
+                        text: 'Driver License Photo',
+                        isTextWidget: true,
+                        fontWeight: FontWeight.w500,
+                        color: themeManager.getTextColor(context),
                       ),
                       SizedBox(height: 8.h),
                       GestureDetector(
@@ -296,13 +243,13 @@ class _DriverLicenseScreenState extends State<DriverLicenseScreen> {
                           decoration: BoxDecoration(
                             border: Border.all(
                               color: driverLicenseFile != null
-                                  ? Color(ConstColors.mainColor)
+                                  ? AppColors.kMainColor
                                   : Colors.grey.shade300,
                               width: 1.5,
                             ),
                             borderRadius: BorderRadius.circular(8.r),
                             color: driverLicenseFile != null
-                                ? Color(ConstColors.mainColor).withOpacity(0.05)
+                                ? AppColors.kMainColor.withOpacity(0.05)
                                 : Colors.grey.shade50,
                           ),
                           child: driverLicenseFile != null
@@ -321,14 +268,14 @@ class _DriverLicenseScreenState extends State<DriverLicenseScreen> {
                                       top: 8,
                                       right: 8,
                                       child: Container(
-                                        padding: EdgeInsets.all(4),
-                                        decoration: BoxDecoration(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: const BoxDecoration(
                                           color: Colors.green,
                                           shape: BoxShape.circle,
                                         ),
-                                        child: Icon(
+                                        child: const Icon(
                                           Icons.check,
-                                          color: Colors.white,
+                                          color: AppColors.kWhiteColor,
                                           size: 16,
                                         ),
                                       ),
@@ -344,12 +291,11 @@ class _DriverLicenseScreenState extends State<DriverLicenseScreen> {
                                       color: Colors.grey.shade400,
                                     ),
                                     SizedBox(height: 12.h),
-                                    Text(
-                                      'Tap to upload driver license',
-                                      style: TextStyle(
-                                        fontSize: 14.sp,
-                                        color: Colors.grey.shade600,
-                                      ),
+                                    MuvamTexts.bodyMedium14(
+                                      context,
+                                      text: 'Tap to upload driver license',
+                                      isTextWidget: true,
+                                      color: Colors.grey.shade600,
                                     ),
                                   ],
                                 ),
@@ -369,28 +315,29 @@ class _DriverLicenseScreenState extends State<DriverLicenseScreen> {
                     onTap: isLoading ? null : _submitDriverLicense,
                     child: Container(
                       width: double.infinity,
-                      height: 48.h,
+                      height: 47.h,
                       decoration: BoxDecoration(
                         color: isLoading
-                            ? Colors.grey
-                            : Color(ConstColors.mainColor),
+                            ? AppColors.kGreyColor
+                            : AppColors.kMainColor,
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Center(
                         child: isLoading
-                            ? CircularProgressIndicator(color: Colors.white)
-                            : Text(
-                                'Continue',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                            ? const CircularProgressIndicator(
+                                color: AppColors.kWhiteColor,
+                              )
+                            : MuvamTexts.button16(
+                                context,
+                                text: 'Continue',
+                                color: AppColors.kWhiteColor,
+                                fontWeight: FontWeight.w600,
+                                isTextWidget: true,
                               ),
                       ),
                     ),
                   ),
-                  SizedBox(height: 20.h),
+                  DeviceBottomPadding(),
                 ],
               ),
             ),

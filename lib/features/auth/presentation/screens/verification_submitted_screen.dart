@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
-import 'package:muvam_rider/core/constants/fonts.dart';
-import 'package:provider/provider.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/app_routes.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
+import 'package:muvam_rider/core/utils/extension.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
+import 'package:muvam_rider/layouts/presentation/shared/bottom_padding.dart';
+import 'package:provider/provider.dart';
 
 class VerificationSubmittedScreen extends StatelessWidget {
   const VerificationSubmittedScreen({super.key});
@@ -11,8 +15,8 @@ class VerificationSubmittedScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final themeManager = Provider.of<ThemeManager>(context);
-    
-    return Scaffold(
+
+    return AppScaffold(
       backgroundColor: themeManager.getBackgroundColor(context),
       body: SafeArea(
         child: Padding(
@@ -20,7 +24,6 @@ class VerificationSubmittedScreen extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Success icon
               Container(
                 width: 120.w,
                 height: 120.h,
@@ -37,57 +40,46 @@ class VerificationSubmittedScreen extends StatelessWidget {
                 ),
               ),
               SizedBox(height: 30.h),
-              Text(
-                'Verification Submitted!',
-                style: TextStyle(
-                  fontFamily: ConstFonts.inter,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 24.sp,
-                  color: themeManager.getTextColor(context),
-                ),
-                textAlign: TextAlign.center,
+              MuvamTexts.headlineSmall24(
+                context,
+                text: 'Verification Submitted!',
+                isTextWidget: true,
+                center: true,
+                color: themeManager.getTextColor(context),
               ),
               SizedBox(height: 12.h),
-              Text(
-                'Your vehicle verification documents have been submitted successfully. We will review your documents and get back to you soon.',
-                style: TextStyle(
-                  fontFamily: ConstFonts.inter,
-                  fontWeight: FontWeight.w400,
-                  fontSize: 14.sp,
-                  color: themeManager.getSecondaryTextColor(context),
-                ),
-                textAlign: TextAlign.center,
+              MuvamTexts.bodyMedium14(
+                context,
+                text:
+                    'Your vehicle verification documents have been submitted successfully. We will review your documents and get back to you soon.',
+                isTextWidget: true,
+                center: true,
+                color: themeManager.getSecondaryTextColor(context),
               ),
               SizedBox(height: 40.h),
               GestureDetector(
                 onTap: () {
-                  // Navigate to home or dashboard
-                  Navigator.pushNamedAndRemoveUntil(
-                    context,
-                    '/home',
-                    (route) => false,
-                  );
+                  context.goNamedRoute(AppRoutes.home.name);
                 },
                 child: Container(
                   width: double.infinity,
-                  height: 48.h,
+                  height: 47.h,
                   decoration: BoxDecoration(
-                    color: Color(ConstColors.mainColor),
+                    color: AppColors.kMainColor,
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Center(
-                    child: Text(
-                      'Continue',
-                      style: TextStyle(
-                        fontFamily: ConstFonts.inter,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16.sp,
-                        color: Colors.white,
-                      ),
+                    child: MuvamTexts.button16(
+                      context,
+                      text: 'Continue',
+                      color: AppColors.kWhiteColor,
+                      fontWeight: FontWeight.w600,
+                      isTextWidget: true,
                     ),
                   ),
                 ),
               ),
+              DeviceBottomPadding(),
             ],
           ),
         ),

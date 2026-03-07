@@ -2,15 +2,20 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:camera/camera.dart';
-import 'package:muvam_rider/core/constants/fonts.dart';
-import 'package:provider/provider.dart';
-import 'package:muvam_rider/core/constants/theme_manager.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/app_spacings.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
+import 'package:muvam_rider/core/utils/app_logger.dart';
+import 'package:muvam_rider/core/utils/extension.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
+import 'package:muvam_rider/layouts/presentation/shared/bottom_padding.dart';
 
 class VehicleRegistrationScreen extends StatefulWidget {
   const VehicleRegistrationScreen({super.key});
 
   @override
-  State<VehicleRegistrationScreen> createState() => _VehicleRegistrationScreenState();
+  State<VehicleRegistrationScreen> createState() =>
+      _VehicleRegistrationScreenState();
 }
 
 class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
@@ -36,7 +41,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
         );
 
         await _cameraController!.initialize();
-        
+
         if (mounted) {
           setState(() {
             _isCameraInitialized = true;
@@ -44,12 +49,14 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
         }
       }
     } catch (e) {
-      print('Error initializing camera: $e');
+      AppLogger.log('Error initializing camera: $e');
     }
   }
 
   Future<void> _captureDocument() async {
-    if (_cameraController == null || !_cameraController!.value.isInitialized || _isCapturing) {
+    if (_cameraController == null ||
+        !_cameraController!.value.isInitialized ||
+        _isCapturing) {
       return;
     }
 
@@ -59,12 +66,12 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
 
     try {
       final XFile image = await _cameraController!.takePicture();
-      
+
       if (mounted) {
         Navigator.pop(context, File(image.path));
       }
     } catch (e) {
-      print('Error capturing image: $e');
+      AppLogger.log('Error capturing image: $e');
       setState(() {
         _isCapturing = false;
       });
@@ -79,24 +86,17 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeManager = Provider.of<ThemeManager>(context);
-    
-    return Scaffold(
-      backgroundColor: Colors.black,
+    return AppScaffold(
+      backgroundColor: AppColors.kBlackColor,
       body: SafeArea(
         child: Stack(
           children: [
-            // Camera Preview
             if (_isCameraInitialized && _cameraController != null)
-              Positioned.fill(
-                child: CameraPreview(_cameraController!),
-              )
+              Positioned.fill(child: CameraPreview(_cameraController!))
             else
-              Center(
-                child: CircularProgressIndicator(color: Colors.white),
+              const Center(
+                child: CircularProgressIndicator(color: AppColors.kWhiteColor),
               ),
-
-            // Top bar with back button and title
             Positioned(
               top: 0,
               left: 0,
@@ -107,37 +107,33 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.black.withOpacity(0.7),
-                      Colors.transparent,
-                    ],
+                    colors: [Colors.black.withOpacity(0.7), Colors.transparent],
                   ),
                 ),
                 child: Row(
                   children: [
                     IconButton(
-                      icon: Icon(Icons.arrow_back, color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: AppColors.kWhiteColor,
+                      ),
+                      onPressed: () => context.pop(),
                     ),
                     Expanded(
-                      child: Text(
-                        'Vehicle Verification',
-                        style: TextStyle(
-                          fontFamily: ConstFonts.inter,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 18.sp,
-                          color: Colors.white,
-                        ),
-                        textAlign: TextAlign.center,
+                      child: MuvamTexts.titleMedium18(
+                        context,
+                        text: 'Vehicle Verification',
+                        isTextWidget: true,
+                        center: true,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.kWhiteColor,
                       ),
                     ),
-                    SizedBox(width: 48.w), // Balance the back button
+                    SizedBox(width: 48.w),
                   ],
                 ),
               ),
             ),
-
-            // Document frame overlay
             Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -147,7 +143,7 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
                     height: 220.h,
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.8),
+                        color: AppColors.kWhiteColor.withOpacity(0.8),
                         width: 3,
                       ),
                       borderRadius: BorderRadius.circular(12.r),
@@ -155,68 +151,62 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
                   ),
                   SizedBox(height: 20.h),
                   Container(
-                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 20.w,
+                      vertical: 10.h,
+                    ),
                     decoration: BoxDecoration(
                       color: Colors.black.withOpacity(0.6),
                       borderRadius: BorderRadius.circular(8.r),
                     ),
-                    child: Text(
-                      'Align the document within the frame',
-                      style: TextStyle(
-                        fontFamily: ConstFonts.inter,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14.sp,
-                        color: Colors.white,
-                      ),
-                      textAlign: TextAlign.center,
+                    child: MuvamTexts.bodyMedium14(
+                      context,
+                      text: 'Align the document within the frame',
+                      isTextWidget: true,
+                      center: true,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.kWhiteColor,
                     ),
                   ),
                 ],
               ),
             ),
-
-            // Bottom section with title and capture button
             Positioned(
               bottom: 0,
               left: 0,
               right: 0,
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+                padding: EdgeInsets.symmetric(
+                  horizontal: AppSpacings.k20,
+                  vertical: AppSpacings.k20,
+                ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
-                    colors: [
-                      Colors.black.withOpacity(0.8),
-                      Colors.transparent,
-                    ],
+                    colors: [Colors.black.withOpacity(0.8), Colors.transparent],
                   ),
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      'Vehicle Registration',
-                      style: TextStyle(
-                        fontFamily: ConstFonts.inter,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 20.sp,
-                        color: Colors.white,
-                      ),
+                    MuvamTexts.titleLarge22(
+                      context,
+                      text: 'Vehicle Registration',
+                      isTextWidget: true,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.kWhiteColor,
                     ),
                     SizedBox(height: 8.h),
-                    Text(
-                      'Take a clear photo of your vehicle registration file.',
-                      style: TextStyle(
-                        fontFamily: ConstFonts.inter,
-                        fontWeight: FontWeight.w400,
-                        fontSize: 13.sp,
-                        color: Colors.white.withOpacity(0.8),
-                      ),
-                      textAlign: TextAlign.center,
+                    MuvamTexts.bodySmall12(
+                      context,
+                      text:
+                          'Take a clear photo of your vehicle registration file.',
+                      isTextWidget: true,
+                      center: true,
+                      color: AppColors.kWhiteColor,
                     ),
                     SizedBox(height: 30.h),
-                    // Capture button
                     GestureDetector(
                       onTap: _isCapturing ? null : _captureDocument,
                       child: Container(
@@ -226,28 +216,28 @@ class _VehicleRegistrationScreenState extends State<VehicleRegistrationScreen> {
                           color: Colors.transparent,
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Colors.white,
+                            color: AppColors.kWhiteColor,
                             width: 4,
                           ),
                         ),
                         child: Center(
                           child: _isCapturing
-                              ? CircularProgressIndicator(
-                                  color: Colors.white,
+                              ? const CircularProgressIndicator(
+                                  color: AppColors.kWhiteColor,
                                   strokeWidth: 3,
                                 )
                               : Container(
                                   width: 60.w,
                                   height: 60.h,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.kWhiteColor,
                                     shape: BoxShape.circle,
                                   ),
                                 ),
                         ),
                       ),
                     ),
-                    SizedBox(height: 20.h),
+                    DeviceBottomPadding(),
                   ],
                 ),
               ),

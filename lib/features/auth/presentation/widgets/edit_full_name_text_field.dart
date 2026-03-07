@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 
 class EditFullNameTextField extends StatelessWidget {
   final String label;
@@ -22,14 +24,12 @@ class EditFullNameTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontSize: 14.sp,
-            fontWeight: FontWeight.w400,
-            color: Colors.grey.shade500,
-          ),
+        MuvamTexts.bodyMedium14(
+          context,
+          text: label,
+          isTextWidget: true,
+          fontWeight: FontWeight.w400,
+          color: Colors.grey.shade500,
         ),
         SizedBox(height: 8.h),
         Container(
@@ -45,27 +45,26 @@ class EditFullNameTextField extends StatelessWidget {
                   controller: controller,
                   keyboardType: keyboardType,
                   readOnly: readOnly,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.black,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.kBlackColor,
                   ),
                   decoration: InputDecoration(
                     border: InputBorder.none,
                     hintText: hintText ?? 'Enter $label',
-                    hintStyle: TextStyle(color: Colors.grey.shade400),
+                    hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w400,
+                      color: Colors.grey.shade400,
+                    ),
                   ),
                 ),
               ),
-              Text(
-                'Edit',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w400,
-                  color: Colors.grey.shade400,
-                ),
+              MuvamTexts.bodyMedium14(
+                context,
+                text: 'Edit',
+                isTextWidget: true,
+                fontWeight: FontWeight.w400,
+                color: Colors.grey.shade400,
               ),
             ],
           ),

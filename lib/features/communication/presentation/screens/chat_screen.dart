@@ -1,24 +1,25 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
 import 'package:googleapis_auth/auth_io.dart' as auth;
 import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/app_routes.dart';
 import 'package:muvam_rider/core/constants/images.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/services/firebase_config_service.dart';
 import 'package:muvam_rider/core/services/unified_notifiation_service.dart';
 import 'package:muvam_rider/core/services/websocket_service.dart';
-import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/communication/data/models/chat_model.dart';
 import 'package:muvam_rider/features/communication/data/providers/chat_provider.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
-
 import '../widgets/chat_bubble.dart';
-import 'call_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   final int rideId;
@@ -53,7 +54,6 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    //ChatScreen initState - Ride ID: ${widget.rideId}');
     _initializeScreen();
   }
 
@@ -63,13 +63,9 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _loadUserId() async {
-    //Loading user ID...');
     try {
       final prefs = await SharedPreferences.getInstance();
       final userId = prefs.getString('user_id');
-
-      //User ID: $userId');
-      //Passenger ID: ${widget.driverId}');
 
       if (mounted) {
         setState(() {
@@ -78,7 +74,6 @@ class _ChatScreenState extends State<ChatScreen> {
         });
       }
     } catch (e) {
-      //Error loading user ID: $e');
       if (mounted) {
         setState(() {
           _userIdLoaded = true;
@@ -89,15 +84,10 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _initializeWebSocket() async {
     try {
-      //Initializing ChatScreen WebSocket');
-
       _webSocketService = WebSocketService.instance;
 
       if (!_webSocketService.isConnected) {
-        //Connecting...');
         await _webSocketService.connect();
-      } else {
-        //Already connected');
       }
 
       if (mounted) {
@@ -108,11 +98,7 @@ class _ChatScreenState extends State<ChatScreen> {
       }
 
       context.read<ChatProvider>().setActiveRide(widget.rideId);
-      //Chat screen marked as active for ride ${widget.rideId}');
-
-      //WebSocket initialized for ChatScreen');
     } catch (e) {
-      //WebSocket initialization error: $e');
       if (mounted) {
         setState(() {
           isLoading = false;
@@ -124,7 +110,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
-    //ChatScreen dispose');
     context.read<ChatProvider>().setActiveRide(null);
     _messageController.dispose();
     _scrollController.dispose();
@@ -133,22 +118,14 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _handleIncomingMessage(Map<String, dynamic> data) {
     try {
-      //Chat message handler called');
-      //   Data: $data');
-
       final messageData = data['data'] as Map<String, dynamic>?;
       if (messageData == null) {
-        //No data field');
         return;
       }
 
       final messageRideId = messageData['ride_id'] ?? data['ride_id'];
-      AppLogger.log(
-        '   Message ride: $messageRideId, Current ride: ${widget.rideId}',
-      );
 
       if (messageRideId != widget.rideId) {
-        //Different ride, ignoring');
         return;
       }
 
@@ -158,9 +135,6 @@ class _ChatScreenState extends State<ChatScreen> {
           data['user_id']?.toString() ??
           '';
       final timestamp = data['timestamp'] ?? DateTime.now().toIso8601String();
-
-      //Adding message: "$messageText"');
-      //   From: $senderId (Current user: $currentUserId)');
 
       if (mounted) {
         final message = ChatMessageModel(
@@ -176,15 +150,13 @@ class _ChatScreenState extends State<ChatScreen> {
           if (_scrollController.hasClients) {
             _scrollController.animateTo(
               0,
-              duration: Duration(milliseconds: 300),
+              duration: const Duration(milliseconds: 300),
               curve: Curves.easeOut,
             );
           }
         });
       }
-    } catch (e) {
-      //Error handling message: $e');
-    }
+    } catch (e) {}
   }
 
   Future<String> getAccessToken() async {
@@ -210,24 +182,15 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _sendMessage() async {
-    //');
-    //SEND MESSAGE INITIATED');
-
     if (_isSending) {
-      //Already sending a message, ignoring');
-      //');
       return;
     }
 
     if (!_userIdLoaded) {
-      //User ID not loaded');
-      //');
       return;
     }
 
     if (!isConnected) {
-      //Not connected');
-      //');
       CustomFlushbar.showError(
         context: context,
         message: 'Not connected to chat',
@@ -237,8 +200,6 @@ class _ChatScreenState extends State<ChatScreen> {
 
     final text = _messageController.text.trim();
     if (text.isEmpty) {
-      //Empty message');
-      //');
       return;
     }
 
@@ -247,21 +208,13 @@ class _ChatScreenState extends State<ChatScreen> {
     });
 
     _messageController.clear();
-    //Input field cleared');
 
     try {
-      //Message: "$text"');
-      //Ride ID: ${widget.rideId}');
-      //User ID: $currentUserId');
-      //Time: ${DateTime.now().toIso8601String()}');
-
       final prefs = await SharedPreferences.getInstance();
       final userName =
           prefs.getString('user_name') ??
           prefs.getString('name') ??
           'Unknown User';
-
-      //User Name: $userName');
 
       _webSocketService.sendMessage({
         "type": 'chat',
@@ -273,9 +226,6 @@ class _ChatScreenState extends State<ChatScreen> {
         },
       });
 
-      //Passed to WebSocket service');
-
-      //Sending FCM notification to driver...');
       try {
         await UnifiedNotificationService.sendChatNotification(
           receiverId: widget.driverId,
@@ -283,18 +233,8 @@ class _ChatScreenState extends State<ChatScreen> {
           messageText: text,
           chatRoomId: widget.rideId.toString(),
         );
-
-        //FCM notification sent');
-      } catch (e) {
-        //FCM notification error: $e');
-      }
-
-      //Waiting for server response...');
-      //');
+      } catch (e) {}
     } catch (e, stack) {
-      //Exception: $e');
-      //Stack: $stack');
-      //');
       CustomFlushbar.showError(
         context: context,
         message: 'Failed to send message',
@@ -305,7 +245,6 @@ class _ChatScreenState extends State<ChatScreen> {
           _isSending = false;
         });
       }
-      //Send operation completed');
     }
   }
 
@@ -338,27 +277,23 @@ class _ChatScreenState extends State<ChatScreen> {
                 borderRadius: BorderRadius.circular(2.5.r),
               ),
             ),
-            Text(
-              'Call ${widget.driverName}',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w600,
-                color: Colors.black,
-              ),
+            MuvamTexts.titleMedium18(
+              context,
+              text: 'Call ${widget.driverName}',
+              isTextWidget: true,
+              fontWeight: FontWeight.w600,
+              color: AppColors.kBlackColor,
             ),
             SizedBox(height: 30.h),
             GestureDetector(
               onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => CallScreen(
-                      driverName: widget.driverName,
-                      rideId: widget.rideId,
-                    ),
-                  ),
+                context.pop();
+                context.pushNamed(
+                  AppRoutes.call.name,
+                  extra: {
+                    'driverName': widget.driverName,
+                    'rideId': widget.rideId,
+                  },
                 );
               },
               child: Container(
@@ -368,13 +303,11 @@ class _ChatScreenState extends State<ChatScreen> {
                   children: [
                     Icon(Icons.phone_android, size: 24.sp),
                     SizedBox(width: 15.w),
-                    Text(
-                      'Call via app',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    MuvamTexts.bodyLarge16(
+                      context,
+                      text: 'Call via app',
+                      isTextWidget: true,
+                      fontWeight: FontWeight.w500,
                     ),
                   ],
                 ),
@@ -383,7 +316,7 @@ class _ChatScreenState extends State<ChatScreen> {
             SizedBox(height: 10.h),
             GestureDetector(
               onTap: () {
-                Navigator.pop(context);
+                context.pop();
                 _makeCall();
               },
               child: Container(
@@ -393,13 +326,11 @@ class _ChatScreenState extends State<ChatScreen> {
                   children: [
                     Icon(Icons.phone, size: 24.sp),
                     SizedBox(width: 15.w),
-                    Text(
-                      'Call via phone',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    MuvamTexts.bodyLarge16(
+                      context,
+                      text: 'Call via phone',
+                      isTextWidget: true,
+                      fontWeight: FontWeight.w500,
                     ),
                   ],
                 ),
@@ -425,15 +356,13 @@ class _ChatScreenState extends State<ChatScreen> {
           message: 'Cannot make phone calls on this device',
         );
       }
-    } catch (e) {
-      //Call error: $e');
-    }
+    } catch (e) {}
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return AppScaffold(
+      backgroundColor: AppColors.kWhiteColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -448,7 +377,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     child: Icon(
                       Icons.arrow_back,
                       size: 24.sp,
-                      color: Colors.black,
+                      color: AppColors.kBlackColor,
                     ),
                   ),
                   SizedBox(width: 15.w),
@@ -462,16 +391,12 @@ class _ChatScreenState extends State<ChatScreen> {
                   ),
                   SizedBox(width: 10.w),
                   Expanded(
-                    child: Text(
-                      widget.driverName,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 18.sp,
-                        fontWeight: FontWeight.w500,
-                        height: 21 / 18,
-                        letterSpacing: -0.32,
-                        color: Colors.black,
-                      ),
+                    child: MuvamTexts.titleMedium18(
+                      context,
+                      text: widget.driverName,
+                      isTextWidget: true,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.kBlackColor,
                     ),
                   ),
                   GestureDetector(
@@ -481,7 +406,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       child: Icon(
                         Icons.phone,
                         size: 24.sp,
-                        color: Colors.black,
+                        color: AppColors.kBlackColor,
                       ),
                     ),
                   ),
@@ -490,7 +415,6 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             SizedBox(height: 10.h),
             Divider(thickness: 1, color: Colors.grey.shade300),
-
             if (!isConnected && !isLoading)
               Container(
                 color: Colors.orange.shade100,
@@ -500,12 +424,11 @@ class _ChatScreenState extends State<ChatScreen> {
                   children: [
                     Icon(Icons.sync_problem, color: Colors.orange, size: 16.sp),
                     SizedBox(width: 8.w),
-                    Text(
-                      'Reconnecting...',
-                      style: TextStyle(
-                        color: Colors.orange.shade900,
-                        fontSize: 12.sp,
-                      ),
+                    MuvamTexts.bodySmall12(
+                      context,
+                      text: 'Reconnecting...',
+                      isTextWidget: true,
+                      color: Colors.orange.shade900,
                     ),
                   ],
                 ),
@@ -515,7 +438,7 @@ class _ChatScreenState extends State<ChatScreen> {
               child: isLoading
                   ? Center(
                       child: CircularProgressIndicator(
-                        color: Color(ConstColors.mainColor),
+                        color: AppColors.kMainColor,
                       ),
                     )
                   : Consumer<ChatProvider>(
@@ -528,14 +451,13 @@ class _ChatScreenState extends State<ChatScreen> {
                           return Center(
                             child: Padding(
                               padding: EdgeInsets.all(20.w),
-                              child: Text(
-                                "No messages yet. Start the conversation!",
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 14.sp,
-                                  color: Colors.grey,
-                                ),
-                                textAlign: TextAlign.center,
+                              child: MuvamTexts.bodyMedium14(
+                                context,
+                                text:
+                                    "No messages yet. Start the conversation!",
+                                isTextWidget: true,
+                                color: Colors.grey,
+                                center: true,
                               ),
                             ),
                           );
@@ -579,7 +501,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         vertical: 10.h,
                       ),
                       decoration: BoxDecoration(
-                        color: Color(0xFFB1B1B1).withOpacity(0.2),
+                        color: AppColors.kGreyColor.withOpacity(0.2),
                         borderRadius: BorderRadius.circular(15.r),
                       ),
                       child: TextField(
@@ -590,23 +512,18 @@ class _ChatScreenState extends State<ChatScreen> {
                         textInputAction: TextInputAction.newline,
                         decoration: InputDecoration(
                           hintText: 'Send message',
-                          hintStyle: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.w500,
-                            height: 1.0,
-                            letterSpacing: -0.32,
-                            color: Color(0xFFB1B1B1),
-                          ),
+                          hintStyle: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w400,
+                                color: AppColors.kGreyColor,
+                              ),
                           border: InputBorder.none,
                           contentPadding: EdgeInsets.zero,
                           isDense: true,
                         ),
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 14.sp,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.w400,
-                          color: Colors.black,
+                          color: AppColors.kBlackColor,
                         ),
                       ),
                     ),
@@ -631,14 +548,14 @@ class _ChatScreenState extends State<ChatScreen> {
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.black,
+                                    AppColors.kBlackColor,
                                   ),
                                 ),
                               )
                             : Icon(
                                 Icons.send,
                                 size: 21.sp,
-                                color: Colors.black,
+                                color: AppColors.kBlackColor,
                               ),
                       ),
                     ),

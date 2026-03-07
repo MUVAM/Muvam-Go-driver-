@@ -2,7 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:go_router/go_router.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
 import 'package:muvam_rider/core/services/unified_notifiation_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
@@ -38,7 +40,6 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
   @override
   Widget build(BuildContext context) {
     final passenger = widget.ride['Passenger'] ?? {};
-    //DEBUG Passenger data: $passenger');
     final tip = widget.acceptedData['tip'] ?? 0;
     final waitFee = widget.acceptedData['wait_fee'] ?? 0;
     final passengerName =
@@ -48,15 +49,12 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
 
     Future<void> _openGoogleMaps() async {
       try {
-        // Determine which location to navigate to based on ride status
         String? destinationAddress;
         final rideStatus = _rideStatus ?? 'accepted';
 
         if (rideStatus == 'started') {
-          // If ride has started, navigate to destination
           destinationAddress = widget.ride['DestAddress'];
         } else {
-          // If ride not started (accepted or arrived), navigate to pickup
           destinationAddress = widget.ride['PickupAddress'];
         }
 
@@ -68,7 +66,6 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
           return;
         }
 
-        // Create Google Maps URL with the destination address
         final encodedAddress = Uri.encodeComponent(destinationAddress);
         final url =
             'https://www.google.com/maps/search/?api=1&query=$encodedAddress';
@@ -84,7 +81,6 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
           );
         }
       } catch (e) {
-        //Error opening Google Maps: $e');
         CustomFlushbar.showError(
           context: context,
           message: 'Failed to open Google Maps',
@@ -97,7 +93,6 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Navigation button above the white container
           if (_rideStatus != 'completed')
             Align(
               alignment: Alignment.topRight,
@@ -111,7 +106,7 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
                       vertical: 8.h,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.kWhiteColor,
                       borderRadius: BorderRadius.circular(8.r),
                       border: Border.all(color: Colors.grey.shade300, width: 1),
                     ),
@@ -120,7 +115,7 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
                       children: [
                         Icon(
                           Icons.navigation,
-                          color: Colors.black,
+                          color: AppColors.kBlackColor,
                           size: 20.sp,
                         ),
                         SizedBox(width: 8.w),
@@ -128,30 +123,26 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              'Navigation',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontWeight: FontWeight.w700,
-                                fontSize: 12.sp,
-                                color: Colors.black,
-                              ),
+                            MuvamTexts.bodySmall12(
+                              context,
+                              text: 'Navigation',
+                              isTextWidget: true,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.kBlackColor,
                             ),
-                            Text(
-                              'Open in map',
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontWeight: FontWeight.w400,
-                                fontSize: 10.sp,
-                                color: Colors.grey[600],
-                              ),
+                            MuvamTexts.bodySmall12(
+                              context,
+                              text: 'Open in map',
+                              isTextWidget: true,
+                              fontWeight: FontWeight.w400,
+                              color: Colors.grey[600],
                             ),
                           ],
                         ),
                         SizedBox(width: 4.w),
                         Icon(
                           Icons.arrow_forward_ios,
-                          color: Colors.black,
+                          color: AppColors.kBlackColor,
                           size: 12.sp,
                         ),
                       ],
@@ -160,17 +151,14 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
                 ),
               ),
             ),
-
-          // White container with content
           Expanded(
             child: Container(
               padding: EdgeInsets.all(20.w),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.kWhiteColor,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
               ),
               child: SingleChildScrollView(
-                // Added for scrollability
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -211,7 +199,7 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
                             width: 353.w,
                             height: 48.h,
                             decoration: BoxDecoration(
-                              color: Color(0xffFC6B6B),
+                              color: const Color(0xffFC6B6B),
                               borderRadius: BorderRadius.circular(25.r),
                             ),
                             child: Stack(
@@ -245,25 +233,26 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
                                       width: 32.w,
                                       height: 32.h,
                                       decoration: BoxDecoration(
-                                        color: Colors.white,
+                                        color: AppColors.kWhiteColor,
                                         shape: BoxShape.circle,
                                       ),
                                       child: Icon(
                                         Icons.arrow_forward_ios,
                                         size: 16.sp,
-                                        color: Colors.black,
+                                        color: AppColors.kBlackColor,
                                       ),
                                     ),
                                   ),
                                 ),
                                 Center(
-                                  child: Text(
-                                    _isCompleted ? 'Trip ended' : 'End trip',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                  child: MuvamTexts.button16(
+                                    context,
+                                    text: _isCompleted
+                                        ? 'Trip ended'
+                                        : 'End trip',
+                                    isTextWidget: true,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.kWhiteColor,
                                   ),
                                 ),
                               ],
@@ -272,13 +261,12 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
                           SizedBox(height: 10.h),
                           GestureDetector(
                             onTap: () => _handleEmergencySOS(),
-                            child: Text(
-                              'Emergency Situation?',
-                              style: TextStyle(
-                                color: Color(ConstColors.mainColor),
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.w500,
-                              ),
+                            child: MuvamTexts.bodyMedium14(
+                              context,
+                              text: 'Emergency Situation?',
+                              isTextWidget: true,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.kMainColor,
                             ),
                           ),
                         ],
@@ -291,11 +279,11 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
                             height: 48.h,
                             decoration: BoxDecoration(
                               color: _showGreenSlider
-                                  ? Color(ConstColors.mainColor)
+                                  ? AppColors.kMainColor
                                   : (_rideStatus == 'arrived' &&
                                             !_showGreenSlider
-                                        ? Color(0xFFB1B1B1)
-                                        : Color(0xFFB1B1B1)),
+                                        ? AppColors.kGreyColor
+                                        : AppColors.kGreyColor),
                               borderRadius: BorderRadius.circular(25.r),
                             ),
                             child: Stack(
@@ -335,33 +323,32 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
                                       width: 32.w,
                                       height: 32.h,
                                       decoration: BoxDecoration(
-                                        color: Colors.white,
+                                        color: AppColors.kWhiteColor,
                                         shape: BoxShape.circle,
                                       ),
                                       child: Icon(
                                         Icons.arrow_forward_ios,
                                         size: 16.sp,
                                         color: _showGreenSlider
-                                            ? Color(ConstColors.mainColor)
-                                            : Color(0xFFB1B1B1),
+                                            ? AppColors.kMainColor
+                                            : AppColors.kGreyColor,
                                       ),
                                     ),
                                   ),
                                 ),
                                 Center(
-                                  child: Text(
-                                    _showGreenSlider
+                                  child: MuvamTexts.button16(
+                                    context,
+                                    text: _showGreenSlider
                                         ? 'Arrived!'
                                         : (_rideStatus == 'arrived'
                                               ? (_isStarted
                                                     ? 'Ride started'
                                                     : 'Swipe to start')
                                               : 'Slide to mark as arrived'),
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                    isTextWidget: true,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.kWhiteColor,
                                   ),
                                 ),
                               ],
@@ -378,22 +365,21 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
                                     width: 353.w,
                                     height: 47.h,
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
+                                      color: AppColors.kWhiteColor,
                                       borderRadius: BorderRadius.circular(8.r),
                                       border: Border.all(
-                                        color: Colors.red,
+                                        color: AppColors.kFailureColor,
                                         width: 1,
                                       ),
                                     ),
                                     padding: EdgeInsets.all(10.w),
                                     child: Center(
-                                      child: Text(
-                                        'Cancel ride',
-                                        style: TextStyle(
-                                          color: Colors.red,
-                                          fontSize: 16.sp,
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                      child: MuvamTexts.button16(
+                                        context,
+                                        text: 'Cancel ride',
+                                        isTextWidget: true,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.kFailureColor,
                                       ),
                                     ),
                                   ),
@@ -419,7 +405,6 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
 
     if (token != null) {
       final result = await ApiService.arriveRide(token, widget.ride['ID']);
-      //ARRIVE RIDE RESPONSE: $result');
 
       if (result['success'] == true) {
         setState(() {
@@ -428,7 +413,6 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
           _sliderValue = 1.0;
         });
 
-        // Send notification to passenger about driver arrival
         try {
           await UnifiedNotificationService.sendRideNotification(
             receiverId: ID.toString(),
@@ -436,18 +420,14 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
             messageText: "Your Driver Has Arrived at Pickup Location",
             chatRoomId: widget.ride['ID'].toString(),
           );
-          //✅ Driver arrived notification sent to passenger $ID');
-        } catch (e) {
-          //❌ Failed to send driver arrived notification: $e');
-        }
+        } catch (e) {}
 
-        await Future.delayed(Duration(milliseconds: 800));
+        await Future.delayed(const Duration(milliseconds: 800));
 
         if (mounted) {
           final updatedRide = Map<String, dynamic>.from(widget.ride);
           updatedRide['Status'] = 'arrived';
 
-          // Call the callback which will close and reopen the sheet
           widget.onRideStatusChanged(updatedRide);
         }
       } else {
@@ -459,49 +439,12 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
     }
   }
 
-  // Future<void> _startRide() async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final token = prefs.getString('auth_token');
-
-  //   if (token != null) {
-  //     final result = await ApiService.startRide(token, widget.ride['ID']);
-  //     //START RIDE RESPONSE: $result');
-
-  //     if (result['success'] == true) {
-  //       setState(() {
-  //         _isStarted = true;
-  //         _sliderValue = 1.0;
-  //       });
-
-  //       await Future.delayed(Duration(milliseconds: 800));
-
-  //       if (mounted) {
-  //         final updatedRide = Map<String, dynamic>.from(widget.ride);
-  //         updatedRide['Status'] = 'started';
-
-  //         setState(() {
-  //           _sliderValue = 0.0;
-  //           _isStarted = false;
-  //         });
-
-  //         widget.onRideStatusChanged(updatedRide);
-  //       }
-  //     } else {
-  //       CustomFlushbar.showError(
-  //         context: context,
-  //         message: result['message'] ?? 'Failed to start ride',
-  //       );
-  //     }
-  //   }
-  // }
-
   Future<void> _startRide() async {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
 
     if (token != null) {
       final result = await ApiService.startRide(token, widget.ride['ID']);
-      //START RIDE RESPONSE: $result');
 
       if (result['success'] == true) {
         setState(() {
@@ -509,7 +452,6 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
           _sliderValue = 1.0;
         });
 
-        // Send notification to passenger about ride start
         final passengerId = widget.ride['Passenger']?['ID']?.toString();
         if (passengerId != null) {
           try {
@@ -520,20 +462,17 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
               chatRoomId: widget.ride['ID'].toString(),
             );
             AppLogger.log(
-              '✅ Ride started notification sent to passenger $passengerId',
+              'Ride started notification sent to passenger $passengerId',
             );
-          } catch (e) {
-            //❌ Failed to send ride started notification: $e');
-          }
+          } catch (e) {}
         }
 
-        await Future.delayed(Duration(milliseconds: 800));
+        await Future.delayed(const Duration(milliseconds: 800));
 
         if (mounted) {
           final updatedRide = Map<String, dynamic>.from(widget.ride);
           updatedRide['Status'] = 'started';
 
-          // Call the callback which will close and reopen the sheet
           widget.onRideStatusChanged(updatedRide);
         }
       } else {
@@ -549,27 +488,20 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
   }
 
   Future<void> _completeRide() async {
-    //=== COMPLETE RIDE CALLED ===');
-
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
 
     if (token != null) {
       final result = await ApiService.completeRide(token, widget.ride['ID']);
-      //COMPLETE RIDE API RESPONSE: $result');
 
       if (result['success'] == true) {
-        //Ride completed successfully');
-
         final updatedRide = Map<String, dynamic>.from(widget.ride);
         updatedRide['Status'] = 'completed';
 
-        // Brief animation before closing
         setState(() {
           _sliderValue = 1.0;
         });
 
-        // Send notification to passenger about ride completion
         final passengerId = widget.ride['Passenger']?['ID']?.toString();
         if (passengerId != null) {
           try {
@@ -580,21 +512,15 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
               chatRoomId: widget.ride['ID'].toString(),
             );
             AppLogger.log(
-              '✅ Ride completed notification sent to passenger $passengerId',
+              'Ride completed notification sent to passenger $passengerId',
             );
-          } catch (e) {
-            //❌ Failed to send ride completed notification: $e');
-          }
+          } catch (e) {}
         }
 
-        await Future.delayed(Duration(milliseconds: 500));
+        await Future.delayed(const Duration(milliseconds: 500));
 
-        // Update parent state - this will trigger the callback which shows the completion sheet
         widget.onRideStatusChanged(updatedRide);
-
-        //State updated and callback called');
       } else {
-        //Failed to complete ride: ${result['message']}');
         setState(() {
           _sliderValue = 0.0;
         });
@@ -608,16 +534,12 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
 
   Future<void> _handleEmergencySOS() async {
     try {
-      //🚨 Emergency SOS button tapped', tag: 'SOS');
-
-      // ✅ FIX 1: Safely parse rideId regardless of whether it's int or String
       final rawRideId = widget.ride['ID'];
       final int? rideId = rawRideId is int
           ? rawRideId
           : int.tryParse(rawRideId?.toString() ?? '');
 
       if (rideId == null) {
-        //❌ Invalid ride ID: $rawRideId', tag: 'SOS');
         if (!mounted) return;
         CustomFlushbar.showError(
           context: context,
@@ -626,7 +548,6 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
         return;
       }
 
-      // Get current location
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high,
       );
@@ -634,10 +555,6 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
       final location = 'POINT(${position.longitude} ${position.latitude})';
       final locationAddress =
           'Lat: ${position.latitude}, Lng: ${position.longitude}';
-
-      //📍 SOS Location: $location', tag: 'SOS');
-      //📍 SOS Address: $locationAddress', tag: 'SOS');
-      //🚗 SOS Ride ID: $rideId', tag: 'SOS');
 
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
@@ -651,7 +568,6 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
         return;
       }
 
-      // ✅ FIX 2: mounted check before showing flushbar after async gap
       if (!mounted) return;
       CustomFlushbar.showInfo(
         context: context,
@@ -662,16 +578,12 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
         token: token,
         location: location,
         locationAddress: locationAddress,
-        rideId: rideId, // ✅ now guaranteed to be int
+        rideId: rideId,
       );
 
-      //SOS Result: $result', tag: 'SOS');
-
-      // ✅ FIX 3: mounted check before showing dialog after async gap
       if (!mounted) return;
 
       if (result['success'] == true) {
-        //✅ SOS alert sent successfully', tag: 'SOS');
         showDialog(
           context: context,
           barrierDismissible: false,
@@ -679,7 +591,11 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
             return AlertDialog(
               title: Row(
                 children: [
-                  Icon(Icons.check_circle, color: Colors.green, size: 28.sp),
+                  Icon(
+                    Icons.check_circle,
+                    color: AppColors.kSuccessColor,
+                    size: 28.sp,
+                  ),
                   SizedBox(width: 10.w),
                   const Text('SOS Alert Sent'),
                 ],
@@ -694,7 +610,7 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
                   child: Text(
                     'OK',
                     style: TextStyle(
-                      color: Color(ConstColors.mainColor),
+                      color: AppColors.kMainColor,
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w600,
                     ),
@@ -705,20 +621,22 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
           },
         );
       } else {
-        //❌ Failed to send SOS: ${result['message']}', tag: 'SOS');
         showDialog(
           context: context,
           barrierDismissible: false,
-
           builder: (BuildContext context) {
             return AlertDialog(
-              backgroundColor: Colors.white,
+              backgroundColor: AppColors.kWhiteColor,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
               title: Row(
                 children: [
-                  Icon(Icons.error, color: Colors.red, size: 28.sp),
+                  Icon(
+                    Icons.error,
+                    color: AppColors.kFailureColor,
+                    size: 28.sp,
+                  ),
                   SizedBox(width: 10.w),
                   const Text('Alert Failed'),
                 ],
@@ -734,7 +652,7 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
                   child: Text(
                     'OK',
                     style: TextStyle(
-                      color: Colors.red,
+                      color: AppColors.kFailureColor,
                       fontSize: 16.sp,
                       fontWeight: FontWeight.w600,
                     ),
@@ -746,20 +664,19 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
         );
       }
     } catch (e) {
-      //❌ Error handling emergency SOS: $e', tag: 'SOS');
       if (!mounted) return;
       showDialog(
         context: context,
         barrierDismissible: false,
         builder: (BuildContext context) {
           return AlertDialog(
-            backgroundColor: Colors.white,
+            backgroundColor: AppColors.kWhiteColor,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
             title: Row(
               children: [
-                Icon(Icons.error, color: Colors.red, size: 28.sp),
+                Icon(Icons.error, color: AppColors.kFailureColor, size: 28.sp),
                 SizedBox(width: 10.w),
                 const Text('Error'),
               ],
@@ -774,7 +691,7 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
                 child: Text(
                   'OK',
                   style: TextStyle(
-                    color: Colors.red,
+                    color: AppColors.kFailureColor,
                     fontSize: 16.sp,
                     fontWeight: FontWeight.w600,
                   ),
@@ -795,43 +712,39 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20.r),
-          side: BorderSide(color: Color(ConstColors.mainColor), width: 2),
+          side: BorderSide(color: AppColors.kMainColor, width: 2),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: AppColors.kWhiteColor,
         child: Container(
           padding: EdgeInsets.all(20.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.kWhiteColor,
             borderRadius: BorderRadius.circular(20.r),
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                'Cancel Ride',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 20.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black,
-                ),
+              MuvamTexts.titleMedium18(
+                context,
+                text: 'Cancel Ride',
+                isTextWidget: true,
+                fontWeight: FontWeight.w600,
+                color: AppColors.kBlackColor,
               ),
               SizedBox(height: 20.h),
-              Text(
-                'Please provide a reason for cancellation:',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w400,
-                  color: Colors.black87,
-                ),
-                textAlign: TextAlign.center,
+              MuvamTexts.bodyMedium14(
+                context,
+                text: 'Please provide a reason for cancellation:',
+                isTextWidget: true,
+                fontWeight: FontWeight.w400,
+                color: AppColors.kBlackColor.withOpacity(0.87),
+                center: true,
               ),
               SizedBox(height: 15.h),
               Container(
                 padding: EdgeInsets.symmetric(horizontal: 15.w, vertical: 5.h),
                 decoration: BoxDecoration(
-                  color: Color(0xFFB1B1B1).withOpacity(0.2),
+                  color: AppColors.kGreyColor.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(8.r),
                   border: Border.all(color: Colors.grey.shade300, width: 1),
                 ),
@@ -839,19 +752,15 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
                   controller: reasonController,
                   decoration: InputDecoration(
                     hintText: 'Enter cancellation reason',
-                    hintStyle: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 12.sp,
+                    hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w400,
-                      color: Color(0xFFB1B1B1),
+                      color: AppColors.kGreyColor,
                     ),
                     border: InputBorder.none,
                   ),
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 14.sp,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.w400,
-                    color: Colors.black,
+                    color: AppColors.kBlackColor,
                   ),
                   maxLines: 3,
                 ),
@@ -865,22 +774,20 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
                       child: Container(
                         height: 47.h,
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: AppColors.kWhiteColor,
                           border: Border.all(
-                            color: Color(ConstColors.mainColor),
+                            color: AppColors.kMainColor,
                             width: 1.5,
                           ),
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                         child: Center(
-                          child: Text(
-                            'Cancel',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              color: Color(ConstColors.mainColor),
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          child: MuvamTexts.button16(
+                            context,
+                            text: 'Cancel',
+                            isTextWidget: true,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.kMainColor,
                           ),
                         ),
                       ),
@@ -893,18 +800,16 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
                       child: Container(
                         height: 47.h,
                         decoration: BoxDecoration(
-                          color: Color(ConstColors.mainColor),
+                          color: AppColors.kMainColor,
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                         child: Center(
-                          child: Text(
-                            'Submit',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              color: Colors.white,
-                              fontSize: 16.sp,
-                              fontWeight: FontWeight.w600,
-                            ),
+                          child: MuvamTexts.button16(
+                            context,
+                            text: 'Submit',
+                            isTextWidget: true,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.kWhiteColor,
                           ),
                         ),
                       ),
@@ -929,7 +834,7 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
           height: 150.h,
           margin: EdgeInsets.symmetric(horizontal: 20.w),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: AppColors.kWhiteColor,
             borderRadius: BorderRadius.circular(15.r),
           ),
           child: Column(
@@ -937,16 +842,13 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
             children: [
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 10.h),
-                child: Text(
-                  'You are still very far to the pickup location to swipe to arrive. You have to be 1km near the pickup before you can swipe to arrive.',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
-                    fontSize: 14.sp,
-                    height: 1.0,
-                    letterSpacing: -0.32,
-                  ),
-                  textAlign: TextAlign.center,
+                child: MuvamTexts.bodyMedium14(
+                  context,
+                  text:
+                      'You are still very far to the pickup location to swipe to arrive. You have to be 1km near the pickup before you can swipe to arrive.',
+                  isTextWidget: true,
+                  fontWeight: FontWeight.w400,
+                  center: true,
                 ),
               ),
               SizedBox(height: 20.h),
@@ -956,17 +858,17 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
                   width: 282.w,
                   height: 40.h,
                   decoration: BoxDecoration(
-                    color: Color(ConstColors.mainColor),
+                    color: AppColors.kMainColor,
                     borderRadius: BorderRadius.circular(5.r),
                   ),
                   padding: EdgeInsets.all(10.w),
                   child: Center(
-                    child: Text(
-                      'Ok',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    child: MuvamTexts.button16(
+                      context,
+                      text: 'Ok',
+                      isTextWidget: true,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.kWhiteColor,
                     ),
                   ),
                 ),
@@ -987,7 +889,7 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
       return;
     }
 
-    Navigator.pop(context); // Close dialog
+    context.pop();
 
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('auth_token');
@@ -999,11 +901,9 @@ class RideAcceptedSheetState extends State<RideAcceptedSheet> {
         reason,
       );
       if (result['success'] == true) {
-        // Update ride status and notify parent - this will handle closing the sheet
         final updatedRide = Map<String, dynamic>.from(widget.ride);
         updatedRide['Status'] = 'cancelled';
         widget.onRideStatusChanged(updatedRide);
-        // Don't call Navigator.pop here - the parent will handle it
         CustomFlushbar.showInfo(
           context: context,
           message: 'Ride cancelled successfully',

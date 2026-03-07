@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:muvam_rider/core/constants/text_styles.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 
 class AccountTextField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
-  final int backgroundColor;
+  final Color backgroundColor;
   final bool isDateField;
   final bool hasDropdown;
   final bool isPassword;
@@ -29,13 +30,19 @@ class AccountTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: ConstTextStyles.fieldLabel),
+        MuvamTexts.bodyMedium14(
+          context,
+          text: label,
+          isTextWidget: true,
+          fontWeight: FontWeight.w500,
+          color: AppColors.kBlackColor,
+        ),
         SizedBox(height: 8.h),
         Container(
           width: 353.w,
           height: 50.h,
           decoration: BoxDecoration(
-            color: Color(backgroundColor),
+            color: backgroundColor,
             borderRadius: BorderRadius.circular(8.r),
           ),
           child: Row(
@@ -46,16 +53,17 @@ class AccountTextField extends StatelessWidget {
                   readOnly: isDateField,
                   obscureText: isPassword,
                   textAlign: TextAlign.left,
-                  style: ConstTextStyles.inputText,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.kBlackColor,
+                  ),
                   textCapitalization: TextCapitalization.words,
                   textAlignVertical: TextAlignVertical.center,
                   decoration: InputDecoration(
                     hintText: hintText,
-                    hintStyle: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 14.sp,
+                    hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
                       fontWeight: FontWeight.w400,
-                      color: Colors.grey.shade400,
+                      color: AppColors.kGreyColor,
                     ),
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.symmetric(
@@ -70,7 +78,11 @@ class AccountTextField extends StatelessWidget {
               if (hasDropdown)
                 Padding(
                   padding: EdgeInsets.only(right: 12.w),
-                  child: Icon(Icons.arrow_drop_down, size: 20.sp),
+                  child: Icon(
+                    Icons.arrow_drop_down,
+                    size: 20.sp,
+                    color: AppColors.kGreyColor,
+                  ),
                 ),
             ],
           ),

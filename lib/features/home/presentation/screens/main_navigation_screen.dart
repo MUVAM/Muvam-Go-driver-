@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
+import 'package:muvam_rider/core/utils/extension.dart';
 import 'package:muvam_rider/features/activities/data/providers/request_provider.dart';
 import 'package:muvam_rider/features/activities/presentation/screens/activities_screen.dart';
 import 'package:muvam_rider/features/earnings/presentation/screens/wallet_screen.dart';
@@ -25,10 +27,10 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   DateTime? _lastBackPress;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
-  final List<Widget> _screens = [
-    const HomeScreen(),
-    ActivitiesScreen(),
-    WalletScreen(),
+  List<Widget> get _screens => [
+    HomeScreen(onOpenDrawer: () => _scaffoldKey.currentState?.openDrawer()),
+    const ActivitiesScreen(),
+    const WalletScreen(),
   ];
 
   @override
@@ -46,7 +48,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       builder: (context) => Container(
         padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.kWhiteColor,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
         ),
         child: Column(
@@ -55,17 +57,20 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Contact us',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 18.sp,
-                    fontWeight: FontWeight.w600,
-                  ),
+                MuvamTexts.titleMedium18(
+                  context,
+                  text: 'Contact us',
+                  isTextWidget: true,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.kBlackColor,
                 ),
                 GestureDetector(
                   onTap: () => Navigator.pop(context),
-                  child: Icon(Icons.close, size: 24.sp),
+                  child: Icon(
+                    Icons.close,
+                    size: 24.sp,
+                    color: AppColors.kBlackColor,
+                  ),
                 ),
               ],
             ),
@@ -76,18 +81,17 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 width: 22.w,
                 height: 22.h,
               ),
-              title: Text(
-                'Via Call',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w500,
-                ),
+              title: MuvamTexts.bodyLarge16(
+                context,
+                text: 'Via Call',
+                isTextWidget: true,
+                fontWeight: FontWeight.w500,
+                color: AppColors.kBlackColor,
               ),
               trailing: Icon(
                 Icons.arrow_forward_ios,
                 size: 12.sp,
-                color: Colors.grey,
+                color: AppColors.kGreyColor,
               ),
               onTap: () async {
                 Navigator.pop(context);
@@ -111,21 +115,20 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 width: 22.w,
                 height: 22.h,
               ),
-              title: Text(
-                'Via WhatsApp',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w500,
-                ),
+              title: MuvamTexts.bodyLarge16(
+                context,
+                text: 'Via WhatsApp',
+                isTextWidget: true,
+                fontWeight: FontWeight.w500,
+                color: AppColors.kBlackColor,
               ),
               trailing: Icon(
                 Icons.arrow_forward_ios,
                 size: 12.sp,
-                color: Colors.grey,
+                color: AppColors.kGreyColor,
               ),
               onTap: () async {
-                Navigator.pop(context);
+                context.pop();
                 final Uri whatsappUri = Uri.parse(
                   'https://wa.me/2347032992768',
                 );
@@ -164,7 +167,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         } else {
           final now = DateTime.now();
           if (_lastBackPress == null ||
-              now.difference(_lastBackPress!) > Duration(seconds: 2)) {
+              now.difference(_lastBackPress!) > const Duration(seconds: 2)) {
             _lastBackPress = now;
             CustomFlushbar.showInfo(
               context: context,
@@ -177,20 +180,29 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       },
       child: Scaffold(
         key: _scaffoldKey,
-        drawer: DriverAppDrawer(onContactUsTap: _showContactBottomSheet),
+        drawer: DriverAppDrawer(
+          onContactUsTap: _showContactBottomSheet,
+          onNavigateToTab: (index) {
+            _scaffoldKey.currentState?.closeDrawer();
+            setState(() => _currentIndex = index);
+          },
+        ),
         body: IndexedStack(index: _currentIndex, children: _screens),
         bottomNavigationBar: BottomNavigationBar(
           currentIndex: _currentIndex,
-          backgroundColor: Colors.white,
-          selectedItemColor: Color(ConstColors.mainColor),
-          unselectedItemColor: Colors.grey,
+          backgroundColor: AppColors.kWhiteColor,
+          selectedItemColor: AppColors.kMainColor,
+          unselectedItemColor: AppColors.kGreyColor,
           onTap: (index) {
             setState(() {
               _currentIndex = index;
             });
           },
           items: [
-            BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+            const BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: 'Home',
+            ),
             BottomNavigationBarItem(
               icon: Consumer<RequestProvider>(
                 builder: (context, requestProvider, child) {
@@ -205,27 +217,29 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                         width: 24.w,
                         height: 24.h,
                         color: _currentIndex == 1
-                            ? Color(ConstColors.mainColor)
-                            : Colors.grey,
+                            ? AppColors.kMainColor
+                            : AppColors.kGreyColor,
                       ),
                       if (count > 0)
                         Positioned(
                           right: 0,
                           top: 0,
                           child: Container(
-                            padding: EdgeInsets.all(2),
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.circular(10),
+                            padding: const EdgeInsets.all(2),
+                            decoration: const BoxDecoration(
+                              color: AppColors.kFailureColor,
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(10),
+                              ),
                             ),
-                            constraints: BoxConstraints(
+                            constraints: const BoxConstraints(
                               minWidth: 16,
                               minHeight: 16,
                             ),
                             child: Text(
                               '$count',
-                              style: TextStyle(
-                                color: Colors.white,
+                              style: const TextStyle(
+                                color: AppColors.kWhiteColor,
                                 fontSize: 10,
                               ),
                               textAlign: TextAlign.center,
@@ -244,8 +258,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 width: 24.w,
                 height: 24.h,
                 color: _currentIndex == 2
-                    ? Color(ConstColors.mainColor)
-                    : Colors.grey,
+                    ? AppColors.kMainColor
+                    : AppColors.kGreyColor,
               ),
               label: 'Earnings',
             ),

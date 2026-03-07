@@ -2,8 +2,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/core/config/repository/ui_service.dart';
+import 'package:muvam_rider/core/config/routes/app_router.dart';
 import 'package:muvam_rider/core/services/call_service.dart';
-import 'package:muvam_rider/core/services/connectivity_service.dart';
 import 'package:muvam_rider/core/services/fcm_token_service.dart';
 import 'package:muvam_rider/core/services/enhanced_notification_service.dart';
 import 'package:muvam_rider/core/services/websocket_service.dart';
@@ -16,17 +17,16 @@ import 'package:muvam_rider/features/communication/data/providers/chat_provider.
 import 'package:muvam_rider/features/communication/presentation/screens/call_screen.dart';
 import 'package:muvam_rider/features/earnings/data/provider/wallet_provider.dart';
 import 'package:muvam_rider/features/earnings/data/provider/withdrawal_provider.dart';
-import 'package:muvam_rider/features/home/data/provider/driver_provider.dart';
+import 'package:muvam_rider/features/home/provider/driver_provider.dart';
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
 import 'package:muvam_rider/features/referral/data/providers/referral_provider.dart';
 import 'package:muvam_rider/core/services/global_call_service.dart';
 import 'package:muvam_rider/features/vehicles/data/provider/vehicle_provider.dart';
-import 'package:muvam_rider/shared/presentation/screens/network_banner.dart';
-import 'package:muvam_rider/shared/presentation/screens/splash_screen.dart';
-import 'package:muvam_rider/shared/provider/connectivity_provider.dart';
+import 'package:muvam_rider/layouts/presentation/screens/connectivity_wrapper.dart';
+import 'package:muvam_rider/layouts/presentation/screens/network_banner.dart';
+import 'package:muvam_rider/layouts/provider/connectivity_provider.dart';
 import 'package:provider/provider.dart';
 import 'core/constants/theme_manager.dart';
-
 import 'core/utils/app_logger.dart';
 
 Future<void> main() async {
@@ -35,10 +35,8 @@ Future<void> main() async {
 
   try {
     await Firebase.initializeApp();
-    //Firebase initialized successfully', tag: 'FIREBASE');
     await FCMTokenService.initializeFCM();
     EnhancedNotificationService.initEnhancedNotifications();
-    //FCM background handler registered', tag: 'FIREBASE');
   } catch (e) {
     AppLogger.error(
       'Firebase initialization failed',
@@ -55,11 +53,7 @@ Future<void> main() async {
   runApp(
     MultiProvider(
       providers: [
-        // ── NEW: ConnectivityProvider must be first so everything below
-        //         can read it if needed ──────────────────────────────────
         ChangeNotifierProvider(create: (_) => ConnectivityProvider()),
-
-        // ──────────────────────────────────────────────────────────────
         ChangeNotifierProvider(create: (context) => ThemeManager()),
         ChangeNotifierProvider(create: (context) => AuthProvider()),
         ChangeNotifierProvider.value(value: chatProvider),
@@ -73,6 +67,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (_) => ReferralProvider()),
         ChangeNotifierProvider(create: (_) => DeleteAccountProvider()),
         ChangeNotifierProvider(create: (_) => VehicleProvider()),
+        ChangeNotifierProvider(create: (_) => UIService()),
       ],
       child: const MyApp(),
     ),
@@ -81,8 +76,6 @@ Future<void> main() async {
 
 void _setupGlobalWebSocketHandlerSync() {
   final webSocket = WebSocketService.instance;
-
-  //DRIVER: Setting up global call handler', tag: 'MAIN_SETUP');
 
   AppLogger.log(
     'Handler before setup: ${webSocket.onIncomingCall != null}',
@@ -94,28 +87,14 @@ void _setupGlobalWebSocketHandlerSync() {
       'DRIVER: INCOMING CALL IN MAIN.DART',
       tag: 'DRIVER_MAIN_CALL',
     );
-    //Raw call data: $callData', tag: 'DRIVER_MAIN_CALL');
 
     final callType = callData['type'];
     final messageData = callData['data'];
 
-    //Call type: $callType', tag: 'DRIVER_MAIN_CALL');
-    //Message data: $messageData', tag: 'DRIVER_MAIN_CALL');
+    if (messageData == null) return;
 
-    if (messageData == null) {
-      //No data in call message!', tag: 'DRIVER_MAIN_CALL');
-      return;
-    }
-
-    final sessionId = messageData['session_id'];
     final callerName = messageData['caller_name'] ?? 'Passenger';
     final rideId = messageData['ride_id'] ?? 0;
-    final recipientId = messageData['recipient_id'];
-
-    //Session ID: $sessionId', tag: 'DRIVER_MAIN_CALL');
-    //Caller Name: $callerName', tag: 'DRIVER_MAIN_CALL');
-    //Ride ID: $rideId', tag: 'DRIVER_MAIN_CALL');
-    //Recipient ID: $recipientId', tag: 'DRIVER_MAIN_CALL');
 
     if (callType == 'call_initiate') {
       AppLogger.log(
@@ -132,13 +111,8 @@ void _setupGlobalWebSocketHandlerSync() {
               tag: 'DRIVER_MAIN_CALL',
             );
 
-            AppLogger.log(
-              'DRIVER: User accepted call - Session: $sessionId',
-              tag: 'DRIVER_MAIN_CALL',
-            );
-
             try {
-              MyApp.navigatorKey.currentState?.push(
+              AppRouter.navigationKey.currentState?.push(
                 MaterialPageRoute(
                   builder: (context) => CallScreen(
                     driverName: callerName,
@@ -147,7 +121,6 @@ void _setupGlobalWebSocketHandlerSync() {
                   ),
                 ),
               );
-              //Navigated to CallScreen', tag: 'DRIVER_MAIN_CALL');
             } catch (e) {
               AppLogger.error(
                 'Failed to navigate to CallScreen',
@@ -200,7 +173,6 @@ void _setupGlobalWebSocketHandlerSync() {
     'Handler after setup: ${webSocket.onIncomingCall != null}',
     tag: 'MAIN_SETUP',
   );
-  //Global call handler setup complete', tag: 'MAIN_SETUP');
   AppLogger.log(
     'DO NOT connect WebSocket yet - wait for HomeScreen',
     tag: 'MAIN_SETUP',
@@ -210,23 +182,17 @@ void _setupGlobalWebSocketHandlerSync() {
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
-  static final GlobalKey<NavigatorState> navigatorKey =
-      GlobalKey<NavigatorState>();
-
   @override
   State<MyApp> createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
+  final AppRouter _appRouter = AppRouter();
+
   @override
   void initState() {
     super.initState();
-
-    //MyApp.initState() called', tag: 'APP_INIT');
-
-    GlobalCallService.instance.initialize(MyApp.navigatorKey);
-
-    //GlobalCallService initialized', tag: 'APP_INIT');
+    GlobalCallService.instance.initialize(AppRouter.navigationKey);
   }
 
   @override
@@ -244,8 +210,8 @@ class _MyAppState extends State<MyApp> {
           minTextAdapt: true,
           splitScreenMode: true,
           builder: (context, child) {
-            return MaterialApp(
-              navigatorKey: MyApp.navigatorKey,
+            return MaterialApp.router(
+              routerConfig: _appRouter.routerConfig,
               debugShowCheckedModeBanner: false,
               title: 'Muvam',
               theme: themeManager.lightTheme,
@@ -253,53 +219,15 @@ class _MyAppState extends State<MyApp> {
               themeMode: themeManager.isDarkMode
                   ? ThemeMode.dark
                   : ThemeMode.light,
-              // ── NEW: NetworkBanner wraps the whole app so the offline
-              //         strip appears above every screen automatically ───
-              home: NetworkBanner(
-                child: ConnectivityWrapper(child: SplashScreen()),
+              builder: (context, child) => NetworkBanner(
+                child: ConnectivityWrapper(
+                  child: child ?? const SizedBox.shrink(),
+                ),
               ),
-              // ────────────────────────────────────────────────────────
-              routes: {'/home': (context) => SplashScreen()},
             );
           },
         );
       },
     );
-  }
-}
-
-// ── ConnectivityWrapper ────────────────────────────────────────────────────
-// Unchanged in structure — now delegates to the new ConnectivityService
-// which reads ConnectivityProvider from the widget tree.
-
-class ConnectivityWrapper extends StatefulWidget {
-  final Widget child;
-
-  const ConnectivityWrapper({super.key, required this.child});
-
-  @override
-  State<ConnectivityWrapper> createState() => _ConnectivityWrapperState();
-}
-
-class _ConnectivityWrapperState extends State<ConnectivityWrapper> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) {
-        ConnectivityService().initialize(context);
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    ConnectivityService().dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return widget.child;
   }
 }

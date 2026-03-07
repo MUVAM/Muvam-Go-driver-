@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 
 class ReasonItem extends StatelessWidget {
   final String reason;
@@ -28,32 +29,24 @@ class ReasonItem extends StatelessWidget {
               decoration: BoxDecoration(
                 border: Border.all(
                   color: isSelected
-                      ? Color(ConstColors.mainColor)
-                      : Colors.grey,
+                      ? AppColors.kMainColor
+                      : AppColors.kGreyColor,
                   width: 2,
                 ),
                 borderRadius: BorderRadius.circular(3.r),
               ),
               child: isSelected
-                  ? Icon(
-                      Icons.check,
-                      size: 14.sp,
-                      color: Color(ConstColors.mainColor),
-                    )
+                  ? Icon(Icons.check, size: 14.sp, color: AppColors.kMainColor)
                   : null,
             ),
             SizedBox(width: 15.w),
             Expanded(
-              child: Text(
-                reason,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w400,
-                  height: 1.0,
-                  letterSpacing: -0.41,
-                  color: Colors.black,
-                ),
+              child: MuvamTexts.bodyLarge16(
+                context,
+                text: reason,
+                isTextWidget: true,
+                fontWeight: FontWeight.w400,
+                color: AppColors.kBlackColor,
               ),
             ),
           ],

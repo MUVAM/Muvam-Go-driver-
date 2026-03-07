@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 
 class LockRadioOption extends StatelessWidget {
   final String title;
@@ -34,7 +35,7 @@ class LockRadioOption extends StatelessWidget {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: isSelected
-                      ? Color(ConstColors.mainColor)
+                      ? AppColors.kMainColor
                       : Colors.grey.shade400,
                   width: 2,
                 ),
@@ -46,7 +47,7 @@ class LockRadioOption extends StatelessWidget {
                         height: 10.h,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Color(ConstColors.mainColor),
+                          color: AppColors.kMainColor,
                         ),
                       ),
                     )
@@ -54,14 +55,12 @@ class LockRadioOption extends StatelessWidget {
             ),
             SizedBox(width: 12.w),
             Expanded(
-              child: Text(
-                title,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w400,
-                  color: Colors.black,
-                ),
+              child: MuvamTexts.bodyMedium14(
+                context,
+                text: title,
+                isTextWidget: true,
+                fontWeight: FontWeight.w400,
+                color: AppColors.kBlackColor,
               ),
             ),
           ],

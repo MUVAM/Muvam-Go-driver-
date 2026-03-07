@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/features/activities/data/providers/request_provider.dart';
 import 'package:muvam_rider/features/activities/presentation/widgets/trip_card.dart';
-import 'package:muvam_rider/features/trips/presentation/screen/trip_details_screen.dart';
 import 'package:provider/provider.dart';
 
 class OrdersTab extends StatelessWidget {
@@ -36,9 +37,7 @@ class OrdersTab extends StatelessWidget {
       builder: (context, provider, child) {
         if (provider.isLoading && !provider.hasData) {
           return Center(
-            child: CircularProgressIndicator(
-              color: Color(ConstColors.mainColor),
-            ),
+            child: CircularProgressIndicator(color: AppColors.kMainColor),
           );
         }
 
@@ -48,22 +47,29 @@ class OrdersTab extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Icon(Icons.error_outline, size: 48.sp, color: Colors.red),
+                Icon(
+                  Icons.error_outline,
+                  size: 48.sp,
+                  color: AppColors.kFailureColor,
+                ),
                 SizedBox(height: 16.h),
-                Text(
-                  provider.errorMessage ?? 'Failed to load rides',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w500,
-                    color: Theme.of(context).textTheme.bodyMedium?.color,
-                  ),
-                  textAlign: TextAlign.center,
+                MuvamTexts.bodyMedium14(
+                  context,
+                  text: provider.errorMessage ?? 'Failed to load rides',
+                  isTextWidget: true,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.kBlackColor,
+                  center: true,
                 ),
                 SizedBox(height: 8.h),
                 TextButton(
                   onPressed: () => provider.fetchRides(),
-                  child: Text('Retry'),
+                  child: MuvamTexts.button16(
+                    context,
+                    text: 'Retry',
+                    isTextWidget: true,
+                    color: AppColors.kMainColor,
+                  ),
                 ),
               ],
             ),
@@ -85,15 +91,14 @@ class OrdersTab extends StatelessWidget {
                   height: 120.h,
                 ),
                 SizedBox(height: 16.h),
-                Text(
-                  "Just relaxing for now. Go ahead and order \na ride whenever you're ready",
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 14.sp,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.grey,
-                  ),
-                  textAlign: TextAlign.center,
+                MuvamTexts.bodyMedium14(
+                  context,
+                  text:
+                      "Just relaxing for now. Go ahead and order \na ride whenever you're ready",
+                  isTextWidget: true,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.kGreyColor,
+                  center: true,
                 ),
                 if (provider.isRefreshing) ...[
                   SizedBox(height: 16.h),
@@ -102,7 +107,7 @@ class OrdersTab extends StatelessWidget {
                     height: 20.h,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Color(ConstColors.mainColor),
+                      color: AppColors.kMainColor,
                     ),
                   ),
                 ],
@@ -124,12 +129,9 @@ class OrdersTab extends StatelessWidget {
                 date: formatDate(ride.createdAt),
                 destination: ride.destAddress,
                 tripId: '#${ride.id}',
-                onTap: () => Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => TripDetailsScreen(rideId: ride.id),
-                  ),
-                ),
+                onTap: () {
+                  context.pushNamed('tripDetails', extra: {'rideId': ride.id});
+                },
               ),
             );
           },

@@ -5,15 +5,14 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:googleapis_auth/auth_io.dart' as auth;
 import 'package:http/http.dart' as http;
+import 'package:muvam_rider/core/config/routes/app_router.dart';
+import 'package:muvam_rider/core/constants/app_routes.dart';
 import 'package:muvam_rider/core/services/fcm_token_service.dart';
 import 'package:muvam_rider/core/services/firebase_config_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
-import 'package:muvam_rider/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:vibration/vibration.dart';
-// import 'package:workpal/services/fcmTokenService.dart';
-// import 'package:firebase_auth/firebase_auth.dart';
-// import 'package:workpal/services/firebase_config_service.dart';
+import 'package:muvam_rider/core/utils/extension.dart';
 
 class InvalidTokenException implements Exception {
   final String message;
@@ -25,43 +24,31 @@ class InvalidTokenException implements Exception {
 
 class EnhancedNotificationService {
   static Future<String> getAccessToken() async {
-    //AUTH DEBUG: Starting getAccessToken');
-
     try {
-      //AUTH DEBUG: Getting Firebase service account config');
       final serviceAccountJson =
           await FirebaseConfigService.getServiceAccountConfig();
-      //AUTH DEBUG: Service account config obtained');
 
       List<String> scopes = [
         "https://www.googleapis.com/auth/userinfo.email",
         "https://www.googleapis.com/auth/firebase.database",
         "https://www.googleapis.com/auth/firebase.messaging",
       ];
-      //AUTH DEBUG: Scopes: $scopes');
 
-      //AUTH DEBUG: Creating service account client');
       http.Client client = await auth.clientViaServiceAccount(
         auth.ServiceAccountCredentials.fromJson(serviceAccountJson),
         scopes,
       );
-      //AUTH DEBUG: Service account client created');
 
-      //AUTH DEBUG: Obtaining access credentials');
       auth.AccessCredentials credentials = await auth
           .obtainAccessCredentialsViaServiceAccount(
             auth.ServiceAccountCredentials.fromJson(serviceAccountJson),
             scopes,
             client,
           );
-      //AUTH DEBUG: Access credentials obtained');
 
       client.close();
-      //AUTH DEBUG: Access token generated successfully');
       return credentials.accessToken.data;
     } catch (e) {
-      //AUTH DEBUG: Error getting access token: $e');
-      //AUTH DEBUG: Stack trace: ${StackTrace.current}');
       rethrow;
     }
   }
@@ -73,19 +60,15 @@ class EnhancedNotificationService {
     required String type,
     Map<String, String>? additionalData,
   }) async {
-    //FCM DEBUG: Starting sendNotificationWithVibration');
     AppLogger.log(
       'FCM DEBUG: Token: ${deviceToken.substring(0, 20)}..., Title: $title, Body: $body, Type: $type',
     );
 
     try {
-      //FCM DEBUG: Getting access token');
       final String serverAccessToken = await getAccessToken();
-      //FCM DEBUG: Access token obtained successfully');
 
       String endpointFirebasecloudMessaging =
           'https://fcm.googleapis.com/v1/projects/muvam-go/messages:send';
-      //FCM DEBUG: FCM endpoint: $endpointFirebasecloudMessaging');
 
       final Map<String, dynamic> message = {
         'message': {
@@ -114,11 +97,6 @@ class EnhancedNotificationService {
         },
       };
 
-      AppLogger.log(
-        'FCM DEBUG: Message payload prepared: ${jsonEncode(message)}',
-      );
-      //FCM DEBUG: Sending HTTP POST request to FCM');
-
       final response = await http.post(
         Uri.parse(endpointFirebasecloudMessaging),
         headers: <String, String>{
@@ -128,41 +106,23 @@ class EnhancedNotificationService {
         body: jsonEncode(message),
       );
 
-      AppLogger.log(
-        'FCM DEBUG: FCM Response - Status Code: ${response.statusCode}',
-      );
-      //FCM DEBUG: FCM Response - Body: ${response.body}');
-
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
         AppLogger.log(
           'FCM DEBUG: Notification sent successfully! Response: $responseData',
         );
       } else {
-        AppLogger.log(
-          'FCM DEBUG: FCM request failed with status: ${response.statusCode}',
-        );
-        // Parse error details if available
         try {
           final errorData = jsonDecode(response.body);
-          //FCM DEBUG: Error details: $errorData');
 
-          // Check if token is invalid and remove it
           if (response.statusCode == 400 || response.statusCode == 404) {
             final errorMessage = errorData['error']?['message'] ?? '';
-            //FCM DEBUG: Error message: $errorMessage');
             if (errorMessage.contains('not a valid FCM registration token') ||
                 errorMessage.contains('Requested entity was not found')) {
-              AppLogger.log(
-                'FCM DEBUG: Invalid token detected, throwing InvalidTokenException',
-              );
-              // Note: We can't remove it here as we don't have userId context
-              // The calling method should handle token removal
               throw InvalidTokenException('Invalid FCM token: $deviceToken');
             }
           }
         } catch (e) {
-          //FCM DEBUG: Error parsing FCM error response: $e');
           if (e is InvalidTokenException) {
             rethrow;
           }
@@ -172,8 +132,7 @@ class EnhancedNotificationService {
       AppLogger.log(
         'FCM DEBUG: Exception in sendNotificationWithVibration: $e',
       );
-      //FCM DEBUG: Stack trace: $stackTrace');
-      rethrow; // Re-throw to let calling method handle it
+      rethrow;
     }
   }
 
@@ -193,19 +152,9 @@ class EnhancedNotificationService {
     required String likerName,
     required String postId,
   }) async {
-    //ENHANCED_NOTIF DEBUG: Starting sendLikeNotification');
-    AppLogger.log(
-      'ENHANCED_NOTIF DEBUG: postOwnerId: $postOwnerId, likerName: $likerName, postId: $postId',
-    );
-
     try {
-      // Get post owner's name for greeting - check both vendors and customers
       String userName = 'User';
 
-      AppLogger.log(
-        'ENHANCED_NOTIF DEBUG: Fetching post owner name from vendors collection',
-      );
-      // Try vendors collection first
       var userDoc = await FirebaseFirestore.instance
           .collection('vendors')
           .doc(postOwnerId)
@@ -214,12 +163,7 @@ class EnhancedNotificationService {
       if (userDoc.exists) {
         final userData = userDoc.data();
         userName = userData?['name'] as String? ?? 'User';
-        //ENHANCED_NOTIF DEBUG: Found vendor name: $userName');
       } else {
-        AppLogger.log(
-          'ENHANCED_NOTIF DEBUG: Not found in vendors, checking customers collection',
-        );
-        // Try customers collection
         userDoc = await FirebaseFirestore.instance
             .collection('customers')
             .doc(postOwnerId)
@@ -231,52 +175,30 @@ class EnhancedNotificationService {
               userData?['username'] as String? ??
               userData?['name'] as String? ??
               'User';
-          //ENHANCED_NOTIF DEBUG: Found customer name: $userName');
-        } else {
-          AppLogger.log(
-            'ENHANCED_NOTIF DEBUG: Post owner not found in either collection',
-          );
         }
       }
 
       final greeting = _getGreeting(userName);
-      //ENHANCED_NOTIF DEBUG: Generated greeting: $greeting');
 
       CollectionReference userTokenCollection = FirebaseFirestore.instance
           .collection('UserToken');
 
-      AppLogger.log(
-        'ENHANCED_NOTIF DEBUG: Fetching FCM tokens for user: $postOwnerId',
-      );
       DocumentSnapshot docSnapshot = await userTokenCollection
           .doc(postOwnerId)
           .get();
 
       if (docSnapshot.exists) {
         List<dynamic> tokenList = docSnapshot['token'] ?? [];
-        AppLogger.log(
-          'ENHANCED_NOTIF DEBUG: Found ${tokenList.length} tokens: $tokenList',
-        );
 
         if (tokenList.isEmpty) {
-          AppLogger.log(
-            'ENHANCED_NOTIF DEBUG: No tokens found, attempting refresh',
-          );
           await _attemptTokenRefresh(postOwnerId);
-          // Try again after refresh
           docSnapshot = await userTokenCollection.doc(postOwnerId).get();
           if (docSnapshot.exists) {
             tokenList = docSnapshot['token'] ?? [];
-            AppLogger.log(
-              'ENHANCED_NOTIF DEBUG: After refresh, found ${tokenList.length} tokens: $tokenList',
-            );
           }
         }
 
         for (String token in tokenList) {
-          AppLogger.log(
-            'ENHANCED_NOTIF DEBUG: Sending notification to token: ${token.substring(0, 20)}...',
-          );
           try {
             await sendNotificationWithVibration(
               deviceToken: token,
@@ -285,28 +207,16 @@ class EnhancedNotificationService {
               type: "like_notification",
               additionalData: {'postId': postId, 'likerId': likerName},
             );
-            AppLogger.log(
-              'ENHANCED_NOTIF DEBUG: Notification sent successfully to token: ${token.substring(0, 20)}...',
-            );
           } catch (e) {
-            AppLogger.log(
-              'ENHANCED_NOTIF DEBUG: Failed to send notification to token: ${token.substring(0, 20)}... Error: $e',
-            );
             if (e is InvalidTokenException) {
-              //ENHANCED_NOTIF DEBUG: Removing invalid token');
               await FCMTokenService.removeInvalidToken(postOwnerId, token);
             }
           }
         }
       } else {
-        AppLogger.log(
-          'ENHANCED_NOTIF DEBUG: No token document found for user, attempting refresh',
-        );
         await _attemptTokenRefresh(postOwnerId);
       }
 
-      //ENHANCED_NOTIF DEBUG: Storing notification in Firestore');
-      // Store notification in Firestore
       await _storeNotificationInFirestore(
         userId: postOwnerId,
         title: "Like Notification",
@@ -314,16 +224,7 @@ class EnhancedNotificationService {
         type: "like",
         additionalData: {'postId': postId, 'likerId': likerName},
       );
-      AppLogger.log(
-        'ENHANCED_NOTIF DEBUG: Notification stored in Firestore successfully',
-      );
-      AppLogger.log(
-        'ENHANCED_NOTIF DEBUG: sendLikeNotification completed successfully',
-      );
-    } catch (e) {
-      //ENHANCED_NOTIF DEBUG: Error in sendLikeNotification: $e');
-      //ENHANCED_NOTIF DEBUG: Stack trace: ${StackTrace.current}');
-    }
+    } catch (e) {}
   }
 
   static Future<void> sendReplyNotification({
@@ -334,7 +235,6 @@ class EnhancedNotificationService {
     required String commentId,
   }) async {
     try {
-      // Get comment author's name for greeting - check both vendors and customers
       String userName = 'User';
 
       var userDoc = await FirebaseFirestore.instance
@@ -374,7 +274,6 @@ class EnhancedNotificationService {
 
         if (tokenList.isEmpty) {
           await _attemptTokenRefresh(commentAuthorId);
-          // Try again after refresh
           docSnapshot = await userTokenCollection.doc(commentAuthorId).get();
           if (docSnapshot.exists) {
             tokenList = docSnapshot['token'] ?? [];
@@ -405,7 +304,6 @@ class EnhancedNotificationService {
         await _attemptTokenRefresh(commentAuthorId);
       }
 
-      // Store notification in Firestore
       await _storeNotificationInFirestore(
         userId: commentAuthorId,
         title: "Reply Notification",
@@ -417,9 +315,7 @@ class EnhancedNotificationService {
           'replierId': replierName,
         },
       );
-    } catch (e) {
-      // Handle error silently
-    }
+    } catch (e) {}
   }
 
   static Future<void> sendCommentNotification({
@@ -431,10 +327,8 @@ class EnhancedNotificationService {
     String? parentCommentAuthorId,
   }) async {
     try {
-      // Get post owner's name for greeting - check both vendors and customers
       String userName = 'User';
 
-      // Try vendors collection first
       var userDoc = await FirebaseFirestore.instance
           .collection('vendors')
           .doc(postOwnerId)
@@ -444,7 +338,6 @@ class EnhancedNotificationService {
         final userData = userDoc.data();
         userName = userData?['name'] as String? ?? 'User';
       } else {
-        // Try customers collection
         userDoc = await FirebaseFirestore.instance
             .collection('customers')
             .doc(postOwnerId)
@@ -486,7 +379,6 @@ class EnhancedNotificationService {
         }
       }
 
-      // Store notification in Firestore for post owner
       await _storeNotificationInFirestore(
         userId: postOwnerId,
         title: "Comment Notification",
@@ -495,14 +387,11 @@ class EnhancedNotificationService {
         additionalData: {'postId': postId, 'commenterId': commenterName},
       );
 
-      // If this is a reply to a comment, notify the original comment author
       if (parentCommentId != null &&
           parentCommentAuthorId != null &&
           parentCommentAuthorId != postOwnerId) {
-        // Get parent comment author's name
         String parentAuthorName = 'User';
 
-        // Try vendors collection first
         var userDoc = await FirebaseFirestore.instance
             .collection('vendors')
             .doc(parentCommentAuthorId)
@@ -512,7 +401,6 @@ class EnhancedNotificationService {
           final userData = userDoc.data();
           parentAuthorName = userData?['name'] as String? ?? 'User';
         } else {
-          // Try customers collection
           userDoc = await FirebaseFirestore.instance
               .collection('customers')
               .doc(parentCommentAuthorId)
@@ -529,7 +417,6 @@ class EnhancedNotificationService {
 
         final replyGreeting = _getGreeting(parentAuthorName);
 
-        // Get parent comment author's tokens
         CollectionReference userTokenCollection = FirebaseFirestore.instance
             .collection('UserToken');
 
@@ -556,7 +443,6 @@ class EnhancedNotificationService {
           }
         }
 
-        // Store notification in Firestore for comment author
         await _storeNotificationInFirestore(
           userId: parentCommentAuthorId,
           title: "Reply Notification",
@@ -569,9 +455,7 @@ class EnhancedNotificationService {
           },
         );
       }
-    } catch (e) {
-      // Handle error silently
-    }
+    } catch (e) {}
   }
 
   static Future<void> sendAdminPostNotification({
@@ -579,7 +463,6 @@ class EnhancedNotificationService {
     required String postContent,
   }) async {
     try {
-      // Get all user tokens
       final tokenSnapshot = await FirebaseFirestore.instance
           .collection('UserToken')
           .get();
@@ -589,10 +472,8 @@ class EnhancedNotificationService {
         final userId = tokenDoc.id;
         final tokenList = List<String>.from(tokenData['token'] ?? []);
 
-        // Get user's name for personalized greeting - check both vendors and customers
         String userName = 'User';
 
-        // Try vendors collection first
         var userDoc = await FirebaseFirestore.instance
             .collection('vendors')
             .doc(userId)
@@ -602,7 +483,6 @@ class EnhancedNotificationService {
           final userData = userDoc.data();
           userName = userData?['name'] as String? ?? 'User';
         } else {
-          // Try customers collection
           userDoc = await FirebaseFirestore.instance
               .collection('customers')
               .doc(userId)
@@ -632,7 +512,6 @@ class EnhancedNotificationService {
           );
         }
 
-        // Store notification in Firestore for each user
         await _storeNotificationInFirestore(
           userId: userId,
           title: "New Post",
@@ -641,9 +520,7 @@ class EnhancedNotificationService {
           additionalData: {'adminName': adminName},
         );
       }
-    } catch (e) {
-      // Handle error silently
-    }
+    } catch (e) {}
   }
 
   static Future<void> _storeNotificationInFirestore({
@@ -653,12 +530,6 @@ class EnhancedNotificationService {
     required String type,
     Map<String, dynamic>? additionalData,
   }) async {
-    //FIRESTORE DEBUG: Starting _storeNotificationInFirestore');
-    AppLogger.log(
-      'FIRESTORE DEBUG: userId: $userId, title: $title, body: $body, type: $type',
-    );
-    //FIRESTORE DEBUG: additionalData: $additionalData');
-
     try {
       final notificationData = {
         'id': DateTime.now().millisecondsSinceEpoch.toString(),
@@ -680,28 +551,12 @@ class EnhancedNotificationService {
         ...?additionalData,
       };
 
-      AppLogger.log(
-        'FIRESTORE DEBUG: Notification data prepared: $notificationData',
-      );
-      AppLogger.log(
-        'FIRESTORE DEBUG: Storing in path: NotificationWp/$userId/notification/',
-      );
-
-      final docRef = await FirebaseFirestore.instance
+      await FirebaseFirestore.instance
           .collection('NotificationWp')
           .doc(userId)
           .collection('notification')
           .add(notificationData);
-
-      AppLogger.log(
-        'FIRESTORE DEBUG: Notification stored successfully with ID: ${docRef.id}',
-      );
-    } catch (e) {
-      AppLogger.log(
-        'FIRESTORE DEBUG: Error storing notification in Firestore: $e',
-      );
-      //FIRESTORE DEBUG: Stack trace: ${StackTrace.current}');
-    }
+    } catch (e) {}
   }
 
   static Future<void> triggerVibration() async {
@@ -712,16 +567,13 @@ class EnhancedNotificationService {
           intensities: [0, 128, 0, 255],
         );
       }
-    } catch (e) {
-      // Handle error silently
-    }
+    } catch (e) {}
   }
 
   static void initEnhancedNotifications() async {
     FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
         FlutterLocalNotificationsPlugin();
 
-    // Create notification channel for Android
     AndroidNotificationChannel channel = AndroidNotificationChannel(
       'FoodHub',
       'WorkPal Notifications',
@@ -756,13 +608,11 @@ class EnhancedNotificationService {
       onDidReceiveNotificationResponse:
           (NotificationResponse notificationResponse) async {
             await triggerVibration();
-            // Handle notification tap for deep linking
 
-            MyApp.navigatorKey.currentState?.pushNamedAndRemoveUntil(
-              '/home',
-              (route) => false,
-            );
-
+            final context = AppRouter.navigationKey.currentContext;
+            if (context != null) {
+              context.pushNamedAndClear(AppRoutes.home.name);
+            }
             if (notificationResponse.payload != null) {
               await _handleNotificationTap(notificationResponse.payload!);
             }
@@ -771,7 +621,6 @@ class EnhancedNotificationService {
 
     FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
       if (message.notification != null) {
-        // Trigger vibration for incoming notifications
         if (message.data['vibrate'] == 'true') {
           await triggerVibration();
         }
@@ -806,7 +655,6 @@ class EnhancedNotificationService {
           iOS: const DarwinNotificationDetails(),
         );
 
-        // Create payload with post ID for deep linking
         String payload = '';
         if (message.data['postId'] != null) {
           payload = 'postId:${message.data['postId']}';
@@ -824,27 +672,27 @@ class EnhancedNotificationService {
 
     FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) async {
       await triggerVibration();
-      // Handle notification tap when app is opened from background
-      MyApp.navigatorKey.currentState?.pushNamedAndRemoveUntil(
-        '/home',
-        (route) => false,
-      );
+
+      final context = AppRouter.navigationKey.currentContext;
+      if (context != null) {
+        context.pushNamedAndClear(AppRoutes.home.name);
+      }
+
       if (message.data['postId'] != null) {
         await _handleNotificationTap('postId:${message.data['postId']}');
       }
     });
 
-    // Handle notification tap when app is launched from terminated state
     FirebaseMessaging.instance.getInitialMessage().then((
       RemoteMessage? message,
     ) async {
       if (message != null && message.data['postId'] != null) {
-        await Future.delayed(Duration(seconds: 1));
+        await Future.delayed(const Duration(seconds: 1));
 
-        MyApp.navigatorKey.currentState?.pushNamedAndRemoveUntil(
-          '/home',
-          (route) => false,
-        );
+        final context = AppRouter.navigationKey.currentContext;
+        if (context != null) {
+          context.pushNamedAndClear(AppRoutes.home.name);
+        }
         _handleNotificationTap('postId:${message.data['postId']}');
       }
     });
@@ -852,10 +700,7 @@ class EnhancedNotificationService {
 
   static Future<void> _handleNotificationTap(String payload) async {
     if (payload.startsWith('postId:')) {
-      final postId = payload.substring(7); // Remove 'postId:' prefix
-
-      // Store the post ID to navigate to it when the app is ready
-      // This will be handled by the main app when it's initialized
+      final postId = payload.substring(7);
       _pendingPostNavigation = postId;
     }
   }
@@ -864,39 +709,18 @@ class EnhancedNotificationService {
 
   static String? getPendingPostNavigation() {
     final postId = _pendingPostNavigation;
-    _pendingPostNavigation = null; // Clear after getting
+    _pendingPostNavigation = null;
     return postId;
   }
 
-  /// Attempt to refresh FCM token for a user who doesn't have one stored
   static Future<void> _attemptTokenRefresh(String userId) async {
-    AppLogger.log(
-      'TOKEN_REFRESH DEBUG: Starting _attemptTokenRefresh for userId: $userId',
-    );
-
     try {
-      // Check if this user is currently authenticated
-      // final currentUser = FirebaseAuth.instance.currentUser;
-
       final prefs = await SharedPreferences.getInstance();
       final currentUser = prefs.getString('user_id');
-      AppLogger.log(
-        'TOKEN_REFRESH DEBUG: Current authenticated user: $currentUser',
-      );
 
       if (currentUser != null && currentUser == userId) {
-        AppLogger.log(
-          'TOKEN_REFRESH DEBUG: User matches current authenticated user, refreshing token',
-        );
         await FCMTokenService.ensureCurrentUserTokenStored();
-        //TOKEN_REFRESH DEBUG: Token refresh completed');
-      } else {
-        AppLogger.log(
-          'TOKEN_REFRESH DEBUG: User does not match current authenticated user, skipping refresh',
-        );
       }
-    } catch (e) {
-      //TOKEN_REFRESH DEBUG: Error in _attemptTokenRefresh: $e');
-    }
+    } catch (e) {}
   }
 }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 
 class HistoryItem extends StatelessWidget {
   final String time;
@@ -26,10 +28,10 @@ class HistoryItem extends StatelessWidget {
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.kWhiteColor,
           borderRadius: BorderRadius.circular(5.r),
           border: Border.all(
-            color: Color(0xFFB1B1B1).withOpacity(0.5),
+            color: AppColors.kGreyColor.withOpacity(0.5),
             width: 0.5,
           ),
         ),
@@ -43,43 +45,38 @@ class HistoryItem extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      time,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w500,
-                        fontSize: 12.sp,
-                        color: Theme.of(context).textTheme.bodyMedium?.color,
-                      ),
+                    MuvamTexts.bodySmall12(
+                      context,
+                      text: time,
+                      isTextWidget: true,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.kBlackColor,
                     ),
-                    Text(
-                      date,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16.sp,
-                        height: 1.0,
-                        letterSpacing: -0.41,
-                        color: Theme.of(context).textTheme.titleMedium?.color,
-                      ),
+                    MuvamTexts.bodyLarge16(
+                      context,
+                      text: date,
+                      isTextWidget: true,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.kBlackColor,
                     ),
                   ],
                 ),
                 isCompleted
-                    ? Text(
-                        price ?? '',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w600,
-                          fontSize: 12.sp,
-                          color: Theme.of(context).textTheme.bodyMedium?.color,
-                        ),
+                    ? MuvamTexts.bodyMedium14(
+                        context,
+                        text: price ?? '',
+                        isTextWidget: true,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.kBlackColor,
                       )
                     : Container(
-                        width: 58.w,
-                        height: 16.h,
+                        width: 70.w,
+                        height: 18.h,
                         decoration: BoxDecoration(
-                          border: Border.all(color: Colors.red, width: 0.7),
+                          border: Border.all(
+                            color: AppColors.kFailureColor,
+                            width: 0.7,
+                          ),
                           borderRadius: BorderRadius.circular(2.r),
                         ),
                         padding: EdgeInsets.only(
@@ -89,14 +86,13 @@ class HistoryItem extends StatelessWidget {
                           left: 7.w,
                         ),
                         child: Center(
-                          child: Text(
-                            'Cancelled',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 8.sp,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.red,
-                            ),
+                          child: MuvamTexts.bodyMedium14(
+                            context,
+                            text: 'Cancelled',
+                            isTextWidget: true,
+                            fontSize: 10.sp,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.kFailureColor,
                           ),
                         ),
                       ),
@@ -106,24 +102,20 @@ class HistoryItem extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Destination',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
-                    fontSize: 12.sp,
-                    color: Theme.of(context).textTheme.bodyMedium?.color,
-                  ),
+                MuvamTexts.bodySmall12(
+                  context,
+                  text: 'Destination',
+                  isTextWidget: true,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.kBlackColor,
                 ),
                 SizedBox(height: 5.h),
-                Text(
-                  destination,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14.sp,
-                    color: Theme.of(context).textTheme.titleMedium?.color,
-                  ),
+                MuvamTexts.bodyMedium14(
+                  context,
+                  text: destination,
+                  isTextWidget: true,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.kBlackColor,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),

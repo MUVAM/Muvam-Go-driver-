@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/app_routes.dart';
+import 'package:muvam_rider/core/constants/app_spacings.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
+import 'package:muvam_rider/layouts/presentation/shared/bottom_padding.dart';
 
 class WithdrawalSuccessScreen extends StatelessWidget {
   final double amount;
@@ -8,8 +15,8 @@ class WithdrawalSuccessScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+    return AppScaffold(
+      backgroundColor: AppColors.kWhiteColor,
       body: Center(
         child: Column(
           children: [
@@ -23,80 +30,67 @@ class WithdrawalSuccessScreen extends StatelessWidget {
               ),
             ),
             SizedBox(height: 20.h),
-            Text(
-              'Withdrawal Successful',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w600,
-                fontSize: 24.sp,
-                height: 21 / 24,
-                letterSpacing: -0.32,
-                color: Theme.of(context).textTheme.titleLarge?.color,
-              ),
-              textAlign: TextAlign.center,
+            MuvamTexts.headlineSmall24(
+              context,
+              text: 'Withdrawal Successful',
+              isTextWidget: true,
+              fontWeight: FontWeight.w600,
+              color: AppColors.kBlackColor,
+              center: true,
             ),
             SizedBox(height: 16.h),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 40.w),
-              child: Text(
-                'Your withdrawal of ₦${amount.toStringAsFixed(0)} is successful you will receive the withdrawal in 30mins.',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w400,
-                  fontSize: 16.sp,
-                  height: 21 / 16,
-                  letterSpacing: -0.32,
-                  color: Theme.of(context).textTheme.bodyMedium?.color,
-                ),
-                textAlign: TextAlign.center,
+              child: MuvamTexts.bodyLarge16(
+                context,
+                text:
+                    'Your withdrawal of ₦${amount.toStringAsFixed(0)} is successful you will receive the withdrawal in 30mins.',
+                isTextWidget: true,
+                fontWeight: FontWeight.w400,
+                color: AppColors.kBlackColor,
+                center: true,
               ),
             ),
-            Spacer(),
+            const Spacer(),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              padding: EdgeInsets.symmetric(horizontal: AppSpacings.k20),
               child: Column(
                 children: [
                   GestureDetector(
                     onTap: () {
-                      Navigator.popUntil(context, (route) => route.isFirst);
+                      context.goNamed(AppRoutes.home.name);
                     },
                     child: Container(
                       width: double.infinity,
                       height: 48.h,
                       decoration: BoxDecoration(
-                        color: Color(0xFF2A8359),
+                        color: AppColors.kMainColor,
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Center(
-                        child: Text(
-                          'Go back home',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16.sp,
-                            color: Colors.white,
-                          ),
+                        child: MuvamTexts.button16(
+                          context,
+                          text: 'Go back home',
+                          isTextWidget: true,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.kWhiteColor,
                         ),
                       ),
                     ),
                   ),
                   SizedBox(height: 12.h),
-                  Text(
-                    'View transaction history',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16.sp,
-                      height: 21 / 24,
-                      letterSpacing: -0.32,
-                      color: Color(0xFF2A8359),
-                    ),
-                    textAlign: TextAlign.center,
+                  MuvamTexts.button16(
+                    context,
+                    text: 'View transaction history',
+                    isTextWidget: true,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.kMainColor,
+                    center: true,
                   ),
                 ],
               ),
             ),
-            SizedBox(height: 40.h),
+            DeviceBottomPadding(),
           ],
         ),
       ),

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/constants/images.dart';
-import 'package:muvam_rider/core/constants/text_styles.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
 
 class AddHomeScreen extends StatefulWidget {
   const AddHomeScreen({super.key});
@@ -20,8 +21,8 @@ class _AddHomeScreenState extends State<AddHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return AppScaffold(
+      backgroundColor: AppColors.kWhiteColor,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -43,7 +44,16 @@ class _AddHomeScreenState extends State<AddHomeScreen> {
               ),
             ),
             SizedBox(height: 15.h),
-            Text('    Add home', style: ConstTextStyles.addHomeTitle),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              child: MuvamTexts.headlineSmall24(
+                context,
+                text: 'Add home',
+                isTextWidget: true,
+                fontWeight: FontWeight.w600,
+                color: AppColors.kBlackColor,
+              ),
+            ),
             SizedBox(height: 30.h),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -51,18 +61,30 @@ class _AddHomeScreenState extends State<AddHomeScreen> {
                 width: 353.w,
                 height: 50.h,
                 decoration: BoxDecoration(
-                  color: Color(ConstColors.fieldColor).withOpacity(0.12),
+                  color: AppColors.kFieldColor.withOpacity(0.12),
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: TextField(
                   decoration: InputDecoration(
                     hintText: 'Search an address',
-                    prefixIcon: Icon(Icons.search, size: 20.sp),
+                    hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w400,
+                      color: AppColors.kGreyColor,
+                    ),
+                    prefixIcon: Icon(
+                      Icons.search,
+                      size: 20.sp,
+                      color: AppColors.kGreyColor,
+                    ),
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.symmetric(
                       horizontal: 10.w,
                       vertical: 8.h,
                     ),
+                  ),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w400,
+                    color: AppColors.kBlackColor,
                   ),
                 ),
               ),
@@ -70,11 +92,12 @@ class _AddHomeScreenState extends State<AddHomeScreen> {
             SizedBox(height: 30.h),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
-              child: Text(
-                'Recent locations',
-                style: ConstTextStyles.recentLocation.copyWith(
-                  color: Color(ConstColors.recentLocationColor),
-                ),
+              child: MuvamTexts.bodyMedium14(
+                context,
+                text: 'Recent locations',
+                isTextWidget: true,
+                fontWeight: FontWeight.w500,
+                color: AppColors.kRecentLocationColor,
               ),
             ),
             SizedBox(height: 15.h),
@@ -91,9 +114,12 @@ class _AddHomeScreenState extends State<AddHomeScreen> {
                       width: 24.w,
                       height: 24.h,
                     ),
-                    title: Text(
-                      recentLocations[index],
-                      style: ConstTextStyles.drawerItem,
+                    title: MuvamTexts.bodyMedium14(
+                      context,
+                      text: recentLocations[index],
+                      isTextWidget: true,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.kBlackColor,
                     ),
                   );
                 },

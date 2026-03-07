@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/app_routes.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/constants/images.dart';
-import 'package:muvam_rider/features/vehicles/presentation/screens/car_information_screen.dart';
 
 class CarItem extends StatelessWidget {
   final String carName;
@@ -18,31 +21,24 @@ class CarItem extends StatelessWidget {
           Image.asset(ConstImages.car, width: 40.w, height: 40.h),
           SizedBox(width: 15.w),
           Expanded(
-            child: Text(
-              '$carName $year',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 16.sp,
-                fontWeight: FontWeight.w600,
-                color: Colors.black,
-              ),
+            child: MuvamTexts.bodyLarge16(
+              context,
+              text: '$carName $year',
+              isTextWidget: true,
+              fontWeight: FontWeight.w600,
+              color: AppColors.kBlackColor,
             ),
           ),
           GestureDetector(
             onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => CarInformationScreen()),
-              );
+              context.pushNamed(AppRoutes.carInformation.name);
             },
-            child: Text(
-              'Edit',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w500,
-                color: const Color(0xFFBDBDBD),
-              ),
+            child: MuvamTexts.bodyMedium14(
+              context,
+              text: 'Edit',
+              isTextWidget: true,
+              fontWeight: FontWeight.w500,
+              color: AppColors.kDrawerAccountColor,
             ),
           ),
         ],

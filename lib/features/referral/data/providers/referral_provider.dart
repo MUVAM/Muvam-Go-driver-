@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:muvam_rider/core/services/referral_service.dart';
-import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/features/referral/data/models/referral_models.dart';
 import 'package:share_plus/share_plus.dart';
 

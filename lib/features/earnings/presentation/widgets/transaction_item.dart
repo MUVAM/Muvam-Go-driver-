@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:provider/provider.dart';
-import 'package:muvam_rider/core/constants/theme_manager.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 
 class TransactionItem extends StatelessWidget {
   final String description;
@@ -20,15 +20,15 @@ class TransactionItem extends StatelessWidget {
   Color _getAmountColor() {
     switch (type) {
       case 'withdrawal':
-        return const Color(0xFFE53935);
+        return AppColors.kFailureColor;
       case 'tip':
         return const Color(0xFF1E88E5);
       case 'commission':
         return const Color(0xFFF57C00);
       case 'ride_earning':
-        return const Color(0xFF43A047);
+        return AppColors.kSuccessColor;
       default:
-        return const Color(0xFF43A047);
+        return AppColors.kSuccessColor;
     }
   }
 
@@ -38,7 +38,6 @@ class TransactionItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeManager = Provider.of<ThemeManager>(context);
     final amountColor = _getAmountColor();
 
     return Padding(
@@ -46,43 +45,32 @@ class TransactionItem extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                description,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 14.sp,
-                  fontWeight: FontWeight.w600,
-                  height: 1.2,
-                  letterSpacing: -0.32,
-                  color: themeManager.getTextColor(context),
-                ),
+              MuvamTexts.bodyMedium14(
+                context,
+                text: description,
+                isTextWidget: true,
+                fontWeight: FontWeight.w600,
+                color: AppColors.kBlackColor,
               ),
               SizedBox(height: 2.h),
-              Text(
-                dateTime,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 11.sp,
-                  fontWeight: FontWeight.w400,
-                  height: 1.0,
-                  letterSpacing: -0.2,
-                  color: themeManager.getSecondaryTextColor(context),
-                ),
+              MuvamTexts.bodyMedium14(
+                context,
+                text: dateTime,
+                isTextWidget: true,
+                fontWeight: FontWeight.w400,
+                color: AppColors.kGreyColor,
               ),
             ],
           ),
-          Text(
-            '${_getSign()}$formattedAmount',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 14.sp,
-              fontWeight: FontWeight.w600,
-              color: amountColor,
-            ),
+          MuvamTexts.bodyMedium14(
+            context,
+            text: '${_getSign()}$formattedAmount',
+            isTextWidget: true,
+            fontWeight: FontWeight.w600,
+            color: amountColor,
           ),
         ],
       ),

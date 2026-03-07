@@ -1,31 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:go_router/go_router.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/app_routes.dart';
+import 'package:muvam_rider/core/constants/app_spacings.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/constants/images.dart';
-import 'package:muvam_rider/core/constants/text_styles.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
 import 'package:muvam_rider/core/services/ride_tracking_service.dart';
 import 'package:muvam_rider/core/services/websocket_service.dart';
-import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
-import 'package:muvam_rider/features/auth/presentation/screens/rider_signup_selection_screen.dart';
-import 'package:muvam_rider/features/home/presentation/screens/main_navigation_screen.dart';
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
-import 'package:muvam_rider/features/profile/presentation/screens/profile_screen.dart';
-import 'package:muvam_rider/features/referral/presentation/screens/referral_screen.dart';
-import 'package:muvam_rider/features/analytics/presentation/screens/analytics_screen.dart';
-import 'package:muvam_rider/features/support/presentation/screens/faq_screen.dart';
-import 'package:muvam_rider/features/support/presentation/screens/about_us_screen.dart';
-import 'package:muvam_rider/shared/presentation/screens/onboarding_screen.dart';
+import 'package:muvam_rider/layouts/presentation/shared/bottom_padding.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'drawer_item_widget.dart';
 
 class DriverAppDrawer extends StatefulWidget {
   final VoidCallback onContactUsTap;
+  final void Function(int index)? onNavigateToTab;
 
-  const DriverAppDrawer({super.key, required this.onContactUsTap});
+  const DriverAppDrawer({
+    super.key,
+    required this.onContactUsTap,
+    this.onNavigateToTab,
+  });
 
   @override
   State<DriverAppDrawer> createState() => _DriverAppDrawerState();
@@ -108,43 +108,41 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
                   Expanded(
                     child: GestureDetector(
                       onTap: () {
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ProfileScreen(),
-                          ),
-                        );
+                        context.pop();
+                        context.pushNamed(AppRoutes.profile.name);
                       },
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            profileProvider.userShortName.isNotEmpty
-                                ? profileProvider.userShortName
-                                : '',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 20.sp,
-                              fontWeight: FontWeight.w600,
-                              color: themeManager.getTextColor(context),
-                            ),
-                            overflow: TextOverflow.ellipsis,
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  profileProvider.userShortName.isNotEmpty
+                                      ? profileProvider.userShortName
+                                      : '',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontFamily: 'Inter',
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: AppSpacings.k22,
+                                    color: themeManager.getTextColor(context),
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                           SizedBox(height: 4.h),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                'My account',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w400,
-                                  color: themeManager.getSecondaryTextColor(
-                                    context,
-                                  ),
-                                ),
+                              MuvamTexts.bodyMedium14(
+                                context,
+                                text: 'My account',
+                                isTextWidget: true,
+                                fontWeight: FontWeight.w400,
+                                color: AppColors.kFieldColor,
                               ),
                               Icon(
                                 Icons.arrow_forward_ios,
@@ -167,42 +165,38 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
               thickness: 1,
               color: themeManager.isDarkMode
                   ? Colors.grey.shade700
-                  : Color(0xFFEEEEEE),
+                  : const Color(0xFFEEEEEE),
               height: 1,
             ),
             DrawerItemWidget(
               title: 'Wallet',
               iconPath: ConstImages.walletSolid,
               onTap: () {
-                Navigator.pop(context);
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => MainNavigationScreen(initialIndex: 2),
-                  ),
-                );
+                if (widget.onNavigateToTab != null) {
+                  widget.onNavigateToTab!(2);
+                } else {
+                  context.pop();
+                  context.goNamed(
+                    AppRoutes.home.name,
+                    extra: {'initialIndex': 2},
+                  );
+                }
               },
             ),
             DrawerItemWidget(
               title: 'Referral',
               iconPath: ConstImages.settings,
               onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => ReferralScreen()),
-                );
+                context.pop();
+                context.pushNamed(AppRoutes.referral.name);
               },
             ),
             DrawerItemWidget(
               title: 'Analytics',
               iconPath: ConstImages.settings,
               onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AnalyticsScreen()),
-                );
+                context.pop();
+                context.pushNamed(AppRoutes.analytics.name);
               },
             ),
             DrawerItemWidget(
@@ -214,25 +208,18 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
               title: 'FAQ',
               iconPath: ConstImages.questionCircle,
               onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => FaqScreen()),
-                );
+                context.pop();
+                context.pushNamed(AppRoutes.faq.name);
               },
             ),
             DrawerItemWidget(
               title: 'About',
               iconPath: ConstImages.book,
               onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => AboutUsScreen()),
-                );
+                context.pop();
+                context.pushNamed(AppRoutes.aboutUs.name);
               },
             ),
-
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: Row(
@@ -243,33 +230,35 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
                     decoration: BoxDecoration(
                       color: _isDarkMode
                           ? Colors.grey.shade700
-                          : Color(ConstColors.mainColor),
+                          : AppColors.kMainColor,
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       _isDarkMode ? Icons.dark_mode : Icons.wb_sunny_outlined,
-                      color: Colors.white,
+                      color: AppColors.kWhiteColor,
                       size: 20.sp,
                     ),
                   ),
                   SizedBox(width: 12.w),
                   Expanded(
-                    child: Text(
-                      'Light mode',
-                      style: ConstTextStyles.drawerItem.copyWith(
-                        color: themeManager.getTextColor(context),
-                      ),
+                    child: MuvamTexts.titleSmall14(
+                      context,
+                      text: 'Light mode',
+                      isTextWidget: true,
+                      fontSize: AppSpacings.k18.sp,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.kBlackColor,
                     ),
                   ),
                   Switch(
                     value: _isDarkMode,
                     onChanged: _toggleTheme,
-                    activeColor: Color(ConstColors.mainColor),
+                    activeColor: AppColors.kMainColor,
                   ),
                 ],
               ),
             ),
-            Spacer(),
+            const Spacer(),
             GestureDetector(
               onTap: () => _showLogoutSheet(context),
               child: Padding(
@@ -283,7 +272,7 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
                         width: 24.w,
                         height: 24.h,
                         fit: BoxFit.contain,
-                        colorFilter: ColorFilter.mode(
+                        colorFilter: const ColorFilter.mode(
                           Color(0xFFEF5350),
                           BlendMode.srcIn,
                         ),
@@ -293,7 +282,7 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
                 ),
               ),
             ),
-            SizedBox(height: 40.h),
+            DeviceBottomPadding(),
           ],
         ),
       ),
@@ -309,7 +298,7 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
       builder: (context) => Container(
         padding: EdgeInsets.all(20.w),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.kWhiteColor,
           borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
         ),
         child: Column(
@@ -324,25 +313,21 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
                 borderRadius: BorderRadius.circular(2.5.r),
               ),
             ),
-            Text(
-              'Log Out',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 18.sp,
-                fontWeight: FontWeight.w600,
-                color: Colors.black,
-              ),
+            MuvamTexts.titleMedium18(
+              context,
+              text: 'Log Out',
+              isTextWidget: true,
+              fontWeight: FontWeight.w600,
+              color: AppColors.kBlackColor,
             ),
             SizedBox(height: 20.h),
-            Text(
-              'Are you sure you want to log out of your account?',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 14.sp,
-                fontWeight: FontWeight.w400,
-                color: Colors.black,
-              ),
+            MuvamTexts.bodyMedium14(
+              context,
+              text: 'Are you sure you want to log out of your account?',
+              isTextWidget: true,
+              fontWeight: FontWeight.w400,
+              color: AppColors.kBlackColor,
+              center: true,
             ),
             SizedBox(height: 30.h),
             Row(
@@ -350,24 +335,23 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
                 Expanded(
                   child: GestureDetector(
                     onTap: () async {
-                      Navigator.pop(context);
+                      context.pop();
                       await _performLogout(context);
                     },
                     child: Container(
                       height: 47.h,
                       decoration: BoxDecoration(
-                        color: Color(0xFFB1B1B1),
+                        color: AppColors.kGreyColor,
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       padding: EdgeInsets.all(10.w),
                       child: Center(
-                        child: Text(
-                          'Log out',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        child: MuvamTexts.button16(
+                          context,
+                          text: 'Log out',
+                          isTextWidget: true,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.kWhiteColor,
                         ),
                       ),
                     ),
@@ -376,22 +360,21 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
                 SizedBox(width: 10.w),
                 Expanded(
                   child: GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: () => context.pop(),
                     child: Container(
                       height: 47.h,
                       decoration: BoxDecoration(
-                        color: Color(ConstColors.mainColor),
+                        color: AppColors.kMainColor,
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       padding: EdgeInsets.all(10.w),
                       child: Center(
-                        child: Text(
-                          'Go Back',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        child: MuvamTexts.button16(
+                          context,
+                          text: 'Go Back',
+                          isTextWidget: true,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.kWhiteColor,
                         ),
                       ),
                     ),
@@ -420,19 +403,12 @@ class _DriverAppDrawerState extends State<DriverAppDrawer> {
       await prefs.remove('auth_token');
       await prefs.remove('vehicle_submitted');
 
-      // if (context.mounted) {
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (context) => const OnboardingScreen()),
-        (route) => false,
-      );
-      // }
-    } catch (e) {
-      //Error during logout: $e');
       if (context.mounted) {
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => const OnboardingScreen()),
-          (route) => false,
-        );
+        context.pushReplacementNamed(AppRoutes.onboarding.name);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        context.pushReplacementNamed(AppRoutes.onboarding.name);
       }
     }
   }

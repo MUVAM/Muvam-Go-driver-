@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:muvam_rider/core/constants/text_styles.dart';
-import 'package:muvam_rider/core/constants/theme_manager.dart';
-import 'package:provider/provider.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 
 class DrawerItemWidget extends StatelessWidget {
   final String title;
@@ -19,8 +18,6 @@ class DrawerItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeManager = Provider.of<ThemeManager>(context);
-
     return InkWell(
       onTap: onTap,
       child: Padding(
@@ -34,11 +31,13 @@ class DrawerItemWidget extends StatelessWidget {
               fit: BoxFit.contain,
             ),
             SizedBox(width: 20.w),
-            Text(
-              title,
-              style: ConstTextStyles.drawerItem.copyWith(
-                color: themeManager.getTextColor(context),
-              ),
+            MuvamTexts.titleSmall14(
+              context,
+              text: title,
+              isTextWidget: true,
+              fontSize: 18.sp,
+              fontWeight: FontWeight.w500,
+              color: AppColors.kBlackColor,
             ),
           ],
         ),
