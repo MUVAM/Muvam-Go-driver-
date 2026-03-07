@@ -2,9 +2,12 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:camera/camera.dart';
-import 'package:muvam_rider/core/constants/fonts.dart';
-import 'package:provider/provider.dart';
-import 'package:muvam_rider/core/constants/theme_manager.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
+import 'package:muvam_rider/core/utils/app_logger.dart';
+import 'package:muvam_rider/core/utils/extension.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
+import 'package:muvam_rider/layouts/presentation/shared/bottom_padding.dart';
 
 class VehicleInsuranceScreen extends StatefulWidget {
   const VehicleInsuranceScreen({super.key});
@@ -44,7 +47,7 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
         }
       }
     } catch (e) {
-      print('Error initializing camera: $e');
+      AppLogger.log('Error initializing camera: $e');
     }
   }
 
@@ -66,7 +69,7 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
         Navigator.pop(context, File(image.path));
       }
     } catch (e) {
-      print('Error capturing image: $e');
+      AppLogger.log('Error capturing image: $e');
       setState(() {
         _isCapturing = false;
       });
@@ -81,20 +84,17 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeManager = Provider.of<ThemeManager>(context);
-
-    return Scaffold(
-      backgroundColor: Colors.black,
+    return AppScaffold(
+      backgroundColor: AppColors.kBlackColor,
       body: SafeArea(
         child: Stack(
           children: [
-            // Camera Preview
             if (_isCameraInitialized && _cameraController != null)
               Positioned.fill(child: CameraPreview(_cameraController!))
             else
-              Center(child: CircularProgressIndicator(color: Colors.white)),
-
-            // Top bar with back button and title
+              const Center(
+                child: CircularProgressIndicator(color: AppColors.kWhiteColor),
+              ),
             Positioned(
               top: 0,
               left: 0,
@@ -105,34 +105,36 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Colors.black.withOpacity(0.7), Colors.transparent],
+                    colors: [
+                      AppColors.kBlackColor.withOpacity(0.7),
+                      Colors.transparent,
+                    ],
                   ),
                 ),
                 child: Row(
                   children: [
                     IconButton(
-                      icon: Icon(Icons.arrow_back, color: Colors.white),
-                      onPressed: () => Navigator.pop(context),
+                      icon: const Icon(
+                        Icons.arrow_back,
+                        color: AppColors.kWhiteColor,
+                      ),
+                      onPressed: () => context.pop(),
                     ),
                     Expanded(
-                      child: Text(
-                        'Vehicle Verification',
-                        style: TextStyle(
-                          fontFamily: ConstFonts.inter,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 18.sp,
-                          color: Colors.white,
-                        ),
-                        textAlign: TextAlign.center,
+                      child: MuvamTexts.titleMedium18(
+                        context,
+                        text: 'Vehicle Verification',
+                        isTextWidget: true,
+                        center: true,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.kWhiteColor,
                       ),
                     ),
-                    SizedBox(width: 48.w), // Balance the back button
+                    SizedBox(width: 48.w),
                   ],
                 ),
               ),
             ),
-
-            // Document frame overlay
             Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -142,7 +144,7 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
                     height: 220.h,
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.8),
+                        color: AppColors.kWhiteColor.withOpacity(0.8),
                         width: 3,
                       ),
                       borderRadius: BorderRadius.circular(12.r),
@@ -155,25 +157,21 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
                       vertical: 10.h,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.6),
+                      color: AppColors.kBlackColor.withOpacity(0.6),
                       borderRadius: BorderRadius.circular(8.r),
                     ),
-                    child: Text(
-                      'Align the document within the frame',
-                      style: TextStyle(
-                        fontFamily: ConstFonts.inter,
-                        fontWeight: FontWeight.w500,
-                        fontSize: 14.sp,
-                        color: Colors.white,
-                      ),
-                      textAlign: TextAlign.center,
+                    child: MuvamTexts.bodyMedium14(
+                      context,
+                      text: 'Align the document within the frame',
+                      isTextWidget: true,
+                      center: true,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.kWhiteColor,
                     ),
                   ),
                 ],
               ),
             ),
-
-            // Bottom section with title and capture button
             Positioned(
               bottom: 0,
               left: 0,
@@ -184,34 +182,32 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
                   gradient: LinearGradient(
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
-                    colors: [Colors.black.withOpacity(0.8), Colors.transparent],
+                    colors: [
+                      AppColors.kBlackColor.withOpacity(0.8),
+                      Colors.transparent,
+                    ],
                   ),
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      'Vehicle Insurance',
-                      style: TextStyle(
-                        fontFamily: ConstFonts.inter,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 20.sp,
-                        color: Colors.white,
-                      ),
+                    MuvamTexts.titleLarge22(
+                      context,
+                      text: 'Vehicle Insurance',
+                      isTextWidget: true,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.kWhiteColor,
                     ),
                     SizedBox(height: 8.h),
-                    Text(
-                      'Take a clear photo of your vehicle insurance document.',
-                      style: TextStyle(
-                        fontFamily: ConstFonts.inter,
-                        fontWeight: FontWeight.w400,
-                        fontSize: 13.sp,
-                        color: Colors.white.withOpacity(0.8),
-                      ),
-                      textAlign: TextAlign.center,
+                    MuvamTexts.bodySmall12(
+                      context,
+                      text:
+                          'Take a clear photo of your vehicle insurance document.',
+                      isTextWidget: true,
+                      center: true,
+                      color: AppColors.kWhiteColor,
                     ),
                     SizedBox(height: 30.h),
-                    // Capture button
                     GestureDetector(
                       onTap: _isCapturing ? null : _captureDocument,
                       child: Container(
@@ -220,26 +216,29 @@ class _VehicleInsuranceScreenState extends State<VehicleInsuranceScreen> {
                         decoration: BoxDecoration(
                           color: Colors.transparent,
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 4),
+                          border: Border.all(
+                            color: AppColors.kWhiteColor,
+                            width: 4,
+                          ),
                         ),
                         child: Center(
                           child: _isCapturing
-                              ? CircularProgressIndicator(
-                                  color: Colors.white,
+                              ? const CircularProgressIndicator(
+                                  color: AppColors.kWhiteColor,
                                   strokeWidth: 3,
                                 )
                               : Container(
                                   width: 60.w,
                                   height: 60.h,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.kWhiteColor,
                                     shape: BoxShape.circle,
                                   ),
                                 ),
                         ),
                       ),
                     ),
-                    SizedBox(height: 20.h),
+                    DeviceBottomPadding(),
                   ],
                 ),
               ),

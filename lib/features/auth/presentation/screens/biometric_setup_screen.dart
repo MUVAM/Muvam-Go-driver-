@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/services/biometric_auth_service.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
 
 class BiometricSetupScreen extends StatefulWidget {
   final VoidCallback onComplete;
@@ -28,7 +30,6 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
   void initState() {
     super.initState();
     _loadBiometricType();
-    // Automatically start scanning after a brief delay
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Future.delayed(const Duration(milliseconds: 500), () {
         if (mounted) {
@@ -55,7 +56,6 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
     });
 
     try {
-      // Use a different reason depending on whether this is a login gate or setup
       final reason = widget.isLoginScreen
           ? 'Authenticate to access Muvam'
           : 'Place your finger on the sensor to set up biometric authentication';
@@ -74,13 +74,11 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
             _isScanning = false;
           });
 
-          // For the login flow, proceed immediately without requiring "Done" tap
           if (widget.isLoginScreen) {
             widget.onComplete();
           }
         }
       } else {
-        // Authentication failed — retry after a short delay
         if (mounted) {
           setState(() {
             _isScanning = false;
@@ -109,8 +107,8 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
   Widget build(BuildContext context) {
     final isFaceID = _biometricType == 'Face ID';
 
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return AppScaffold(
+      backgroundColor: AppColors.kWhiteColor,
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 20.w),
@@ -118,45 +116,28 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const Spacer(),
-
-              // Title
-              Text(
-                isFaceID ? 'Place your face' : 'Place your finger',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 26.sp,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black,
-                  letterSpacing: -0.32,
-                  height: 1.0,
-                ),
-                textAlign: TextAlign.center,
+              MuvamTexts.headlineSmall24(
+                context,
+                text: isFaceID ? 'Place your face' : 'Place your finger',
+                isTextWidget: true,
+                center: true,
+                color: AppColors.kBlackColor,
+                fontWeight: FontWeight.w500,
               ),
-
               SizedBox(height: 16.h),
-
-              // Subtitle
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 20.w),
-                child: Text(
-                  isFaceID
+                child: MuvamTexts.bodyLarge16(
+                  context,
+                  text: isFaceID
                       ? 'Place your face in the middle of the circle and hold still'
                       : 'Place your finger on the sensor and lift after you feel a vibration',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w400,
-                    color: Colors.grey[600],
-                    letterSpacing: -0.32,
-                    height: 1.0,
-                  ),
-                  textAlign: TextAlign.center,
+                  isTextWidget: true,
+                  center: true,
+                  color: Colors.grey[600],
                 ),
               ),
-
               SizedBox(height: 60.h),
-
-              // Fingerprint/Face Image
               AnimatedContainer(
                 duration: const Duration(milliseconds: 300),
                 child: isFaceID
@@ -170,7 +151,7 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
                             color: _scanComplete
                                 ? Colors.green
                                 : _isScanning
-                                ? Color(ConstColors.mainColor)
+                                ? AppColors.kMainColor
                                 : Colors.grey.shade400,
                             width: 4,
                           ),
@@ -194,33 +175,28 @@ class _BiometricSetupScreenState extends State<BiometricSetupScreen> {
                         fit: BoxFit.contain,
                       ),
               ),
-
               SizedBox(height: 60.h),
-
-              // Done Button (only show when scan is complete)
               if (_scanComplete)
                 GestureDetector(
                   onTap: _proceedToAuthentication,
                   child: Container(
                     width: double.infinity,
-                    height: 48.h,
+                    height: 47.h,
                     decoration: BoxDecoration(
-                      color: Color(ConstColors.mainColor),
+                      color: AppColors.kMainColor,
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: Center(
-                      child: Text(
-                        'Done',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16.sp,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      child: MuvamTexts.button16(
+                        context,
+                        text: 'Done',
+                        color: AppColors.kWhiteColor,
+                        fontWeight: FontWeight.w600,
+                        isTextWidget: true,
                       ),
                     ),
                   ),
                 ),
-
               const Spacer(),
             ],
           ),

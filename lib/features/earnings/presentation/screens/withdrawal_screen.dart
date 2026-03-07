@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:go_router/go_router.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/app_routes.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/earnings/presentation/widgets/bank_selector_widget.dart';
 import 'package:muvam_rider/features/earnings/presentation/widgets/text_field_widget.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
+import 'package:muvam_rider/layouts/presentation/shared/bottom_padding.dart';
 import 'package:provider/provider.dart';
-import 'package:muvam_rider/core/constants/theme_manager.dart';
 import 'package:muvam_rider/features/earnings/data/provider/withdrawal_provider.dart';
-import 'withdrawal_success_screen.dart';
 
 class WithdrawalScreen extends StatefulWidget {
   const WithdrawalScreen({super.key});
@@ -92,11 +95,9 @@ class WithdrawalScreenState extends State<WithdrawalScreen> {
     );
 
     if (success) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => WithdrawalSuccessScreen(amount: amount),
-        ),
+      context.pushNamed(
+        AppRoutes.withdrawalSuccess.name,
+        extra: {'amount': amount},
       );
     } else if (provider.errorMessage != null) {
       CustomFlushbar.showError(
@@ -108,15 +109,14 @@ class WithdrawalScreenState extends State<WithdrawalScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeManager = Provider.of<ThemeManager>(context);
     final withdrawalProvider = Provider.of<WithdrawalProvider>(context);
 
-    return Scaffold(
-      backgroundColor: themeManager.getBackgroundColor(context),
+    return AppScaffold(
+      backgroundColor: AppColors.kWhiteColor,
       body: Column(
         children: [
           Container(
-            padding: EdgeInsets.fromLTRB(20.w, 50.h, 20.w, 30.h),
+            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
             child: Column(
               children: [
                 Row(
@@ -125,31 +125,27 @@ class WithdrawalScreenState extends State<WithdrawalScreen> {
                       onTap: () => Navigator.pop(context),
                       child: Image.asset(
                         ConstImages.back,
-                        width: 40.w,
-                        height: 40.h,
+                        width: 33.w,
+                        height: 33.h,
                         fit: BoxFit.cover,
                       ),
                     ),
                   ],
                 ),
                 SizedBox(height: 20.h),
-                Text(
-                  'Withdrawal',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w600,
-                    fontSize: 26.sp,
-                    color: themeManager.getTextColor(context),
-                  ),
+                MuvamTexts.headlineSmall24(
+                  context,
+                  text: 'Withdrawal',
+                  isTextWidget: true,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.kBlackColor,
                 ),
-                Text(
-                  'Please enter your correct bank details',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
-                    fontSize: 14.sp,
-                    color: Color(0xFF8E8E93),
-                  ),
+                MuvamTexts.bodyMedium14(
+                  context,
+                  text: 'Please enter your correct bank details',
+                  isTextWidget: true,
+                  fontWeight: FontWeight.w400,
+                  color: const Color(0xFF8E8E93),
                 ),
               ],
             ),
@@ -161,7 +157,7 @@ class WithdrawalScreenState extends State<WithdrawalScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   SizedBox(height: 10.h),
-                  BankSelectorWidget(parentContext: context),
+                  const BankSelectorWidget(),
                   SizedBox(height: 24.h),
                   TextFieldWidget(
                     label: 'Account number',
@@ -188,21 +184,19 @@ class WithdrawalScreenState extends State<WithdrawalScreen> {
             ),
           ),
           Container(
-            padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 40.h),
-            decoration: BoxDecoration(
-              color: themeManager.getBackgroundColor(context),
-            ),
+            padding: EdgeInsets.fromLTRB(20.w, 20.h, 20.w, 0),
+            decoration: BoxDecoration(color: AppColors.kWhiteColor),
             child: GestureDetector(
               onTap: withdrawalProvider.isWithdrawing
                   ? null
                   : _handleWithdrawal,
               child: Container(
                 width: double.infinity,
-                height: 48.h,
+                height: 47.h,
                 decoration: BoxDecoration(
                   color: withdrawalProvider.isWithdrawing
-                      ? Color(ConstColors.mainColor)
-                      : Color(0xFFB1B1B1),
+                      ? AppColors.kMainColor
+                      : AppColors.kFieldColor,
                   borderRadius: BorderRadius.circular(12.r),
                 ),
                 child: Center(
@@ -211,23 +205,22 @@ class WithdrawalScreenState extends State<WithdrawalScreen> {
                           width: 24.w,
                           height: 24.h,
                           child: const CircularProgressIndicator(
-                            color: Colors.white,
+                            color: AppColors.kWhiteColor,
                             strokeWidth: 2.5,
                           ),
                         )
-                      : Text(
-                          'Withdraw',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w600,
-                            fontSize: 17.sp,
-                            color: Colors.white,
-                          ),
+                      : MuvamTexts.button16(
+                          context,
+                          text: 'Withdraw',
+                          isTextWidget: true,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.kWhiteColor,
                         ),
                 ),
               ),
             ),
           ),
+          DeviceBottomPadding(),
         ],
       ),
     );

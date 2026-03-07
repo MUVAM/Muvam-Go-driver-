@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/features/earnings/data/provider/wallet_provider.dart';
 import 'package:muvam_rider/features/earnings/presentation/widgets/transaction_item.dart';
 import 'package:muvam_rider/features/earnings/presentation/widgets/wallet_card_widget.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
 import 'package:provider/provider.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/app_routes.dart';
 import 'package:muvam_rider/core/constants/images.dart';
-import 'package:muvam_rider/core/constants/theme_manager.dart';
-import 'package:muvam_rider/features/earnings/presentation/screens/how_to_withdraw.dart';
 
 class WalletScreen extends StatefulWidget {
   const WalletScreen({super.key});
@@ -30,7 +32,6 @@ class WalletScreenState extends State<WalletScreen> {
     'Withdrawal',
   ];
 
-  // Maps display label → backend type value
   final Map<String, String> filterTypeMap = {
     'All': 'all',
     'Tip': 'tip',
@@ -76,9 +77,8 @@ class WalletScreenState extends State<WalletScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeManager = Provider.of<ThemeManager>(context);
-    return Scaffold(
-      backgroundColor: themeManager.getBackgroundColor(context),
+    return AppScaffold(
+      backgroundColor: AppColors.kWhiteColor,
       body: SafeArea(
         child: Consumer<WalletProvider>(
           builder: (context, walletProvider, child) {
@@ -95,20 +95,18 @@ class WalletScreenState extends State<WalletScreen> {
                   children: [
                     Icon(Icons.error_outline, size: 48.sp, color: Colors.grey),
                     SizedBox(height: 16.h),
-                    Text(
-                      'Failed to load wallet data',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w500,
-                        color: themeManager.getTextColor(context),
-                      ),
+                    MuvamTexts.bodyLarge16(
+                      context,
+                      text: 'Failed to load wallet data',
+                      isTextWidget: true,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.kBlackColor,
                     ),
                     SizedBox(height: 16.h),
                     ElevatedButton(
                       onPressed: () => walletProvider.fetchWalletSummary(),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Color(ConstColors.mainColor),
+                        backgroundColor: AppColors.kMainColor,
                       ),
                       child: const Text('Retry'),
                     ),
@@ -122,38 +120,25 @@ class WalletScreenState extends State<WalletScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Wallet',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 26.sp,
-                          fontWeight: FontWeight.w600,
-                          height: 1.0,
-                          letterSpacing: -0.32,
-                          color: themeManager.getTextColor(context),
-                        ),
+                      MuvamTexts.headlineSmall24(
+                        context,
+                        text: 'Wallet',
+                        isTextWidget: true,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.kBlackColor,
                       ),
                       GestureDetector(
-                        onTap: () => Navigator.push(
+                        onTap: () =>
+                            context.pushNamed(AppRoutes.howToWithdraw.name),
+                        child: MuvamTexts.bodyLarge16(
                           context,
-                          MaterialPageRoute(
-                            builder: (context) => HowToWithdraw(),
-                          ),
-                        ),
-                        child: Text(
-                          'How to withdraw?',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 16.sp,
-                            fontWeight: FontWeight.w500,
-                            height: 1.0,
-                            letterSpacing: -0.32,
-                            color: Color(ConstColors.mainColor),
-                          ),
+                          text: 'How to withdraw?',
+                          isTextWidget: true,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.kMainColor,
                         ),
                       ),
                     ],
@@ -161,9 +146,7 @@ class WalletScreenState extends State<WalletScreen> {
                   SizedBox(height: 30.h),
                   WalletCardWidget(
                     walletSummary: walletSummary,
-                    themeManager: themeManager,
                     walletProvider: walletProvider,
-                    context: context,
                   ),
                   SizedBox(height: 20.h),
                   Row(
@@ -179,21 +162,19 @@ class WalletScreenState extends State<WalletScreen> {
                           padding: EdgeInsets.symmetric(horizontal: 10.w),
                           decoration: BoxDecoration(
                             color: selectedTab == index
-                                ? Color(ConstColors.mainColor)
+                                ? AppColors.kMainColor
                                 : Colors.transparent,
                             borderRadius: BorderRadius.circular(3.r),
                           ),
                           child: Center(
-                            child: Text(
-                              tab,
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 12.sp,
-                                fontWeight: FontWeight.w500,
-                                color: selectedTab == index
-                                    ? Colors.white
-                                    : themeManager.getTextColor(context),
-                              ),
+                            child: MuvamTexts.bodyMedium14(
+                              context,
+                              text: tab,
+                              isTextWidget: true,
+                              fontWeight: FontWeight.w500,
+                              color: selectedTab == index
+                                  ? AppColors.kWhiteColor
+                                  : AppColors.kBlackColor,
                             ),
                           ),
                         ),
@@ -201,29 +182,25 @@ class WalletScreenState extends State<WalletScreen> {
                     }).toList(),
                   ),
                   SizedBox(height: 15.h),
-                  Text(
-                    walletProvider.formatAmount(walletSummary.totalEarnings),
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w700,
-                      fontSize: 24.sp,
-                      height: 1.0,
-                      letterSpacing: -0.41,
-                      color: themeManager.getTextColor(context),
+                  MuvamTexts.headlineMedium28(
+                    context,
+                    text: walletProvider.formatAmount(
+                      walletSummary.totalEarnings,
                     ),
+                    isTextWidget: true,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.kBlackColor,
                   ),
-                  SizedBox(height: 20.h),
+                  SizedBox(height: 10.h),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'Transaction history',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.w600,
-                          color: themeManager.getTextColor(context),
-                        ),
+                      MuvamTexts.titleMedium18(
+                        context,
+                        text: 'Transaction history',
+                        isTextWidget: true,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.kBlackColor,
                       ),
                       Container(
                         width: 120.w,
@@ -231,16 +208,14 @@ class WalletScreenState extends State<WalletScreen> {
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
                           border: Border.all(
-                            color: themeManager
-                                .getSecondaryTextColor(context)
-                                .withValues(alpha: 0.5),
+                            color: AppColors.kGreyColor.withValues(alpha: 0.5),
                             width: 0.7,
                           ),
                           borderRadius: BorderRadius.circular(4.r),
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
-                            dropdownColor: Colors.white,
+                            dropdownColor: AppColors.kWhiteColor,
                             value: selectedFilter,
                             icon: Padding(
                               padding: EdgeInsets.only(left: 6.w),
@@ -248,12 +223,11 @@ class WalletScreenState extends State<WalletScreen> {
                             ),
                             isExpanded: false,
                             isDense: true,
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 12.sp,
-                              fontWeight: FontWeight.w400,
-                              color: themeManager.getTextColor(context),
-                            ),
+                            style: Theme.of(context).textTheme.labelLarge
+                                ?.copyWith(
+                                  fontWeight: FontWeight.w400,
+                                  color: AppColors.kBlackColor,
+                                ),
                             items: filterOptions.map((String value) {
                               return DropdownMenuItem<String>(
                                 value: value,
@@ -303,14 +277,12 @@ class WalletScreenState extends State<WalletScreen> {
                                   size: 48.sp,
                                   color: Colors.grey.shade300,
                                 ),
-                                SizedBox(height: 16.h),
-                                Text(
-                                  'No transactions yet',
-                                  style: TextStyle(
-                                    fontFamily: 'Inter',
-                                    fontSize: 14.sp,
-                                    color: Colors.grey,
-                                  ),
+                                SizedBox(height: 8.h),
+                                MuvamTexts.bodyLarge16(
+                                  context,
+                                  text: 'No transactions yet',
+                                  isTextWidget: true,
+                                  color: AppColors.kGreyColor,
                                 ),
                               ],
                             ),

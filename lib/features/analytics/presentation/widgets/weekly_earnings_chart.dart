@@ -1,13 +1,14 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/features/analytics/data/models/overview_response_model.dart';
 
 class WeeklyEarningsChart extends StatelessWidget {
   final WeeklyOverviewData? overview;
 
-  const WeeklyEarningsChart({Key? key, required this.overview})
-    : super(key: key);
+  const WeeklyEarningsChart({super.key, required this.overview});
 
   @override
   Widget build(BuildContext context) {
@@ -16,21 +17,19 @@ class WeeklyEarningsChart extends StatelessWidget {
         width: double.infinity,
         height: 70.h,
         child: Center(
-          child: Text(
-            'No data available',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 14.sp,
-              color: Colors.grey,
-            ),
+          child: MuvamTexts.bodyMedium14(
+            context,
+            text: 'No data available',
+            isTextWidget: true,
+            color: AppColors.kGreyColor,
           ),
         ),
       );
     }
 
     return Container(
-      width: 318.w,
-      height: 150.h,
+      width: double.infinity,
+      height: 140.h,
       child: BarChart(
         BarChartData(
           alignment: BarChartAlignment.spaceAround,
@@ -44,7 +43,7 @@ class WeeklyEarningsChart extends StatelessWidget {
                 getTitlesWidget: (value, meta) {
                   if (value.toInt() < 0 ||
                       value.toInt() >= overview!.dailyBreakdown.length) {
-                    return SizedBox.shrink();
+                    return const SizedBox.shrink();
                   }
                   final day = overview!.dailyBreakdown[value.toInt()];
                   return Padding(
@@ -52,30 +51,27 @@ class WeeklyEarningsChart extends StatelessWidget {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          day.dayLabel,
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 11.sp,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black,
-                          ),
+                        MuvamTexts.bodySmall12(
+                          context,
+                          text: day.dayLabel,
+                          isTextWidget: true,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.kBlackColor,
                         ),
                         SizedBox(height: 2.h),
-                        Text(
-                          _formatAmount(day.amount),
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 9.sp,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.black87,
-                          ),
+                        MuvamTexts.bodySmall12(
+                          // changed from headlineSmall24
+                          context,
+                          text: _formatAmount(day.amount),
+                          isTextWidget: true,
+                          fontWeight: FontWeight.w400,
+                          color: AppColors.kBlackColor.withOpacity(0.87),
                         ),
                       ],
                     ),
                   );
                 },
-                reservedSize: 40.h,
+                reservedSize: 56.h,
               ),
             ),
             leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -110,7 +106,7 @@ class WeeklyEarningsChart extends StatelessWidget {
         barRods: [
           BarChartRodData(
             toY: day.amount > 0 ? day.amount : 0.5,
-            gradient: LinearGradient(
+            gradient: const LinearGradient(
               colors: [Color(0xFF4A9D7A), Color(0xFF1F5D42)],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,

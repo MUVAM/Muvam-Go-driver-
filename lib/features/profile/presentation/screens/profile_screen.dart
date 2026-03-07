@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:go_router/go_router.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/app_routes.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
-import 'package:muvam_rider/features/auth/presentation/screens/delete_account_screen.dart';
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
-import 'package:muvam_rider/features/profile/presentation/screens/app_lock_screen.dart';
 import 'package:muvam_rider/features/profile/presentation/widgets/profile_field.dart';
-import 'package:muvam_rider/features/ratings/presentation/screens/ratings_screen.dart';
 import 'package:muvam_rider/features/vehicles/data/models/vehicle_response.dart';
-import 'package:muvam_rider/features/vehicles/presentation/screens/car_information_screen.dart';
-import 'package:muvam_rider/features/vehicles/presentation/screens/my_cars_screen.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
+import 'package:muvam_rider/layouts/presentation/shared/bottom_padding.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -62,18 +62,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final user = profileProvider.userProfile;
 
         if (profileProvider.isLoading && user == null) {
-          return Scaffold(
-            backgroundColor: Colors.white,
+          return AppScaffold(
+            backgroundColor: AppColors.kWhiteColor,
             body: Center(
-              child: CircularProgressIndicator(
-                color: Color(ConstColors.mainColor),
-              ),
+              child: CircularProgressIndicator(color: AppColors.kMainColor),
             ),
           );
         }
 
-        return Scaffold(
-          backgroundColor: Colors.white,
+        return AppScaffold(
+          backgroundColor: AppColors.kWhiteColor,
           body: SafeArea(
             child: Column(
               children: [
@@ -92,14 +90,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                       Expanded(
                         child: Center(
-                          child: Text(
-                            'My account',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 20.sp,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black,
-                            ),
+                          child: MuvamTexts.titleLarge22(
+                            context,
+                            text: 'My account',
+                            isTextWidget: true,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                       ),
@@ -107,7 +103,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ],
                   ),
                 ),
-                SizedBox(height: 20.h),
+                SizedBox(height: 10.h),
                 Expanded(
                   child: SingleChildScrollView(
                     child: Column(
@@ -120,7 +116,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               height: 100.h,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Color(0xFFE0E0E0),
+                                color: AppColors.kGreyColor.withOpacity(0.5),
                               ),
                               child: profileProvider.userProfilePhoto.isNotEmpty
                                   ? ClipOval(
@@ -130,7 +126,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         errorBuilder:
                                             (context, error, stackTrace) {
                                               return Container(
-                                                color: Color(0xFFE0E0E0),
+                                                color: AppColors.kGreyColor
+                                                    .withOpacity(0.5),
                                               );
                                             },
                                       ),
@@ -144,12 +141,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 width: 24.w,
                                 height: 24.h,
                                 decoration: BoxDecoration(
-                                  color: Color(ConstColors.mainColor),
+                                  color: AppColors.kMainColor,
                                   shape: BoxShape.circle,
                                 ),
                                 child: Icon(
                                   Icons.add,
-                                  color: Colors.white,
+                                  color: AppColors.kWhiteColor,
                                   size: 20.sp,
                                 ),
                               ),
@@ -172,7 +169,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   size: 20.sp,
                                   color: index < profileProvider.userRating
                                       ? Colors.amber
-                                      : Colors.grey.shade300,
+                                      : AppColors.kGreyColor.withOpacity(0.3),
                                 ),
                               ),
                             ),
@@ -181,30 +178,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         SizedBox(height: 8.h),
                         GestureDetector(
                           onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => RatingsScreen(),
-                              ),
-                            );
+                            context.pushNamed(AppRoutes.ratings.name);
                           },
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Text(
-                                'View ratings',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black,
-                                ),
+                              MuvamTexts.bodyMedium14(
+                                context,
+                                text: 'View ratings',
+                                isTextWidget: true,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.kBlackColor,
                               ),
                               SizedBox(width: 5.w),
                               Icon(
                                 Icons.arrow_forward_ios,
                                 size: 12.sp,
-                                color: Colors.black,
+                                color: AppColors.kBlackColor,
                               ),
                             ],
                           ),
@@ -245,38 +235,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                    'My Car',
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 18.sp,
-                                      fontWeight: FontWeight.w600,
-                                      letterSpacing: -0.32,
-                                      color: Colors.black,
-                                    ),
+                                  MuvamTexts.titleMedium18(
+                                    context,
+                                    text: 'My Car',
+                                    isTextWidget: true,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.kBlackColor,
                                   ),
                                   GestureDetector(
                                     onTap: () async {
-                                      await Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) =>
-                                              CarInformationScreen(
-                                                showBackButton: true,
-                                              ),
-                                        ),
+                                      await context.pushNamed(
+                                        AppRoutes.carInformation.name,
                                       );
                                       _loadPrimaryVehicle();
                                     },
-                                    child: Text(
-                                      '+ Add another vehicle',
-                                      style: TextStyle(
-                                        fontFamily: 'Inter',
-                                        fontSize: 12.sp,
-                                        fontWeight: FontWeight.w500,
-                                        letterSpacing: -0.32,
-                                        color: Color(ConstColors.mainColor),
-                                      ),
+                                    child: MuvamTexts.bodyMedium14(
+                                      context,
+                                      text: '+ Add another vehicle',
+                                      isTextWidget: true,
+                                      fontWeight: FontWeight.w500,
+                                      color: AppColors.kMainColor,
                                     ),
                                   ),
                                 ],
@@ -284,23 +262,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               SizedBox(height: 15.h),
                               GestureDetector(
                                 onTap: () async {
-                                  await Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => MyCarsScreen(),
-                                    ),
-                                  );
+                                  await context.pushNamed('myCars');
                                   _loadPrimaryVehicle();
                                 },
                                 child: Container(
                                   width: double.infinity,
                                   decoration: BoxDecoration(
-                                    color: Color(0xFFF7F9F8),
+                                    color: AppColors.kFormFieldColor,
                                     borderRadius: BorderRadius.circular(8.r),
                                   ),
                                   padding: EdgeInsets.symmetric(
                                     horizontal: 14.w,
-                                    vertical: 15.h,
+                                    vertical: 10.h,
                                   ),
                                   child: Row(
                                     mainAxisAlignment:
@@ -316,9 +289,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 child:
                                                     CircularProgressIndicator(
                                                       strokeWidth: 2,
-                                                      color: Color(
-                                                        ConstColors.mainColor,
-                                                      ),
+                                                      color:
+                                                          AppColors.kMainColor,
                                                     ),
                                               )
                                             else if (primaryVehicle
@@ -355,27 +327,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  Text(
-                                                    'Active car',
-                                                    style: TextStyle(
-                                                      fontFamily: 'Inter',
-                                                      fontSize: 12.sp,
-                                                      fontWeight:
-                                                          FontWeight.w400,
-                                                      color: Colors.grey,
-                                                    ),
+                                                  MuvamTexts.bodySmall12(
+                                                    context,
+                                                    text: 'Active car',
+                                                    isTextWidget: true,
+                                                    fontWeight: FontWeight.w400,
+                                                    color: AppColors.kGreyColor,
                                                   ),
                                                   if (primaryVehicle != null)
-                                                    Text(
-                                                      primaryVehicle!
+                                                    MuvamTexts.bodyMedium14(
+                                                      context,
+                                                      text: primaryVehicle!
                                                           .displayName,
-                                                      style: TextStyle(
-                                                        fontFamily: 'Inter',
-                                                        fontSize: 14.sp,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                        color: Colors.black,
-                                                      ),
+                                                      isTextWidget: true,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color:
+                                                          AppColors.kBlackColor,
+                                                      maxLines: 1,
                                                       overflow:
                                                           TextOverflow.ellipsis,
                                                     ),
@@ -388,42 +357,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       Icon(
                                         Icons.arrow_forward_ios,
                                         size: 16.sp,
-                                        color: Colors.black,
+                                        color: AppColors.kBlackColor,
                                       ),
                                     ],
                                   ),
                                 ),
                               ),
-                              // ProfileField(
-                              //   label: 'Location',
-                              //   value: 'Update your location',
-                              //   hasEdit: true,
-                              //   onTap: () {
-                              //     Navigator.push(
-                              //       context,
-                              //       MaterialPageRoute(
-                              //         builder: (context) => UpdateLocationScreen(),
-                              //       ),
-                              //     );
-                              //   },
-                              // ),
                               SizedBox(height: 24.h),
                               GestureDetector(
                                 onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => AppLockScreen(),
-                                    ),
-                                  );
+                                  context.pushNamed(AppRoutes.appLock.name);
                                 },
                                 child: Container(
                                   padding: EdgeInsets.all(10.sp),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: AppColors.kWhiteColor,
                                     borderRadius: BorderRadius.circular(12.r),
                                     border: Border.all(
-                                      color: Color(0xFFE0E0E0),
+                                      color: AppColors.kGreyColor.withOpacity(
+                                        0.3,
+                                      ),
                                       width: 1,
                                     ),
                                   ),
@@ -434,13 +387,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         height: 48.h,
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
-                                          color: Color(
-                                            ConstColors.mainColor,
-                                          ).withOpacity(0.1),
+                                          color: AppColors.kMainColor
+                                              .withOpacity(0.1),
                                         ),
                                         child: Icon(
                                           Icons.fingerprint,
-                                          color: Color(ConstColors.mainColor),
+                                          color: AppColors.kMainColor,
                                           size: 28.sp,
                                         ),
                                       ),
@@ -450,24 +402,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                           children: [
-                                            Text(
-                                              'Set up biometrics',
-                                              style: TextStyle(
-                                                fontFamily: 'Inter',
-                                                fontSize: 14.sp,
-                                                fontWeight: FontWeight.w600,
-                                                color: Colors.black,
-                                              ),
+                                            MuvamTexts.bodyMedium14(
+                                              context,
+                                              text: 'Set up biometrics',
+                                              isTextWidget: true,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppColors.kBlackColor,
                                             ),
                                             SizedBox(height: 2.h),
-                                            Text(
-                                              'Secure your app with fingerprint \nor face unlock',
-                                              style: TextStyle(
-                                                fontFamily: 'Inter',
-                                                fontSize: 12.sp,
-                                                fontWeight: FontWeight.w400,
-                                                color: Color(0xFF9E9E9E),
-                                              ),
+                                            MuvamTexts.bodySmall12(
+                                              context,
+                                              text:
+                                                  'Secure your app with fingerprint \nor face unlock',
+                                              isTextWidget: true,
+                                              fontWeight: FontWeight.w400,
+                                              color: const Color(0xFF9E9E9E),
                                             ),
                                           ],
                                         ),
@@ -475,7 +424,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       Icon(
                                         Icons.arrow_forward_ios,
                                         size: 16.sp,
-                                        color: Color(0xFF9E9E9E),
+                                        color: const Color(0xFF9E9E9E),
                                       ),
                                     ],
                                   ),
@@ -484,18 +433,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               SizedBox(height: 10.h),
                               GestureDetector(
                                 onTap: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) =>
-                                          DeleteAccountScreen(),
-                                    ),
+                                  context.pushNamed(
+                                    AppRoutes.deleteAccount.name,
                                   );
                                 },
                                 child: Padding(
                                   padding: EdgeInsets.symmetric(
                                     horizontal: 20.w,
-                                    vertical: 16.h,
                                   ),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -507,19 +451,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         fit: BoxFit.contain,
                                       ),
                                       SizedBox(width: 16.w),
-                                      Text(
-                                        'Delete account',
-                                        style: TextStyle(
-                                          fontFamily: 'Inter',
-                                          fontSize: 14.sp,
-                                          fontWeight: FontWeight.w600,
-                                          color: Color(ConstColors.redColor),
-                                        ),
+                                      MuvamTexts.bodyMedium14(
+                                        context,
+                                        text: 'Delete account',
+                                        isTextWidget: true,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.kFailureColor,
                                       ),
                                     ],
                                   ),
                                 ),
                               ),
+                              DeviceBottomPadding(),
                             ],
                           ),
                         ),

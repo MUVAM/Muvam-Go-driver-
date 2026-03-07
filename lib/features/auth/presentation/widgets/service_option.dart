@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
-import 'package:muvam_rider/core/constants/fonts.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
 
 class ServiceOption extends StatelessWidget {
@@ -33,10 +33,10 @@ class ServiceOption extends StatelessWidget {
             height: 185.h,
             decoration: BoxDecoration(
               color: isSelected
-                  ? Color(ConstColors.mainColor).withOpacity(0.2)
+                  ? AppColors.kMainColor.withOpacity(0.2)
                   : themeManager.getCardColor(context),
               borderRadius: BorderRadius.circular(12.r),
-              border: Border.all(color: const Color(0xFFB1B1B1), width: 1),
+              border: Border.all(color: AppColors.kGreyColor, width: 1),
             ),
             child: Stack(
               children: [
@@ -48,12 +48,12 @@ class ServiceOption extends StatelessWidget {
                       width: 22.5.w,
                       height: 22.5.h,
                       decoration: const BoxDecoration(
-                        color: Color(ConstColors.mainColor),
+                        color: AppColors.kMainColor,
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         Icons.check,
-                        color: Colors.white,
+                        color: AppColors.kWhiteColor,
                         size: 16.sp,
                       ),
                     ),
@@ -72,17 +72,13 @@ class ServiceOption extends StatelessWidget {
             ),
           ),
           SizedBox(height: 12.h),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontFamily: ConstFonts.inter,
-              fontWeight: FontWeight.w600,
-              fontSize: 22.sp,
-              height: 1.0,
-              letterSpacing: -0.32,
-              color: themeManager.getTextColor(context),
-            ),
+          MuvamTexts.headlineSmall24(
+            context,
+            text: title,
+            isTextWidget: true,
+            fontWeight: FontWeight.w600,
+            color: themeManager.getTextColor(context),
+            center: true,
           ),
         ],
       ),

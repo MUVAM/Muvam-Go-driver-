@@ -1,22 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:go_router/go_router.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/app_routes.dart';
 import 'package:muvam_rider/core/constants/images.dart';
-import 'package:muvam_rider/core/constants/text_styles.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
+import 'package:muvam_rider/core/utils/extension.dart';
 import 'package:muvam_rider/features/auth/data/provider/auth_provider.dart';
-import 'package:muvam_rider/features/auth/presentation/screens/kyc_verification_page.dart';
-import 'package:muvam_rider/features/auth/presentation/screens/testKyc.dart';
-import 'package:muvam_rider/features/home/presentation/screens/main_navigation_screen.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
+import 'package:muvam_rider/layouts/presentation/shared/bottom_padding.dart';
 import 'package:provider/provider.dart';
 import 'package:pinput/pinput.dart';
 import 'dart:async';
-import 'package:muvam_rider/core/services/api_service.dart';
-import 'package:muvam_rider/features/auth/presentation/screens/upload_document_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'create_account_screen.dart';
 
 class OtpScreen extends StatefulWidget {
   final String phoneNumber;
@@ -78,13 +76,9 @@ class _OtpScreenState extends State<OtpScreen> {
     setState(() => _isLoading = false);
 
     if (success) {
-      //\n🔐 ========== POST-OTP VERIFICATION FLOW ==========');
-
       final userRole = authProvider.verifyOtpResponse?['user']?['Role'];
-      //📋 User Role: $userRole');
 
       if (userRole != null && userRole != 'driver') {
-        //❌ Invalid role: User is not a driver');
         CustomFlushbar.showError(
           context: context,
           message:
@@ -95,79 +89,45 @@ class _OtpScreenState extends State<OtpScreen> {
 
       if (authProvider.isNewUser) {
         AppLogger.log(
-          '🆕 New user detected - navigating to Create Account Screen',
+          'New user detected - navigating to Create Account Screen',
         );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => CreateAccountScreen(
-              phoneNumber: widget.phoneNumber,
-              serviceType: widget.serviceType,
-            ),
-          ),
+        context.pushReplacementNamed(
+          AppRoutes.createAccount.name,
+          extra: {
+            'phoneNumber': widget.phoneNumber,
+            'serviceType': widget.serviceType,
+          },
         );
       } else {
-        //👤 Existing user - checking vehicle_submitted status');
-
-        // Check vehicle_submitted from SharedPreferences
         final prefs = await SharedPreferences.getInstance();
-
-        // Debug: Show all keys
-        final allKeys = prefs.getKeys();
-        //🔍 All keys in SharedPreferences: $allKeys');
-
-        // Check if key exists
-        final hasKey = prefs.containsKey('vehicle_submitted');
-        //🔍 vehicle_submitted key exists: $hasKey');
-
-        // Get raw value
-        final rawValue = prefs.get('vehicle_submitted');
-        AppLogger.log(
-          '🔍 Raw value: $rawValue (type: ${rawValue.runtimeType})',
-        );
 
         final vehicleSubmitted = prefs.getBool('vehicle_submitted') ?? false;
 
-        //🚗 Vehicle submitted (final): $vehicleSubmitted');
-
-        // Navigate based on vehicle_submitted
         if (vehicleSubmitted == true) {
-          //✅ Vehicle submitted - navigating to Main App');
-          //========== AUTHENTICATION SUCCESSFUL ==========\n');
-
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (context) => MainNavigationScreen()),
-            (route) => false,
-          );
+          AppLogger.log('Vehicle submitted - navigating to Main App');
+          AppLogger.log('========== AUTHENTICATION SUCCESSFUL ==========\n');
+          context.pushNamedAndClear(AppRoutes.home.name);
         } else {
           AppLogger.log(
-            '❌ Vehicle not submitted - navigating to KYC Verification',
+            'Vehicle not submitted - navigating to KYC Verification',
           );
-
-          // Extract user data from the response
           final userData = authProvider.verifyOtpResponse?['user'];
-
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (context) => KycVerificationPage(
-                firstName: userData?['first_name'],
-                lastName: userData?['last_name'],
-                email: userData?['Email'],
-                phone: widget.phoneNumber,
-                dob: userData?['date_of_birth'],
-              ),
-            ),
+          context.pushReplacementNamed(
+            AppRoutes.kycVerificationPage.name,
+            extra: {
+              'firstName': userData?['first_name'],
+              'lastName': userData?['last_name'],
+              'email': userData?['Email'],
+              'phone': widget.phoneNumber,
+              'dob': userData?['date_of_birth'],
+            },
           );
-
           AppLogger.log(
             '========== REDIRECTED TO KYC VERIFICATION ==========\n',
           );
         }
       }
     } else {
-      //❌ OTP verification failed');
       CustomFlushbar.showError(
         context: context,
         message: authProvider.errorMessage ?? 'Invalid OTP',
@@ -198,8 +158,8 @@ class _OtpScreenState extends State<OtpScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return AppScaffold(
+      backgroundColor: AppColors.kWhiteColor,
       resizeToAvoidBottomInset: true,
       body: SafeArea(
         child: Stack(
@@ -225,14 +185,18 @@ class _OtpScreenState extends State<OtpScreen> {
                   children: [
                     SizedBox(height: 60.h),
                     Image.asset(ConstImages.otp, width: 426.w, height: 426.h),
-                    Text(
-                      'Phone Verification',
-                      style: ConstTextStyles.boldTitle,
+                    MuvamTexts.headlineSmall24(
+                      context,
+                      text: 'Phone Verification',
+                      isTextWidget: true,
+                      color: AppColors.kBlackColor,
                     ),
                     SizedBox(height: 2.h),
-                    Text(
-                      'Enter the 6 digit code sent to you',
-                      style: ConstTextStyles.lightSubtitle,
+                    MuvamTexts.bodyMedium14(
+                      context,
+                      text: 'Enter the 6 digit code sent to you',
+                      isTextWidget: true,
+                      color: AppColors.kSubtitleColor,
                     ),
                     SizedBox(height: 42.h),
                     Pinput(
@@ -245,12 +209,12 @@ class _OtpScreenState extends State<OtpScreen> {
                         textStyle: TextStyle(
                           fontSize: 18.sp,
                           fontWeight: FontWeight.w600,
-                          color: Colors.black,
+                          color: AppColors.kBlackColor,
                         ),
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           border: Border(
                             bottom: BorderSide(
-                              color: Color(ConstColors.blackColor),
+                              color: AppColors.kBlackColor,
                               width: 2,
                             ),
                           ),
@@ -262,12 +226,12 @@ class _OtpScreenState extends State<OtpScreen> {
                         textStyle: TextStyle(
                           fontSize: 18.sp,
                           fontWeight: FontWeight.w600,
-                          color: Colors.black,
+                          color: AppColors.kBlackColor,
                         ),
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           border: Border(
                             bottom: BorderSide(
-                              color: Color(ConstColors.mainColor),
+                              color: AppColors.kMainColor,
                               width: 2,
                             ),
                           ),
@@ -279,21 +243,19 @@ class _OtpScreenState extends State<OtpScreen> {
                         textStyle: TextStyle(
                           fontSize: 18.sp,
                           fontWeight: FontWeight.w600,
-                          color: Colors.black,
+                          color: AppColors.kBlackColor,
                         ),
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           border: Border(
                             bottom: BorderSide(
-                              color: Color(ConstColors.mainColor),
+                              color: AppColors.kMainColor,
                               width: 2,
                             ),
                           ),
                         ),
                       ),
                       hapticFeedbackType: HapticFeedbackType.lightImpact,
-                      onCompleted: (pin) {
-                        // Auto-submit when OTP is complete (optional)
-                      },
+                      onCompleted: (pin) {},
                       cursor: Column(
                         mainAxisAlignment: MainAxisAlignment.end,
                         children: [
@@ -301,7 +263,7 @@ class _OtpScreenState extends State<OtpScreen> {
                             margin: EdgeInsets.only(bottom: 9.h),
                             width: 22.w,
                             height: 1,
-                            color: Color(ConstColors.mainColor),
+                            color: AppColors.kMainColor,
                           ),
                         ],
                       ),
@@ -311,12 +273,12 @@ class _OtpScreenState extends State<OtpScreen> {
                       onTap: _countdown == 0 ? _resendOtp : null,
                       child: RichText(
                         text: TextSpan(
-                          style: ConstTextStyles.lightSubtitle,
                           children: [
                             TextSpan(
                               text: 'Didn\'t receive code? ',
                               style: TextStyle(
-                                color: Color(ConstColors.blackColor),
+                                fontFamily: 'Inter',
+                                color: AppColors.kBlackColor,
                                 fontSize: 14.sp,
                               ),
                             ),
@@ -325,7 +287,8 @@ class _OtpScreenState extends State<OtpScreen> {
                                 text:
                                     '0:${_countdown.toString().padLeft(2, '0')}',
                                 style: TextStyle(
-                                  color: Color(ConstColors.mainColor),
+                                  fontFamily: 'Inter',
+                                  color: AppColors.kMainColor,
                                   fontSize: 14.sp,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -334,7 +297,8 @@ class _OtpScreenState extends State<OtpScreen> {
                               TextSpan(
                                 text: 'Resend',
                                 style: TextStyle(
-                                  color: Color(ConstColors.mainColor),
+                                  fontFamily: 'Inter',
+                                  color: AppColors.kMainColor,
                                   fontSize: 14.sp,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -348,14 +312,13 @@ class _OtpScreenState extends State<OtpScreen> {
                       onTap: () {
                         Navigator.pop(context);
                       },
-                      child: Text(
-                        'Edit my number',
-                        style: TextStyle(
-                          color: Color(ConstColors.blackColor),
-                          fontSize: 14.sp,
-                          fontWeight: FontWeight.w500,
-                          decoration: TextDecoration.underline,
-                        ),
+                      child: MuvamTexts.bodyMedium14(
+                        context,
+                        text: 'Edit my number',
+                        isTextWidget: true,
+                        color: AppColors.kBlackColor,
+                        fontWeight: FontWeight.w500,
+                        textDecoration: TextDecoration.underline,
                       ),
                     ),
                     SizedBox(height: 40.h),
@@ -363,11 +326,11 @@ class _OtpScreenState extends State<OtpScreen> {
                       onTap: isOtpComplete && !_isLoading ? _verifyOtp : null,
                       child: Container(
                         width: double.infinity,
-                        height: 48.h,
+                        height: 47.h,
                         decoration: BoxDecoration(
                           color: isOtpComplete && !_isLoading
-                              ? Color(ConstColors.mainColor)
-                              : Color(ConstColors.fieldColor),
+                              ? AppColors.kMainColor
+                              : AppColors.kFieldColor,
                           borderRadius: BorderRadius.circular(8.r),
                         ),
                         child: Center(
@@ -375,27 +338,26 @@ class _OtpScreenState extends State<OtpScreen> {
                               ? SizedBox(
                                   width: 20.w,
                                   height: 20.h,
-                                  child: CircularProgressIndicator(
-                                    color: Colors.white,
+                                  child: const CircularProgressIndicator(
+                                    color: AppColors.kWhiteColor,
                                     strokeWidth: 2,
                                   ),
                                 )
-                              : Text(
-                                  'Continue',
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 16.sp,
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                              : MuvamTexts.button16(
+                                  context,
+                                  text: 'Continue',
+                                  color: AppColors.kWhiteColor,
+                                  fontWeight: FontWeight.w600,
+                                  isTextWidget: true,
                                 ),
                         ),
                       ),
                     ),
-                    SizedBox(height: 20.h),
                   ],
                 ),
               ),
             ),
+            DeviceBottomPadding(),
           ],
         ),
       ),

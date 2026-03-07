@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 
 class BreakdownItem extends StatelessWidget {
   final String label;
@@ -18,25 +20,21 @@ class BreakdownItem extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontWeight: isTotal ? FontWeight.w700 : FontWeight.w400,
-            fontSize: isTotal ? 18.sp : 16.sp,
-            color: isTotal ? Colors.black : Color(0xFF666666),
-            letterSpacing: -0.3,
-          ),
+        MuvamTexts.bodyMedium14(
+          context,
+          text: label,
+          isTextWidget: true,
+          fontWeight: isTotal ? FontWeight.w500 : FontWeight.w400,
+          fontSize: isTotal ? 18.sp : 16.sp,
+          color: isTotal ? AppColors.kBlackColor : const Color(0xFF666666),
         ),
-        Text(
-          amount,
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontWeight: isTotal ? FontWeight.w700 : FontWeight.w600,
-            fontSize: isTotal ? 18.sp : 16.sp,
-            color: isTotal ? Color(0xFF2A8359) : Colors.black,
-            letterSpacing: -0.3,
-          ),
+        MuvamTexts.bodyLarge16(
+          context,
+          text: amount,
+          isTextWidget: true,
+          fontWeight: isTotal ? FontWeight.w700 : FontWeight.w600,
+          fontSize: isTotal ? 18.sp : 16.sp,
+          color: isTotal ? AppColors.kMainColor : AppColors.kBlackColor,
         ),
       ],
     );

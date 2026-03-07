@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 
 class TripCard extends StatelessWidget {
   final String time;
@@ -26,10 +28,10 @@ class TripCard extends StatelessWidget {
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppColors.kWhiteColor,
           borderRadius: BorderRadius.circular(5.r),
           border: Border.all(
-            color: Color(0xFFB1B1B1).withOpacity(0.5),
+            color: AppColors.kGreyColor.withOpacity(0.5),
             width: 0.5,
           ),
         ),
@@ -44,25 +46,19 @@ class TripCard extends StatelessWidget {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      time,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w500,
-                        fontSize: 12.sp,
-                        color: Theme.of(context).textTheme.bodyMedium?.color,
-                      ),
+                    MuvamTexts.bodySmall12(
+                      context,
+                      text: time,
+                      isTextWidget: true,
+                      fontWeight: FontWeight.w500,
+                      color: AppColors.kBlackColor,
                     ),
-                    Text(
-                      date,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16.sp,
-                        height: 1.0,
-                        letterSpacing: -0.41,
-                        color: Theme.of(context).textTheme.titleMedium?.color,
-                      ),
+                    MuvamTexts.bodyLarge16(
+                      context,
+                      text: date,
+                      isTextWidget: true,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.kBlackColor,
                     ),
                   ],
                 ),
@@ -71,7 +67,7 @@ class TripCard extends StatelessWidget {
                     width: 8.w,
                     height: 8.h,
                     decoration: BoxDecoration(
-                      color: Colors.green,
+                      color: AppColors.kSuccessColor,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -79,25 +75,19 @@ class TripCard extends StatelessWidget {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(
-                        'Trip ID',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w500,
-                          fontSize: 12.sp,
-                          color: Theme.of(context).textTheme.bodyMedium?.color,
-                        ),
+                      MuvamTexts.bodySmall12(
+                        context,
+                        text: 'Trip ID',
+                        isTextWidget: true,
+                        fontWeight: FontWeight.w500,
+                        color: AppColors.kBlackColor,
                       ),
-                      Text(
-                        tripId,
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16.sp,
-                          height: 1.0,
-                          letterSpacing: -0.41,
-                          color: Theme.of(context).textTheme.titleMedium?.color,
-                        ),
+                      MuvamTexts.bodyLarge16(
+                        context,
+                        text: tripId,
+                        isTextWidget: true,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.kBlackColor,
                       ),
                     ],
                   ),
@@ -105,24 +95,20 @@ class TripCard extends StatelessWidget {
               ],
             ),
             SizedBox(height: 15.h),
-            Text(
-              'Destination',
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w500,
-                fontSize: 12.sp,
-                color: Theme.of(context).textTheme.bodyMedium?.color,
-              ),
+            MuvamTexts.bodySmall12(
+              context,
+              text: 'Destination',
+              isTextWidget: true,
+              fontWeight: FontWeight.w500,
+              color: AppColors.kBlackColor,
             ),
             SizedBox(height: 5.h),
-            Text(
-              destination,
-              style: TextStyle(
-                fontFamily: 'Inter',
-                fontWeight: FontWeight.w600,
-                fontSize: 14.sp,
-                color: Theme.of(context).textTheme.titleMedium?.color,
-              ),
+            MuvamTexts.bodyMedium14(
+              context,
+              text: destination,
+              isTextWidget: true,
+              fontWeight: FontWeight.w600,
+              color: AppColors.kBlackColor,
             ),
           ],
         ),

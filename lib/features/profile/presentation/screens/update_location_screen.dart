@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/constants/url_constants.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
 import 'package:muvam_rider/core/services/location_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
@@ -22,8 +24,8 @@ class UpdateLocationScreen extends StatefulWidget {
 
 class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
   GoogleMapController? _mapController;
-  LatLng _selectedLocation = LatLng(6.5244, 3.3792);
-  LatLng _currentLocation = LatLng(6.5244, 3.3792);
+  LatLng _selectedLocation = const LatLng(6.5244, 3.3792);
+  LatLng _currentLocation = const LatLng(6.5244, 3.3792);
   final TextEditingController _searchController = TextEditingController();
   bool _isLoading = false;
   Set<Marker> _markers = {};
@@ -54,9 +56,9 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
         _selectedLocation = currentLocation;
         _markers = {
           Marker(
-            markerId: MarkerId('selected'),
+            markerId: const MarkerId('selected'),
             position: _selectedLocation,
-            infoWindow: InfoWindow(title: 'Current Location'),
+            infoWindow: const InfoWindow(title: 'Current Location'),
           ),
         };
       });
@@ -69,7 +71,6 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
   }
 
   void _onMapTap(LatLng position) {
-    //=== MAP TAPPED ===');
     AppLogger.log(
       'Tapped position: ${position.latitude}, ${position.longitude}',
     );
@@ -77,16 +78,15 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
       _selectedLocation = position;
       _markers = {
         Marker(
-          markerId: MarkerId('selected'),
+          markerId: const MarkerId('selected'),
           position: position,
-          infoWindow: InfoWindow(title: 'Selected Location'),
+          infoWindow: const InfoWindow(title: 'Selected Location'),
         ),
       };
     });
   }
 
   Future<void> _updateLocation() async {
-    //=== UPDATING LOCATION ===');
     AppLogger.log(
       'Selected location: ${_selectedLocation.latitude}, ${_selectedLocation.longitude}',
     );
@@ -107,37 +107,47 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
         );
 
         if (result['success'] == true) {
-          //Location updated successfully');
-          Navigator.pop(context);
-          CustomFlushbar.showSuccess(
-            context: context,
-            message: 'Location updated successfully',
-          );
+          if (mounted) {
+            Navigator.pop(context);
+            CustomFlushbar.showSuccess(
+              context: context,
+              message: 'Location updated successfully',
+            );
+          }
         } else {
-          //Failed to update location: ${result['message']}');
-          CustomFlushbar.showError(
-            context: context,
-            message: result['message'] ?? 'Failed to update location',
-          );
+          if (mounted) {
+            CustomFlushbar.showError(
+              context: context,
+              message: result['message'] ?? 'Failed to update location',
+            );
+          }
         }
       }
     } catch (e) {
-      //Error updating location: $e');
-      CustomFlushbar.showError(context: context, message: 'Error: $e');
+      if (mounted) {
+        CustomFlushbar.showError(context: context, message: 'Error: $e');
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return AppScaffold(
       appBar: AppBar(
-        title: Text('Update Location'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+        title: MuvamTexts.titleMedium18(
+          context,
+          text: 'Update Location',
+          isTextWidget: true,
+          color: AppColors.kBlackColor,
+        ),
+        backgroundColor: AppColors.kWhiteColor,
+        foregroundColor: AppColors.kBlackColor,
         elevation: 0,
       ),
       body: Stack(
@@ -145,7 +155,7 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
           GoogleMap(
             onMapCreated: (GoogleMapController controller) {
               _mapController = controller;
-              Future.delayed(Duration(milliseconds: 500), () {
+              Future.delayed(const Duration(milliseconds: 500), () {
                 _getCurrentLocation();
               });
             },
@@ -165,7 +175,7 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
             child: Container(
               padding: EdgeInsets.all(20.w),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: AppColors.kWhiteColor,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
               ),
               child: Column(
@@ -184,10 +194,19 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
                     controller: _searchController,
                     decoration: InputDecoration(
                       hintText: 'Search for a location...',
-                      prefixIcon: Icon(Icons.search),
+                      hintStyle: Theme.of(context).textTheme.bodySmall
+                          ?.copyWith(
+                            fontWeight: FontWeight.w400,
+                            color: AppColors.kGreyColor,
+                          ),
+                      prefixIcon: const Icon(Icons.search),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8.r),
                       ),
+                    ),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w400,
+                      color: AppColors.kBlackColor,
                     ),
                     onChanged: (value) {
                       _filterLocations(value);
@@ -197,7 +216,7 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
                     Container(
                       margin: EdgeInsets.only(top: 8.h),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: AppColors.kWhiteColor,
                         borderRadius: BorderRadius.circular(8.r),
                         border: Border.all(color: Colors.grey.shade300),
                       ),
@@ -205,9 +224,11 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
                         children: _locationSuggestions.map((location) {
                           return ListTile(
                             leading: Icon(Icons.location_on, size: 20.sp),
-                            title: Text(
-                              location['description'],
-                              style: TextStyle(fontSize: 14.sp),
+                            title: MuvamTexts.bodyMedium14(
+                              context,
+                              text: location['description'],
+                              isTextWidget: true,
+                              fontSize: 14.sp,
                             ),
                             onTap: () => _selectLocation(location),
                           );
@@ -215,13 +236,19 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
                       ),
                     ),
                   SizedBox(height: 20.h),
-                  Text(
-                    'Lat: ${_selectedLocation.latitude.toStringAsFixed(6)}',
-                    style: TextStyle(fontSize: 14.sp),
+                  MuvamTexts.bodyMedium14(
+                    context,
+                    text:
+                        'Lat: ${_selectedLocation.latitude.toStringAsFixed(6)}',
+                    isTextWidget: true,
+                    fontSize: 14.sp,
                   ),
-                  Text(
-                    'Lng: ${_selectedLocation.longitude.toStringAsFixed(6)}',
-                    style: TextStyle(fontSize: 14.sp),
+                  MuvamTexts.bodyMedium14(
+                    context,
+                    text:
+                        'Lng: ${_selectedLocation.longitude.toStringAsFixed(6)}',
+                    isTextWidget: true,
+                    fontSize: 14.sp,
                   ),
                   SizedBox(height: 20.h),
                   GestureDetector(
@@ -231,20 +258,21 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
                       height: 48.h,
                       decoration: BoxDecoration(
                         color: _isLoading
-                            ? Colors.grey
-                            : Color(ConstColors.mainColor),
+                            ? AppColors.kGreyColor
+                            : AppColors.kMainColor,
                         borderRadius: BorderRadius.circular(8.r),
                       ),
                       child: Center(
                         child: _isLoading
-                            ? CircularProgressIndicator(color: Colors.white)
-                            : Text(
-                                'Update Location',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                            ? const CircularProgressIndicator(
+                                color: AppColors.kWhiteColor,
+                              )
+                            : MuvamTexts.button16(
+                                context,
+                                text: 'Update Location',
+                                isTextWidget: true,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.kWhiteColor,
                               ),
                       ),
                     ),
@@ -259,8 +287,6 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
   }
 
   void _filterLocations(String query) {
-    //Filtering locations for: $query');
-
     _debounceTimer?.cancel();
 
     if (query.isEmpty) {
@@ -271,7 +297,7 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
       return;
     }
 
-    _debounceTimer = Timer(Duration(milliseconds: 500), () {
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () {
       _searchPlaces(query);
     });
   }
@@ -302,11 +328,9 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
           _showSuggestions = _locationSuggestions.isNotEmpty;
         });
       } else {
-        //Places API error: ${response.statusCode}');
         _filterRecentLocations(query);
       }
     } catch (e) {
-      //Error searching places: $e');
       _filterRecentLocations(query);
     }
   }
@@ -326,7 +350,6 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
   }
 
   void _selectLocation(Map<String, dynamic> location) {
-    //Selected location: ${location['description']}');
     setState(() {
       _searchController.text = location['description'];
       _showSuggestions = false;
@@ -361,9 +384,9 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
           _selectedLocation = selectedLatLng;
           _markers = {
             Marker(
-              markerId: MarkerId('selected'),
+              markerId: const MarkerId('selected'),
               position: selectedLatLng,
-              infoWindow: InfoWindow(title: 'Selected Location'),
+              infoWindow: const InfoWindow(title: 'Selected Location'),
             ),
           };
         });
@@ -374,14 +397,13 @@ class _UpdateLocationScreenState extends State<UpdateLocationScreen> {
           ),
         );
       }
-    } catch (e) {
-      //Error getting place details: $e');
-    }
+    } catch (e) {}
   }
 
   @override
   void dispose() {
     _debounceTimer?.cancel();
+    _searchController.dispose();
     super.dispose();
   }
 }

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:muvam_rider/core/services/profile_service.dart';
-import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/features/profile/data/models/profile_models.dart';
 
 class ProfileProvider with ChangeNotifier {
@@ -18,7 +17,6 @@ class ProfileProvider with ChangeNotifier {
   bool get isUpdating => _isUpdating;
   String? get errorMessage => _errorMessage;
 
-  // Convenient getters
   String get userName => userProfile?.fullName ?? 'User';
   String get userShortName => userProfile?.shortName ?? 'User';
   String get userEmail => userProfile?.email ?? '';
@@ -31,8 +29,6 @@ class ProfileProvider with ChangeNotifier {
   bool get isProfileComplete => userProfile?.profileComplete ?? false;
 
   Future<bool> fetchUserProfile() async {
-    //📱 ProfileProvider: Fetching user profile...');
-
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -44,25 +40,17 @@ class ProfileProvider with ChangeNotifier {
         _profileResponse = profile;
         _isLoading = false;
         notifyListeners();
-
-        //ProfileProvider: Profile loaded successfully');
-        //   User: ${profile.user.fullName}');
-
         return true;
       } else {
         _errorMessage = 'Failed to load profile';
         _isLoading = false;
         notifyListeners();
-
-        //ProfileProvider: Failed to load profile');
         return false;
       }
     } catch (e) {
       _errorMessage = e.toString();
       _isLoading = false;
       notifyListeners();
-
-      //ProfileProvider: Error - $e');
       return false;
     }
   }
@@ -73,8 +61,6 @@ class ProfileProvider with ChangeNotifier {
     required String email,
     required String dateOfBirth,
   }) async {
-    //UserProfileProvider: Updating user profile');
-
     _isUpdating = true;
     _errorMessage = null;
     notifyListeners();
@@ -91,20 +77,16 @@ class ProfileProvider with ChangeNotifier {
 
       if (result['success'] == true) {
         await fetchUserProfile();
-
-        //UserProfileProvider: Profile updated successfully');
         notifyListeners();
         return true;
       } else {
         _errorMessage = result['message'] ?? 'Failed to update profile';
-        //UserProfileProvider: Update failed - $_errorMessage');
         notifyListeners();
         return false;
       }
     } catch (e) {
       _errorMessage = e.toString();
       _isUpdating = false;
-      //UserProfileProvider: Error updating profile - $e');
       notifyListeners();
       return false;
     }
@@ -119,13 +101,9 @@ class ProfileProvider with ChangeNotifier {
     _errorMessage = null;
     await _profileService.clearCachedUserData();
     notifyListeners();
-
-    //🗑️ ProfileProvider: Profile cleared');
   }
 
-  // Method to refresh profile data
   Future<void> refreshProfile() async {
-    //🔄 ProfileProvider: Refreshing profile...');
     await fetchUserProfile();
   }
 }

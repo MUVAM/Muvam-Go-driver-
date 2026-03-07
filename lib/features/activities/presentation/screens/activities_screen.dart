@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
 import 'package:muvam_rider/features/activities/data/providers/request_provider.dart';
 import 'package:muvam_rider/features/activities/presentation/widgets/active_tab.dart';
 import 'package:muvam_rider/features/activities/presentation/widgets/history_tab.dart';
 import 'package:muvam_rider/features/activities/presentation/widgets/orders_tab.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
 import 'package:provider/provider.dart';
 
 class ActivitiesScreen extends StatefulWidget {
@@ -53,12 +55,12 @@ class ActivitiesScreenState extends State<ActivitiesScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Color(0xFFF7F9F8),
+    return AppScaffold(
+      backgroundColor: AppColors.kWhiteColor,
       body: Stack(
         children: [
           Positioned(
-            top: 70.h,
+            top: 40.h,
             left: 20.w,
             child: Container(
               width: 353.w,
@@ -102,7 +104,7 @@ class ActivitiesScreenState extends State<ActivitiesScreen>
         margin: EdgeInsets.symmetric(vertical: 7.h),
         width: 0.5.w,
         height: 18.h,
-        color: Theme.of(context).dividerColor,
+        color: Colors.grey.shade300,
       ),
     );
   }
@@ -116,7 +118,7 @@ class ActivitiesScreenState extends State<ActivitiesScreen>
           width: 116.33.w,
           height: 28.h,
           decoration: BoxDecoration(
-            color: isSelected ? Colors.white : Colors.transparent,
+            color: isSelected ? AppColors.kWhiteColor : Colors.transparent,
             borderRadius: BorderRadius.circular(7.r),
           ),
           child: Center(
@@ -126,7 +128,7 @@ class ActivitiesScreenState extends State<ActivitiesScreen>
                 fontFamily: 'Inter',
                 fontSize: 12.sp,
                 fontWeight: FontWeight.w500,
-                color: Theme.of(context).textTheme.bodyMedium?.color,
+                color: AppColors.kBlackColor,
               ),
             ),
           ),
@@ -138,13 +140,13 @@ class ActivitiesScreenState extends State<ActivitiesScreen>
   Widget _getCurrentTabContent() {
     switch (_selectedTabIndex) {
       case 0:
-        return OrdersTab();
+        return const OrdersTab();
       case 1:
-        return ActiveTab();
+        return const ActiveTab();
       case 2:
-        return HistoryTab();
+        return const HistoryTab();
       default:
-        return OrdersTab();
+        return const OrdersTab();
     }
   }
 }

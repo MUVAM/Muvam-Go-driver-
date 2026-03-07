@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:provider/provider.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
-import 'package:muvam_rider/core/constants/theme_manager.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 
 class TextFieldWidget extends StatelessWidget {
   final String label;
@@ -26,26 +25,22 @@ class TextFieldWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeManager = Provider.of<ThemeManager>(context);
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontFamily: 'Inter',
-            fontWeight: FontWeight.w500,
-            fontSize: 14.sp,
-            color: themeManager.getTextColor(context),
-          ),
+        MuvamTexts.bodyMedium14(
+          context,
+          text: label,
+          isTextWidget: true,
+          fontWeight: FontWeight.w600,
+          color: AppColors.kBlackColor,
         ),
         SizedBox(height: 8.h),
         Container(
           width: double.infinity,
           height: 45.h,
           decoration: BoxDecoration(
-            color: const Color(ConstColors.fieldColor).withOpacity(0.12),
+            color: AppColors.kFieldColor.withOpacity(0.12),
             borderRadius: BorderRadius.circular(3.r),
           ),
           child: TextField(
@@ -53,19 +48,17 @@ class TextFieldWidget extends StatelessWidget {
             keyboardType: keyboardType,
             enabled: enabled,
             onChanged: onChanged,
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 14.sp,
-              color: themeManager.getTextColor(context),
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w400,
+              color: AppColors.kBlackColor,
             ),
             decoration: InputDecoration(
               border: InputBorder.none,
               contentPadding: EdgeInsets.all(15.w),
               hintText: hintText.isNotEmpty ? hintText : 'Enter $label',
-              hintStyle: TextStyle(
-                fontFamily: 'Inter',
-                fontSize: 12.sp,
-                color: Colors.grey,
+              hintStyle: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w400,
+                color: AppColors.kGreyColor,
               ),
             ),
           ),

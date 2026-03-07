@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:muvam_rider/core/constants/fonts.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
 
 class KycDocumentTile extends StatelessWidget {
   final String icon;
@@ -30,7 +31,7 @@ class KycDocumentTile extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: Container(
         padding: EdgeInsets.symmetric(vertical: 16.h),
-        decoration: BoxDecoration(border: Border()),
+        decoration: const BoxDecoration(border: Border()),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -40,40 +41,35 @@ class KycDocumentTile extends StatelessWidget {
               height: 24.h,
               color: isUploaded
                   ? themeManager.getTextColor(context)
-                  : Colors.black,
+                  : AppColors.kBlackColor,
             ),
             SizedBox(width: 16.w),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontFamily: ConstFonts.inter,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16.sp,
-                      color: isUploaded
-                          ? themeManager.getTextColor(context)
-                          : Colors.black,
-                    ),
+                  MuvamTexts.bodyLarge16(
+                    context,
+                    text: title,
+                    isTextWidget: true,
+                    fontWeight: FontWeight.w600,
+                    color: isUploaded
+                        ? themeManager.getTextColor(context)
+                        : AppColors.kBlackColor,
                   ),
                   SizedBox(height: 8.h),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Expanded(
-                        child: Text(
-                          subtitle,
-                          style: TextStyle(
-                            fontFamily: ConstFonts.inter,
-                            fontWeight: FontWeight.w400,
-                            fontSize: 14.sp,
-                            height: 1.5,
-                            color: isUploaded
-                                ? themeManager.getTextColor(context)
-                                : Color(0xFF808080),
-                          ),
+                        child: MuvamTexts.bodyMedium14(
+                          context,
+                          text: subtitle,
+                          isTextWidget: true,
+                          fontWeight: FontWeight.w400,
+                          color: isUploaded
+                              ? themeManager.getTextColor(context)
+                              : AppColors.kGreyColor,
                         ),
                       ),
                       SizedBox(width: 12.w),
@@ -81,13 +77,13 @@ class KycDocumentTile extends StatelessWidget {
                           ? Icon(
                               Icons.check_circle,
                               size: 24.sp,
-                              color: Colors.green,
+                              color: AppColors.kSuccessColor,
                             )
                           : SvgPicture.asset(
                               ConstImages.backChevron,
                               color: isUploaded
                                   ? themeManager.getTextColor(context)
-                                  : Color(0xFF808080),
+                                  : AppColors.kGreyColor,
                             ),
                     ],
                   ),

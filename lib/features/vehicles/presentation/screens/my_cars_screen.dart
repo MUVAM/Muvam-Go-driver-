@@ -1,10 +1,14 @@
-import 'package:another_flushbar/flushbar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:go_router/go_router.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/app_spacings.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/constants/images.dart';
 import 'package:muvam_rider/core/services/api_service.dart';
+import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/vehicles/data/models/vehicle_response.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class MyCarsScreen extends StatefulWidget {
@@ -27,9 +31,8 @@ class _MyCarsScreenState extends State<MyCarsScreen> {
 
   Future<void> _loadVehicles() async {
     final prefs = await SharedPreferences.getInstance();
-
     final token = prefs.getString('auth_token');
-    // final token = await TokenManager.getToken();
+
     if (token == null) return;
 
     final response = await ApiService.getVehicles(token);
@@ -51,52 +54,35 @@ class _MyCarsScreenState extends State<MyCarsScreen> {
 
   Future<void> _setPrimaryVehicle(dynamic id) async {
     final prefs = await SharedPreferences.getInstance();
-
     final token = prefs.getString('auth_token');
-    // final token = await TokenManager.getToken();
+
     if (token == null) return;
 
     final response = await ApiService.setPrimaryVehicle(id, token);
     if (response['success']) {
-      // Show success message
-      Flushbar(
-        title: "Success",
+      CustomFlushbar.showSuccess(
+        context: context,
         message: "Successfully set this vehicle as your default",
-        duration: Duration(seconds: 3),
-        backgroundColor: Colors.green,
-        margin: EdgeInsets.all(8),
-        borderRadius: BorderRadius.circular(8),
-        flushbarPosition: FlushbarPosition.TOP,
-      ).show(context);
-
-      // Reload vehicles to reflect the updated default status
+      );
       await _loadVehicles();
     } else {
-      // Show error message
-      Flushbar(
-        title: "Error",
-        message:
-            response['message'] ??
-            "Failed to set default vehicle. Please try again.",
-        duration: Duration(seconds: 3),
-        backgroundColor: Colors.red,
-        margin: EdgeInsets.all(8),
-        borderRadius: BorderRadius.circular(8),
-        flushbarPosition: FlushbarPosition.TOP,
-      ).show(context);
+      CustomFlushbar.showError(
+        context: context,
+        message: 'Failed to set default vehicle. Please try again.',
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return AppScaffold(
+      backgroundColor: AppColors.kWhiteColor,
       body: SafeArea(
         child: Column(
           children: [
             SizedBox(height: 20.h),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w),
+              padding: EdgeInsets.symmetric(horizontal: AppSpacings.k20),
               child: Row(
                 children: [
                   GestureDetector(
@@ -110,14 +96,12 @@ class _MyCarsScreenState extends State<MyCarsScreen> {
                   ),
                   Expanded(
                     child: Center(
-                      child: Text(
-                        'My cars',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 18.sp,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black,
-                        ),
+                      child: MuvamTexts.titleMedium18(
+                        context,
+                        text: 'My cars',
+                        isTextWidget: true,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.kBlackColor,
                       ),
                     ),
                   ),
@@ -129,9 +113,7 @@ class _MyCarsScreenState extends State<MyCarsScreen> {
             if (isLoading)
               Expanded(
                 child: Center(
-                  child: CircularProgressIndicator(
-                    color: Color(ConstColors.mainColor),
-                  ),
+                  child: CircularProgressIndicator(color: AppColors.kMainColor),
                 ),
               )
             else
@@ -148,9 +130,7 @@ class _MyCarsScreenState extends State<MyCarsScreen> {
                       onTap: () {
                         setState(() => selectedVehicle = vehicle);
                       },
-
                       onLongPress: () async {
-                        // Show confirmation dialog
                         final confirmed = await showDialog<bool>(
                           context: context,
                           builder: (BuildContext context) {
@@ -158,49 +138,41 @@ class _MyCarsScreenState extends State<MyCarsScreen> {
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12.r),
                               ),
-                              title: Text(
-                                'Set Default Vehicle',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 18.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.black,
-                                ),
+                              title: MuvamTexts.titleMedium18(
+                                context,
+                                text: 'Set Default Vehicle',
+                                isTextWidget: true,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.kBlackColor,
                               ),
-                              content: Text(
-                                'Do you want to set "${vehicle.displayName}" as your default vehicle?',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 14.sp,
-                                  fontWeight: FontWeight.w400,
-                                  color: Colors.black87,
-                                ),
+                              content: MuvamTexts.bodyMedium14(
+                                context,
+                                text:
+                                    'Do you want to set "${vehicle.displayName}" as your default vehicle?',
+                                isTextWidget: true,
+                                fontWeight: FontWeight.w400,
+                                color: AppColors.kBlackColor,
                               ),
                               actions: [
                                 TextButton(
                                   onPressed: () =>
                                       Navigator.of(context).pop(false),
-                                  child: Text(
-                                    'Cancel',
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 14.sp,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.grey,
-                                    ),
+                                  child: MuvamTexts.bodyMedium14(
+                                    context,
+                                    text: 'Cancel',
+                                    isTextWidget: true,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppColors.kGreyColor,
                                   ),
                                 ),
                                 TextButton(
-                                  onPressed: () =>
-                                      Navigator.of(context).pop(true),
-                                  child: Text(
-                                    'Confirm',
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 14.sp,
-                                      fontWeight: FontWeight.w600,
-                                      color: Color(ConstColors.mainColor),
-                                    ),
+                                  onPressed: () => context.pop(true),
+                                  child: MuvamTexts.bodyMedium14(
+                                    context,
+                                    text: 'Confirm',
+                                    isTextWidget: true,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.kMainColor,
                                   ),
                                 ),
                               ],
@@ -208,7 +180,6 @@ class _MyCarsScreenState extends State<MyCarsScreen> {
                           },
                         );
 
-                        // If user confirmed, set as primary vehicle
                         if (confirmed == true) {
                           _setPrimaryVehicle(vehicle.id);
                         }
@@ -230,14 +201,16 @@ class _MyCarsScreenState extends State<MyCarsScreen> {
                                             width: 60.w,
                                             height: 60.h,
                                             color: Colors.grey.shade300,
-                                            child: Icon(Icons.directions_car),
+                                            child: const Icon(
+                                              Icons.directions_car,
+                                            ),
                                           ),
                                     )
                                   : Container(
                                       width: 60.w,
                                       height: 60.h,
                                       color: Colors.grey.shade300,
-                                      child: Icon(Icons.directions_car),
+                                      child: const Icon(Icons.directions_car),
                                     ),
                             ),
                             SizedBox(width: 12.w),
@@ -245,24 +218,20 @@ class _MyCarsScreenState extends State<MyCarsScreen> {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    vehicle.displayName,
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 16.sp,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.black,
-                                    ),
+                                  MuvamTexts.bodyLarge16(
+                                    context,
+                                    text: vehicle.displayName,
+                                    isTextWidget: true,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppColors.kBlackColor,
                                   ),
                                   SizedBox(height: 4.h),
-                                  Text(
-                                    '${vehicle.year} • ${vehicle.color}',
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontSize: 14.sp,
-                                      fontWeight: FontWeight.w400,
-                                      color: Colors.grey,
-                                    ),
+                                  MuvamTexts.bodyMedium14(
+                                    context,
+                                    text: '${vehicle.year} • ${vehicle.color}',
+                                    isTextWidget: true,
+                                    fontWeight: FontWeight.w400,
+                                    color: AppColors.kGreyColor,
                                   ),
                                 ],
                               ),
@@ -270,7 +239,7 @@ class _MyCarsScreenState extends State<MyCarsScreen> {
                             if (isSelected)
                               Icon(
                                 Icons.check_circle,
-                                color: Color(ConstColors.mainColor),
+                                color: AppColors.kMainColor,
                                 size: 24.sp,
                               ),
                           ],

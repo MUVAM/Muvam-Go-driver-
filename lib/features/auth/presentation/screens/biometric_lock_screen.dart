@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/services/biometric_auth_service.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
 
 class BiometricLockScreen extends StatefulWidget {
   final VoidCallback onAuthenticated;
@@ -63,8 +65,7 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
           _authenticationSuccess = true;
         });
 
-        // Show success state briefly before navigating
-        await Future.delayed(Duration(milliseconds: 500));
+        await Future.delayed(const Duration(milliseconds: 500));
 
         _biometricService.clearBackgroundTime();
         widget.onAuthenticated();
@@ -89,8 +90,8 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
   Widget build(BuildContext context) {
     final isFaceID = _biometricType == 'Face ID';
 
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return AppScaffold(
+      backgroundColor: AppColors.kWhiteColor,
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -98,43 +99,27 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  // 'MuvamGo Driver is Locked',
-
-                      isFaceID
-                      ? 'Place your Head'
-                      : 'Place your Finger',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 24.sp,
-                    fontWeight: FontWeight.w700,
-                    color: Colors.black,
-                  ),
+                MuvamTexts.headlineSmall24(
+                  context,
+                  text: isFaceID ? 'Place your Head' : 'Place your Finger',
+                  isTextWidget: true,
+                  color: AppColors.kBlackColor,
                 ),
-               
                 SizedBox(height: 60.h),
-
-                // Instruction text
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 30.w),
-                  child: Text(
-                    isFaceID
+                  child: MuvamTexts.bodyMedium14(
+                    context,
+                    text: isFaceID
                         ? 'Place your head in the middle of the circle to add your face.'
                         : 'Place your finger on the sensor and lift after you feel a vibration',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.grey.shade700,
-                    ),
-                    textAlign: TextAlign.center,
+                    isTextWidget: true,
+                    center: true,
+                    color: AppColors.kSubtitleColor,
                   ),
                 ),
                 SizedBox(height: 40.h),
-
-                // Biometric display
                 if (isFaceID)
-                  // Face ID - Oval frame
                   GestureDetector(
                     onTap: _isAuthenticating ? null : _authenticate,
                     child: Container(
@@ -147,15 +132,15 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
                           color: _authenticationSuccess
                               ? Colors.green
                               : _isAuthenticating
-                              ? Color(ConstColors.mainColor)
+                              ? AppColors.kMainColor
                               : Colors.grey.shade400,
                           width: 4,
                         ),
                       ),
                       child: Center(
                         child: _isAuthenticating
-                            ? CircularProgressIndicator(
-                                color: Color(ConstColors.mainColor),
+                            ? const CircularProgressIndicator(
+                                color: AppColors.kMainColor,
                                 strokeWidth: 3,
                               )
                             : Icon(
@@ -169,15 +154,14 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
                     ),
                   )
                 else
-                  // Fingerprint - Image display
                   GestureDetector(
                     onTap: _isAuthenticating ? null : _authenticate,
                     child: Container(
                       width: 150.w,
                       height: 150.h,
                       child: _isAuthenticating
-                          ? CircularProgressIndicator(
-                              color: Color(ConstColors.mainColor),
+                          ? const CircularProgressIndicator(
+                              color: AppColors.kMainColor,
                               strokeWidth: 3,
                             )
                           : Image.asset(
@@ -190,19 +174,16 @@ class _BiometricLockScreenState extends State<BiometricLockScreen> {
                             ),
                     ),
                   ),
-
                 SizedBox(height: 40.h),
                 if (!_isAuthenticating && !_authenticationSuccess)
                   TextButton(
                     onPressed: _authenticate,
-                    child: Text(
-                      'Tap to Authenticate',
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 14.sp,
-                        fontWeight: FontWeight.w500,
-                        color: Color(ConstColors.mainColor),
-                      ),
+                    child: MuvamTexts.bodyMedium14(
+                      context,
+                      text: 'Tap to Authenticate',
+                      isTextWidget: true,
+                      color: AppColors.kMainColor,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
               ],

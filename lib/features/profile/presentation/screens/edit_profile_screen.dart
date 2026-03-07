@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
-import 'package:muvam_rider/core/utils/app_logger.dart';
+import 'package:go_router/go_router.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/app_routes.dart';
+import 'package:muvam_rider/core/constants/app_spacings.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
 import 'package:muvam_rider/features/auth/presentation/widgets/edit_full_name_text_field.dart';
-import 'package:muvam_rider/features/home/presentation/screens/main_navigation_screen.dart';
 import 'package:muvam_rider/features/profile/data/providers/profile_provider.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
+import 'package:muvam_rider/layouts/presentation/shared/bottom_padding.dart';
 import 'package:provider/provider.dart';
 
 class EditProfileScreen extends StatefulWidget {
@@ -51,9 +55,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
             int.parse(parts[1]),
           );
         }
-      } catch (e) {
-        //Error parsing date: $e');
-      }
+      } catch (e) {}
     }
 
     final DateTime? picked = await showDatePicker(
@@ -64,13 +66,13 @@ class EditProfileScreenState extends State<EditProfileScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: Color(ConstColors.mainColor),
-              onPrimary: Colors.white,
-              onSurface: Colors.black,
-              surface: Colors.white,
+            colorScheme: const ColorScheme.light(
+              primary: AppColors.kMainColor,
+              onPrimary: AppColors.kWhiteColor,
+              onSurface: AppColors.kBlackColor,
+              surface: AppColors.kWhiteColor,
             ),
-            dialogBackgroundColor: Colors.white,
+            dialogBackgroundColor: AppColors.kWhiteColor,
           ),
           child: child!,
         );
@@ -81,7 +83,6 @@ class EditProfileScreenState extends State<EditProfileScreen> {
       String month = picked.month.toString().padLeft(2, '0');
       String day = picked.day.toString().padLeft(2, '0');
       dobController.text = "$month/$day/${picked.year}";
-      //Date selected: ${dobController.text}');
     }
   }
 
@@ -113,7 +114,6 @@ class EditProfileScreenState extends State<EditProfileScreen> {
 
     final provider = context.read<ProfileProvider>();
 
-    // Split full name into first and last name
     final nameParts = fullNameController.text.trim().split(' ');
     final firstName = nameParts.first;
     final lastName = nameParts.length > 1 ? nameParts.sublist(1).join(' ') : '';
@@ -132,13 +132,9 @@ class EditProfileScreenState extends State<EditProfileScreen> {
         context: context,
         message: 'Profile updated successfully',
       );
-
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => MainNavigationScreen()),
-          );
+          context.goNamed(AppRoutes.home.name);
         }
       });
     } else {
@@ -161,8 +157,8 @@ class EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return AppScaffold(
+      backgroundColor: AppColors.kWhiteColor,
       body: SafeArea(
         child: Consumer<ProfileProvider>(
           builder: (context, provider, child) {
@@ -179,26 +175,24 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                           width: 40.w,
                           height: 40.h,
                           decoration: BoxDecoration(
-                            color: Color(0xFFF5F5F5),
+                            color: AppColors.kFormFieldColor,
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
                             Icons.arrow_back,
-                            color: Colors.black,
+                            color: AppColors.kBlackColor,
                             size: 20.sp,
                           ),
                         ),
                       ),
                       Expanded(
                         child: Center(
-                          child: Text(
-                            'Edit profile',
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 20.sp,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black,
-                            ),
+                          child: MuvamTexts.titleMedium18(
+                            context,
+                            text: 'Edit profile',
+                            isTextWidget: true,
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                       ),
@@ -254,10 +248,7 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                   ),
                 ),
                 Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: 20.w,
-                    vertical: 20.h,
-                  ),
+                  padding: EdgeInsets.symmetric(horizontal: AppSpacings.k20.w),
                   child: GestureDetector(
                     onTap: provider.isUpdating ? null : _saveProfile,
                     child: Container(
@@ -265,8 +256,8 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                       height: 47.h,
                       decoration: BoxDecoration(
                         color: provider.isUpdating
-                            ? Colors.grey
-                            : Color(ConstColors.mainColor),
+                            ? AppColors.kGreyColor
+                            : AppColors.kMainColor,
                         borderRadius: BorderRadius.circular(12.r),
                       ),
                       child: Center(
@@ -274,24 +265,23 @@ class EditProfileScreenState extends State<EditProfileScreen> {
                             ? SizedBox(
                                 width: 24.w,
                                 height: 24.h,
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
+                                child: const CircularProgressIndicator(
+                                  color: AppColors.kWhiteColor,
                                   strokeWidth: 2.5,
                                 ),
                               )
-                            : Text(
-                                'Save changes',
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white,
-                                ),
+                            : MuvamTexts.button16(
+                                context,
+                                text: 'Save changes',
+                                isTextWidget: true,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.kWhiteColor,
                               ),
                       ),
                     ),
                   ),
                 ),
+                DeviceBottomPadding(),
               ],
             );
           },

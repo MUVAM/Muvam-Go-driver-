@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:muvam_rider/core/services/delete_account_service.dart';
-import 'package:muvam_rider/core/utils/app_logger.dart';
 
 class DeleteAccountProvider extends ChangeNotifier {
   final DeleteAccountService _deleteAccountService = DeleteAccountService();

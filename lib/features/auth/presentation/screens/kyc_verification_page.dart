@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:flutter_svg/svg.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
-import 'package:muvam_rider/core/constants/images.dart';
-import 'package:muvam_rider/core/constants/text_styles.dart';
+import 'package:go_router/go_router.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/app_routes.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/utils/custom_flushbar.dart';
-import 'package:muvam_rider/features/auth/presentation/screens/account_verification_success_screen.dart';
+import 'package:muvam_rider/features/auth/presentation/widgets/verification_tile_widget.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
 import 'package:qoreidsdk/qoreidsdk.dart';
 
 class KycVerificationPage extends StatefulWidget {
@@ -43,7 +44,6 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
     Qoreidsdk.onResult((result) async {
       debugPrint('QoreID Result: $result');
 
-      // Check for cancellation or error first based on the provided log format
       if (result['code'] == 'E_USER_CANCELED' ||
           result['event'] == 'ERROR_RESULT' ||
           result['message'] == 'User canceled') {
@@ -52,14 +52,9 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
           message: result['message'] ?? 'Verification cancelled',
         );
         _handleSuccess();
-
         return;
       }
 
-      // Check for success verification status
-      // We interpret the presence of non-null verification data as success ONLY if it's not an error event
-      // Check for success verification status
-      // We interpret the presence of non-null verification data as success ONLY if it's not an error event
       if (result['status'] == 'success' ||
           (result['data']?['verification'] != null &&
               result['data']?['verification']?['status'] != null)) {
@@ -69,12 +64,10 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
           if (productCode == 'drivers_license') {
             _driversLicenseVerified = true;
           } else if (productCode == 'nin') {
-            // Assuming 'nin' is for identity verification as per launch params
             _identityVerified = true;
           }
         });
 
-        // Handle success if both are verified
         if (_driversLicenseVerified && _identityVerified) {
           _handleSuccess();
         } else {
@@ -96,17 +89,10 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
   }
 
   void _handleSuccess() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const AccountVerificationSuccessScreen(),
-      ),
-    );
+    context.pushReplacementNamed(AppRoutes.accountVerificationSuccess.name);
   }
 
   Future<void> _launchQoreIDIdentity() async {
-    // TODO: Replace with your actual QoreID Client ID
-    // const String clientId = "KBC1C1YDB6ACWN2AB5PK";
     const String clientId = "NYPPI7J3M2CAROJ4U28O";
 
     if (clientId != "NYPPI7J3M2CAROJ4U28O") {
@@ -117,18 +103,15 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
       return;
     }
 
-    // Prepare applicant data with actual user information
-    // IMPORTANT: QoreID SDK expects camelCase field names
     final applicantData = <String, dynamic>{
       'firstName': widget.firstName ?? '',
       'lastName': widget.lastName ?? '',
-      'middleName': '', // Add middleName field
+      'middleName': '',
       'email': widget.email ?? '',
-      'gender': '', // Add gender field
+      'gender': '',
     };
 
     if (widget.phone != null && widget.phone!.isNotEmpty) {
-      // Remove any non-digit characters and format properly
       String cleanPhone = widget.phone!.replaceAll(RegExp(r'[^\d+]'), '');
       applicantData['phoneNumber'] = cleanPhone;
     } else {
@@ -136,7 +119,6 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
     }
 
     if (widget.dob != null && widget.dob!.isNotEmpty) {
-      // Convert MM/DD/YYYY to YYYY-MM-DD format if needed
       try {
         final parts = widget.dob!.split('/');
         if (parts.length == 3) {
@@ -150,15 +132,10 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
       applicantData['dob'] = '';
     }
 
-    debugPrint('QoreID Applicant Data: $applicantData');
-    debugPrint('QoreID Client ID: $clientId');
-    debugPrint('QoreID Product Code: face_verification');
-
     final data = QoreidData(
       clientId: clientId,
-      customerReference:
-          "user_${DateTime.now().millisecondsSinceEpoch}", // Unique Ref
-      productCode: "nin", // Try face verification first
+      customerReference: "user_${DateTime.now().millisecondsSinceEpoch}",
+      productCode: "nin",
       flowId: 1266,
       addressData: {},
       applicantData: applicantData,
@@ -167,9 +144,7 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
     );
 
     try {
-      debugPrint('Launching QoreID SDK...');
       await Qoreidsdk.launchQoreid(data);
-      debugPrint('QoreID SDK launched successfully');
     } catch (e, stackTrace) {
       debugPrint("QoreID Launch Error: $e");
       debugPrint("Stack Trace: $stackTrace");
@@ -181,7 +156,6 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
   }
 
   Future<void> _launchQoreIDdriversLicense() async {
-    // TODO: Replace with your actual QoreID Client ID
     const String clientId = "NYPPI7J3M2CAROJ4U28O";
 
     if (clientId != "NYPPI7J3M2CAROJ4U28O") {
@@ -192,18 +166,15 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
       return;
     }
 
-    // Prepare applicant data with actual user information
-    // IMPORTANT: QoreID SDK expects camelCase field names
     final applicantData = <String, dynamic>{
       'firstName': widget.firstName ?? '',
       'lastName': widget.lastName ?? '',
-      'middleName': '', // Add middleName field
+      'middleName': '',
       'email': widget.email ?? '',
-      'gender': '', // Add gender field
+      'gender': '',
     };
 
     if (widget.phone != null && widget.phone!.isNotEmpty) {
-      // Remove any non-digit characters and format properly
       String cleanPhone = widget.phone!.replaceAll(RegExp(r'[^\d+]'), '');
       applicantData['phoneNumber'] = cleanPhone;
     } else {
@@ -211,7 +182,6 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
     }
 
     if (widget.dob != null && widget.dob!.isNotEmpty) {
-      // Convert MM/DD/YYYY to YYYY-MM-DD format if needed
       try {
         final parts = widget.dob!.split('/');
         if (parts.length == 3) {
@@ -225,15 +195,10 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
       applicantData['dob'] = '';
     }
 
-    debugPrint('QoreID Applicant Data: $applicantData');
-    debugPrint('QoreID Client ID: $clientId');
-    debugPrint('QoreID Product Code: face_verification');
-
     final data = QoreidData(
       clientId: clientId,
-      customerReference:
-          "user_${DateTime.now().millisecondsSinceEpoch}", // Unique Ref
-      productCode: "drivers_license", // Try face verification first
+      customerReference: "user_${DateTime.now().millisecondsSinceEpoch}",
+      productCode: "drivers_license",
       flowId: 1266,
       addressData: {},
       applicantData: applicantData,
@@ -242,9 +207,7 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
     );
 
     try {
-      debugPrint('Launching QoreID SDK...');
       await Qoreidsdk.launchQoreid(data);
-      debugPrint('QoreID SDK launched successfully');
     } catch (e, stackTrace) {
       debugPrint("QoreID Launch Error: $e");
       debugPrint("Stack Trace: $stackTrace");
@@ -257,95 +220,57 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      // appBar: AppBar(
-      //   backgroundColor: Colors.white,
-      //   elevation: 0,
-      //   leading: GestureDetector(
-      //     onTap: () => Navigator.pop(context),
-      //     child: Padding(
-      //       padding: EdgeInsets.all(12.w),
-      //       child: Icon(Icons.arrow_back, color: Colors.black),
-      //     ),
-      //   ),
-      //   centerTitle: true,
-      //   title: Text(
-      //     'KYC Verification',
-      //     style: TextStyle(
-      //       fontFamily: 'Inter',
-      //       fontSize: 18.sp,
-      //       fontWeight: FontWeight.w600,
-      //       color: Colors.black,
-      //     ),
-      //   ),
-      // ),
+    return AppScaffold(
+      backgroundColor: AppColors.kWhiteColor,
       body: SafeArea(
         child: Padding(
           padding: EdgeInsets.symmetric(horizontal: 20.w),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // SizedBox(height: 10.h),
               Row(
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
                     child: Padding(
-                      padding: EdgeInsets.only(
-                        left: 12.w,
-                        // top: 12.h,
-                        bottom: 12.h,
+                      padding: EdgeInsets.only(left: 12.w, bottom: 12.h),
+                      child: const Icon(
+                        Icons.arrow_back,
+                        color: AppColors.kBlackColor,
                       ),
-                      child: Icon(Icons.arrow_back, color: Colors.black),
                     ),
                   ),
                   SizedBox(width: 20.w),
-                  // Spacer(),
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       SizedBox(height: 20.h),
-                      Center(
-                        child: Text(
-                          'KYC Verification',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 18.sp,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.black,
-                          ),
-                        ),
+                      MuvamTexts.titleMedium18(
+                        context,
+                        text: 'KYC Verification',
+                        isTextWidget: true,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.kBlackColor,
                       ),
-
                       Center(
-                        child: Container(
+                        child: SizedBox(
                           width: 245,
-                          child: Text(
-                            maxLines: 4,
-                            'Please submit the following document to verify your profile',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontFamily: 'Inter',
-                              fontSize: 14.sp,
-                              fontWeight: FontWeight.w400,
-                              color: Colors.black,
-                              height: 1.5,
-                            ),
+                          child: MuvamTexts.bodyMedium14(
+                            context,
+                            text:
+                                'Please submit the following document to verify your profile',
+                            center: true,
+                            color: AppColors.kBlackColor,
                           ),
                         ),
                       ),
                     ],
                   ),
-                  // Spacer(),
                 ],
               ),
-
               SizedBox(height: 30.h),
-
-              // Tile 1: Driver's License
-              _buildVerificationTile(
+              VerificationTileWidget(
                 imagePath: 'assets/images/kyc.png',
                 title: "Driver's License Verification",
                 subtitle:
@@ -356,14 +281,11 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
                 isActionable: !_driversLicenseVerified,
                 isVerified: _driversLicenseVerified,
               ),
-
               Padding(
                 padding: EdgeInsets.symmetric(vertical: 10.h),
-                child: Divider(color: Color(0xff808080), thickness: 1),
+                child: const Divider(color: Color(0xff808080), thickness: 1),
               ),
-
-              // Tile 2: Identity Verification
-              _buildVerificationTile(
+              VerificationTileWidget(
                 imagePath: 'assets/images/accountImage.png',
                 title: "Identity verification",
                 subtitle:
@@ -374,108 +296,10 @@ class _KycVerificationPageState extends State<KycVerificationPage> {
               ),
               Padding(
                 padding: EdgeInsets.symmetric(vertical: 10.h),
-                child: Divider(color: Color(0xff808080), thickness: 1),
+                child: const Divider(color: Color(0xff808080), thickness: 1),
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildVerificationTile({
-    required String imagePath,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-    bool isActionable = false,
-    bool isVerified = false,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12.r),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 8.w),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(12.r),
-          // Optional: Add subtle background if actionable
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Image
-            // Container(
-            // width: 50.w,
-            // height: 50.h,
-            // decoration: BoxDecoration(
-            //   shape: BoxShape.circle,
-            //   color: Color(ConstColors.mainColor).withOpacity(0.1),
-            // ),
-            // padding: EdgeInsets.all(10.w),
-            Container(
-              margin: EdgeInsets.only(top: 5.h),
-              child: Image.asset(
-                height: 16.h,
-                width: 16.w,
-                imagePath,
-                fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return Icon(
-                    Icons.description,
-                    color: Color(ConstColors.mainColor),
-                  );
-                },
-              ),
-            ),
-            // ),
-            SizedBox(width: 8.w),
-            // Text Content
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 16.sp,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black,
-                    ),
-                  ),
-                  SizedBox(height: 4.h),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 12.sp,
-                      fontWeight: FontWeight.w400,
-                      color: Colors.grey[600],
-                      height: 1.4,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            if (isVerified)
-              Padding(
-                padding: EdgeInsets.only(left: 8.w, top: 10.h),
-                child: Icon(
-                  Icons.check_circle,
-                  size: 20.sp,
-                  color: Colors.green,
-                ),
-              )
-            else if (isActionable)
-              Padding(
-                padding: EdgeInsets.only(left: 8.w, top: 30.h),
-                child: Icon(
-                  Icons.arrow_forward_ios,
-                  size: 16.sp,
-                  color: Colors.black,
-                ),
-              ),
-          ],
         ),
       ),
     );

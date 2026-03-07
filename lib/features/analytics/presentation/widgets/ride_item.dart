@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 
 class RideItem extends StatelessWidget {
   final String location;
@@ -19,7 +21,7 @@ class RideItem extends StatelessWidget {
       width: double.infinity,
       height: 60.h,
       decoration: BoxDecoration(
-        color: Color(0xFFF7F9F8),
+        color: AppColors.kFormFieldColor,
         borderRadius: BorderRadius.circular(8.r),
       ),
       padding: EdgeInsets.symmetric(horizontal: 15.w),
@@ -31,45 +33,33 @@ class RideItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  location,
+                MuvamTexts.bodyMedium14(
+                  context,
+                  text: location,
+                  isTextWidget: true,
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.kBlackColor,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w500,
-                    fontSize: 16.sp,
-                    height: 20 / 16,
-                    letterSpacing: -0.08,
-                    color: Colors.black,
-                  ),
                 ),
                 SizedBox(height: 2.h),
-                Text(
-                  time,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontWeight: FontWeight.w400,
-                    fontSize: 14.sp,
-                    height: 20 / 14,
-                    letterSpacing: -0.08,
-                    color: Colors.black54,
-                  ),
+                MuvamTexts.bodySmall12(
+                  context,
+                  text: time,
+                  isTextWidget: true,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.kBlackColor.withOpacity(0.54),
                 ),
               ],
             ),
           ),
           SizedBox(width: 10.w),
-          Text(
-            amount,
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w600,
-              fontSize: 16.sp,
-              height: 20 / 16,
-              letterSpacing: -0.08,
-              color: Color(0xFF2A8359),
-            ),
+          MuvamTexts.bodyMedium14(
+            context,
+            text: amount,
+            isTextWidget: true,
+            fontWeight: FontWeight.w600,
+            color: AppColors.kMainColor,
           ),
         ],
       ),

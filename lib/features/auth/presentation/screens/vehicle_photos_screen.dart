@@ -1,12 +1,16 @@
 import 'dart:io';
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
-import 'package:muvam_rider/core/constants/fonts.dart';
-import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/app_spacings.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
+import 'package:muvam_rider/features/auth/presentation/widgets/photo_box_widget.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
+import 'package:muvam_rider/layouts/presentation/shared/bottom_padding.dart';
+import 'package:provider/provider.dart';
 
 class VehiclePhotosScreen extends StatefulWidget {
   const VehiclePhotosScreen({super.key});
@@ -46,7 +50,6 @@ class _VehiclePhotosScreenState extends State<VehiclePhotosScreen> {
 
   void _continue() {
     if (_allPhotosUploaded) {
-      // Return the list of photos to the previous screen
       Navigator.pop(context, _vehiclePhotos.whereType<File>().toList());
     }
   }
@@ -54,8 +57,8 @@ class _VehiclePhotosScreenState extends State<VehiclePhotosScreen> {
   @override
   Widget build(BuildContext context) {
     final themeManager = Provider.of<ThemeManager>(context);
-    
-    return Scaffold(
+
+    return AppScaffold(
       backgroundColor: themeManager.getBackgroundColor(context),
       appBar: AppBar(
         backgroundColor: themeManager.getBackgroundColor(context),
@@ -65,16 +68,14 @@ class _VehiclePhotosScreenState extends State<VehiclePhotosScreen> {
             Icons.arrow_back,
             color: themeManager.getTextColor(context),
           ),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => context.pop(),
         ),
-        title: Text(
-          'Vehicle Verification',
-          style: TextStyle(
-            fontFamily: ConstFonts.inter,
-            fontWeight: FontWeight.w600,
-            fontSize: 18.sp,
-            color: themeManager.getTextColor(context),
-          ),
+        title: MuvamTexts.titleMedium18(
+          context,
+          text: 'Vehicle Verification',
+          isTextWidget: true,
+          fontWeight: FontWeight.w600,
+          color: themeManager.getTextColor(context),
         ),
         centerTitle: true,
       ),
@@ -83,28 +84,26 @@ class _VehiclePhotosScreenState extends State<VehiclePhotosScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+              padding: EdgeInsets.symmetric(
+                horizontal: AppSpacings.k20,
+                vertical: AppSpacings.k20,
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Vehicle Photo',
-                    style: TextStyle(
-                      fontFamily: ConstFonts.inter,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 24.sp,
-                      color: themeManager.getTextColor(context),
-                    ),
+                  MuvamTexts.headlineSmall24(
+                    context,
+                    text: 'Vehicle Photo',
+                    isTextWidget: true,
+                    fontWeight: FontWeight.w700,
+                    color: themeManager.getTextColor(context),
                   ),
                   SizedBox(height: 8.h),
-                  Text(
-                    'Upload three clear photo of your vehicle.',
-                    style: TextStyle(
-                      fontFamily: ConstFonts.inter,
-                      fontWeight: FontWeight.w400,
-                      fontSize: 14.sp,
-                      color: themeManager.getSecondaryTextColor(context),
-                    ),
+                  MuvamTexts.bodyMedium14(
+                    context,
+                    text: 'Upload three clear photo of your vehicle.',
+                    isTextWidget: true,
+                    color: themeManager.getSecondaryTextColor(context),
                   ),
                 ],
               ),
@@ -118,7 +117,15 @@ class _VehiclePhotosScreenState extends State<VehiclePhotosScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: List.generate(3, (index) {
-                        return _buildPhotoBox(index, themeManager);
+                        return PhotoBoxWidget(
+                          photo: _vehiclePhotos[index],
+                          index: index,
+                          themeManager: themeManager,
+                          onTap: () => _vehiclePhotos[index] == null
+                              ? _pickImage(index)
+                              : null,
+                          onRemove: () => _removeImage(index),
+                        );
                       }),
                     ),
                   ],
@@ -126,143 +133,36 @@ class _VehiclePhotosScreenState extends State<VehiclePhotosScreen> {
               ),
             ),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 20.h),
+              padding: EdgeInsets.symmetric(horizontal: 20.w),
               child: GestureDetector(
                 onTap: _allPhotosUploaded ? _continue : null,
                 child: Container(
                   width: double.infinity,
-                  height: 48.h,
+                  height: 47.h,
                   decoration: BoxDecoration(
                     color: _allPhotosUploaded
-                        ? Color(ConstColors.mainColor)
-                        : Colors.grey.shade300,
+                        ? AppColors.kMainColor
+                        : AppColors.kGreyColor,
                     borderRadius: BorderRadius.circular(8.r),
                   ),
                   child: Center(
-                    child: Text(
-                      'Continue',
-                      style: TextStyle(
-                        fontFamily: ConstFonts.inter,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 16.sp,
-                        color: _allPhotosUploaded
-                            ? Colors.white
-                            : Colors.grey.shade500,
-                      ),
+                    child: MuvamTexts.button16(
+                      context,
+                      text: 'Continue',
+                      color: _allPhotosUploaded
+                          ? AppColors.kWhiteColor
+                          : Colors.grey.shade500,
+                      fontWeight: FontWeight.w600,
+                      isTextWidget: true,
                     ),
                   ),
                 ),
               ),
             ),
+            DeviceBottomPadding(),
           ],
         ),
       ),
     );
   }
-
-  Widget _buildPhotoBox(int index, ThemeManager themeManager) {
-    final photo = _vehiclePhotos[index];
-    
-    return GestureDetector(
-      onTap: () => photo == null ? _pickImage(index) : null,
-      child: CustomPaint(
-        foregroundPainter: DashedBorderPainter(
-          color: Colors.grey.shade400,
-          strokeWidth: 2,
-          gap: 6,
-          radius: 8.r,
-        ),
-        child: Container(
-          width: 102.w,
-          height: 102.w,
-          child: photo != null
-              ? Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(6.r),
-                      child: Image.file(
-                        photo,
-                        width: double.infinity,
-                        height: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    Positioned(
-                      top: 4.h,
-                      right: 4.w,
-                      child: GestureDetector(
-                        onTap: () => _removeImage(index),
-                        child: Container(
-                          padding: EdgeInsets.all(4.w),
-                          decoration: BoxDecoration(
-                            color: Colors.red,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.close,
-                            color: Colors.white,
-                            size: 16.sp,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                )
-              : Center(
-                  child: Icon(
-                    Icons.add,
-                    size: 40.sp,
-                    color: Colors.grey.shade400,
-                  ),
-                ),
-        ),
-      ),
-    );
-  }
-
-
-}
-
-class DashedBorderPainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
-  final double gap;
-  final double radius;
-
-  DashedBorderPainter({
-    required this.color,
-    this.strokeWidth = 1.0,
-    this.gap = 5.0,
-    this.radius = 0.0,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final Paint paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke;
-
-    final Path path = Path();
-    path.addRRect(RRect.fromRectAndRadius(
-      Rect.fromLTWH(0, 0, size.width, size.height),
-      Radius.circular(radius),
-    ));
-
-    final Path dashedPath = Path();
-    for (final ui.PathMetric metric in path.computeMetrics()) {
-      double distance = 0.0;
-      while (distance < metric.length) {
-        dashedPath.addPath(
-          metric.extractPath(distance, distance + gap),
-          Offset.zero,
-        );
-        distance += gap * 2;
-      }
-    }
-    canvas.drawPath(dashedPath, paint);
-  }
-
-  @override
-  bool shouldRepaint(CustomPainter oldDelegate) => false;
 }

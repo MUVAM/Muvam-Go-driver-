@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:go_router/go_router.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/constants/theme_manager.dart';
 
 class CustomBottomSheet {
@@ -28,14 +30,12 @@ class CustomBottomSheet {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 18.sp,
-                  fontWeight: FontWeight.w600,
-                  color: themeManager.getTextColor(context),
-                ),
+              MuvamTexts.titleMedium18(
+                context,
+                text: title,
+                isTextWidget: true,
+                fontWeight: FontWeight.w600,
+                color: themeManager.getTextColor(context),
               ),
               SizedBox(height: 10.h),
               Flexible(
@@ -46,26 +46,21 @@ class CustomBottomSheet {
                       return Column(
                         children: [
                           ListTile(
-                            title: Text(
-                              option,
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 16.sp,
-                                color: themeManager.getTextColor(context),
-                              ),
+                            title: MuvamTexts.bodyLarge16(
+                              context,
+                              text: option,
+                              isTextWidget: true,
+                              color: themeManager.getTextColor(context),
                             ),
                             trailing: isSelected
-                                ? Icon(
-                                    Icons.check,
-                                    color: Color(ConstColors.mainColor),
-                                  )
+                                ? Icon(Icons.check, color: AppColors.kMainColor)
                                 : null,
                             onTap: () {
                               onSelected(option);
-                              Navigator.pop(context);
+                              context.pop();
                             },
                           ),
-                          if (option != options.last) Divider(),
+                          if (option != options.last) const Divider(),
                         ],
                       );
                     }).toList(),

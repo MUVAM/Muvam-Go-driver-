@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
-import 'package:muvam_rider/core/constants/text_styles.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 
 class LocationField extends StatefulWidget {
   final TextEditingController controller;
@@ -29,18 +29,27 @@ class _LocationFieldState extends State<LocationField> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Location', style: ConstTextStyles.fieldLabel),
+        MuvamTexts.bodyMedium14(
+          context,
+          text: 'Location',
+          isTextWidget: true,
+          fontWeight: FontWeight.w500,
+          color: AppColors.kBlackColor,
+        ),
         SizedBox(height: 8.h),
         Container(
           width: 353.w,
           height: 50.h,
           decoration: BoxDecoration(
-            color: Color(ConstColors.locationFieldColor),
+            color: AppColors.kLocationFieldColor,
             borderRadius: BorderRadius.circular(8.r),
           ),
           child: TextField(
             controller: widget.controller,
-            style: ConstTextStyles.inputText,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w400,
+              color: AppColors.kBlackColor,
+            ),
             decoration: InputDecoration(
               border: InputBorder.none,
               contentPadding: EdgeInsets.symmetric(
@@ -56,7 +65,7 @@ class _LocationFieldState extends State<LocationField> {
             margin: EdgeInsets.only(top: 5.h),
             constraints: BoxConstraints(maxHeight: 200.h),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.kWhiteColor,
               borderRadius: BorderRadius.circular(8.r),
               boxShadow: [
                 BoxShadow(
@@ -79,14 +88,13 @@ class _LocationFieldState extends State<LocationField> {
                   leading: Icon(
                     Icons.location_on,
                     size: 20.sp,
-                    color: Color(ConstColors.mainColor),
+                    color: AppColors.kMainColor,
                   ),
-                  title: Text(
-                    suggestion,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w400,
-                    ),
+                  title: MuvamTexts.bodyMedium14(
+                    context,
+                    text: suggestion,
+                    isTextWidget: true,
+                    fontWeight: FontWeight.w400,
                   ),
                   onTap: () => widget.onSelect(suggestion),
                 );

@@ -1,0 +1,199 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/app_spacings.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
+import 'package:muvam_rider/core/constants/images.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
+import 'package:muvam_rider/layouts/presentation/shared/bottom_padding.dart';
+
+class FaqScreen extends StatefulWidget {
+  const FaqScreen({super.key});
+
+  @override
+  State<FaqScreen> createState() => _FaqScreenState();
+}
+
+class _FaqScreenState extends State<FaqScreen> {
+  int? _expandedIndex;
+
+  final List<Map<String, String>> _faqs = [
+    {
+      'question': 'How do I request a ride?',
+      'answer':
+          'Simply open the app, enter your destination, and tap "Request Ride". A nearby driver will be matched with you automatically.',
+    },
+    {
+      'question': 'How is the fare calculated?',
+      'answer':
+          'Fares are calculated based on distance, time, and current demand. You\'ll see the estimated fare before confirming your ride.',
+    },
+    {
+      'question': 'Can I schedule a ride in advance?',
+      'answer':
+          'Yes! When requesting a ride, tap the clock icon to schedule a pickup time up to 7 days in advance.',
+    },
+    {
+      'question': 'What payment methods are accepted?',
+      'answer':
+          'We accept cash, credit/debit cards, and mobile wallet payments. You can manage your payment methods in the Wallet section.',
+    },
+    {
+      'question': 'How do I cancel a ride?',
+      'answer':
+          'You can cancel a ride from the active ride screen. Note that cancellation fees may apply if the driver is already on the way.',
+    },
+    {
+      'question': 'What if I left something in the vehicle?',
+      'answer':
+          'Go to your ride history, select the trip, and use the "Contact Driver" option to reach out about lost items.',
+    },
+    {
+      'question': 'How do I rate my driver?',
+      'answer':
+          'After each ride, you\'ll be prompted to rate your driver on a scale of 1-5 stars and provide optional feedback.',
+    },
+    {
+      'question': 'Is my ride insured?',
+      'answer':
+          'Yes, all rides are covered by our comprehensive insurance policy for your safety and peace of mind.',
+    },
+    {
+      'question': 'How do I add a stop during my ride?',
+      'answer':
+          'You can add stops when requesting a ride by tapping "Add Stop" before confirming. Additional charges may apply.',
+    },
+    {
+      'question': 'What should I do in case of an emergency?',
+      'answer':
+          'Use the emergency button in the app to contact local authorities and share your ride details with emergency contacts.',
+    },
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return AppScaffold(
+      backgroundColor: AppColors.kWhiteColor,
+      body: SafeArea(
+        child: Column(
+          children: [
+            SizedBox(height: AppSpacings.k20),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: AppSpacings.k20),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => context.pop(),
+                    child: Image.asset(
+                      ConstImages.back,
+                      width: 33.w,
+                      height: 33.h,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  Expanded(
+                    child: Center(
+                      child: MuvamTexts.titleMedium18(
+                        context,
+                        text: 'FAQ',
+                        isTextWidget: true,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.kBlackColor,
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 30.w),
+                ],
+              ),
+            ),
+            SizedBox(height: AppSpacings.k20.h),
+            Expanded(
+              child: ListView.separated(
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
+                itemCount: _faqs.length,
+                separatorBuilder: (context, index) => SizedBox(height: 12.h),
+                itemBuilder: (context, index) {
+                  final faq = _faqs[index];
+                  final isExpanded = _expandedIndex == index;
+
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.kWhiteColor,
+                      borderRadius: BorderRadius.circular(12.r),
+                      border: Border.all(
+                        color: isExpanded
+                            ? AppColors.kMainColor
+                            : Colors.grey.shade200,
+                        width: isExpanded ? 2 : 1,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.kBlackColor.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12.r),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            setState(() {
+                              _expandedIndex = isExpanded ? null : index;
+                            });
+                          },
+                          child: Padding(
+                            padding: EdgeInsets.all(16.w),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: MuvamTexts.bodyLarge16(
+                                        context,
+                                        text: faq['question']!,
+                                        isTextWidget: true,
+                                        fontWeight: FontWeight.w600,
+                                        color: AppColors.kBlackColor,
+                                      ),
+                                    ),
+                                    Icon(
+                                      isExpanded
+                                          ? Icons.keyboard_arrow_up
+                                          : Icons.keyboard_arrow_down,
+                                      color: AppColors.kMainColor,
+                                      size: 24.sp,
+                                    ),
+                                  ],
+                                ),
+                                if (isExpanded) ...[
+                                  SizedBox(height: 12.h),
+                                  MuvamTexts.bodyMedium14(
+                                    context,
+                                    text: faq['answer']!,
+                                    isTextWidget: true,
+                                    fontWeight: FontWeight.w400,
+                                    color: Colors.grey[700],
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            DeviceBottomPadding(),
+          ],
+        ),
+      ),
+    );
+  }
+}

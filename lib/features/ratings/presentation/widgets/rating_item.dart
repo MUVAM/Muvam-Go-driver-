@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 
 class RatingItem extends StatelessWidget {
   final String name;
@@ -30,14 +32,12 @@ class RatingItem extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  name,
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 16.sp,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black,
-                  ),
+                MuvamTexts.bodyLarge16(
+                  context,
+                  text: name,
+                  isTextWidget: true,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.kBlackColor,
                 ),
                 SizedBox(height: 5.h),
                 Row(
@@ -52,34 +52,28 @@ class RatingItem extends StatelessWidget {
                             size: 14.sp,
                             color: index < rating
                                 ? Colors.amber
-                                : Colors.grey.shade300,
+                                : AppColors.kGreyColor.withOpacity(0.3),
                           ),
                         ),
                       ),
                     ),
                     SizedBox(width: 10.w),
-                    Text(
-                      time,
-                      style: TextStyle(
-                        fontFamily: 'Inter',
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.grey.shade600,
-                      ),
+                    MuvamTexts.bodySmall12(
+                      context,
+                      text: time,
+                      isTextWidget: true,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.grey.shade600,
                     ),
                   ],
                 ),
                 SizedBox(height: 8.h),
-                Text(
-                  comment,
-                  style: TextStyle(
-                    fontFamily: 'Mulish',
-                    fontSize: 13.sp,
-                    fontWeight: FontWeight.w400,
-                    height: 1.48,
-                    letterSpacing: -0.13,
-                    color: Colors.black,
-                  ),
+                MuvamTexts.bodyMedium14(
+                  context,
+                  text: comment,
+                  isTextWidget: true,
+                  fontWeight: FontWeight.w400,
+                  color: AppColors.kBlackColor,
                 ),
               ],
             ),

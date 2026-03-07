@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:muvam_rider/core/utils/app_logger.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 
 class ChatNotificationService {
   static OverlayEntry? _currentOverlay;
@@ -53,9 +53,7 @@ class ChatNotificationService {
     try {
       await _audioPlayer.stop();
       await _audioPlayer.play(AssetSource('sounds/messageAlert.mp3'));
-    } catch (e) {
-      //Error playing notification sound: $e');
-    }
+    } catch (e) {}
   }
 
   static void hide() {
@@ -153,7 +151,7 @@ class __ChatNotificationWidgetState extends State<_ChatNotificationWidget>
                   },
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: AppColors.kWhiteColor,
                       borderRadius: BorderRadius.circular(12.r),
                       boxShadow: [
                         BoxShadow(
@@ -171,14 +169,14 @@ class __ChatNotificationWidgetState extends State<_ChatNotificationWidget>
                             children: [
                               CircleAvatar(
                                 radius: 20.r,
-                                backgroundColor: Color(ConstColors.mainColor),
+                                backgroundColor: AppColors.kMainColor,
                                 backgroundImage: widget.senderImage != null
                                     ? NetworkImage(widget.senderImage!)
                                     : null,
                                 child: widget.senderImage == null
                                     ? Icon(
                                         Icons.person,
-                                        color: Colors.white,
+                                        color: AppColors.kWhiteColor,
                                         size: 20.sp,
                                       )
                                     : null,
@@ -192,14 +190,12 @@ class __ChatNotificationWidgetState extends State<_ChatNotificationWidget>
                                     Row(
                                       children: [
                                         Expanded(
-                                          child: Text(
-                                            widget.senderName,
-                                            style: TextStyle(
-                                              fontFamily: 'Inter',
-                                              fontSize: 14.sp,
-                                              fontWeight: FontWeight.w600,
-                                              color: Colors.black,
-                                            ),
+                                          child: MuvamTexts.bodyMedium14(
+                                            context,
+                                            text: widget.senderName,
+                                            isTextWidget: true,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.kBlackColor,
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                           ),
@@ -211,32 +207,28 @@ class __ChatNotificationWidgetState extends State<_ChatNotificationWidget>
                                             vertical: 2.h,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: Color(ConstColors.mainColor),
+                                            color: AppColors.kMainColor,
                                             borderRadius: BorderRadius.circular(
                                               8.r,
                                             ),
                                           ),
-                                          child: Text(
-                                            'New',
-                                            style: TextStyle(
-                                              fontFamily: 'Inter',
-                                              fontSize: 10.sp,
-                                              fontWeight: FontWeight.w600,
-                                              color: Colors.white,
-                                            ),
+                                          child: MuvamTexts.bodySmall12(
+                                            context,
+                                            text: 'New',
+                                            isTextWidget: true,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.kWhiteColor,
                                           ),
                                         ),
                                       ],
                                     ),
                                     SizedBox(height: 4.h),
-                                    Text(
-                                      widget.message,
-                                      style: TextStyle(
-                                        fontFamily: 'Inter',
-                                        fontSize: 13.sp,
-                                        fontWeight: FontWeight.w400,
-                                        color: Colors.grey[700],
-                                      ),
+                                    MuvamTexts.bodySmall12(
+                                      context,
+                                      text: widget.message,
+                                      isTextWidget: true,
+                                      fontWeight: FontWeight.w400,
+                                      color: Colors.grey[700],
                                       maxLines: 2,
                                       overflow: TextOverflow.ellipsis,
                                     ),
@@ -246,7 +238,7 @@ class __ChatNotificationWidgetState extends State<_ChatNotificationWidget>
                               SizedBox(width: 8.w),
                               Icon(
                                 Icons.chat_bubble,
-                                color: Color(ConstColors.mainColor),
+                                color: AppColors.kMainColor,
                                 size: 20.sp,
                               ),
                             ],

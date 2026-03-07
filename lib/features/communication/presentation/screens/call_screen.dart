@@ -1,10 +1,14 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:go_router/go_router.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/services/call_service.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
 import 'package:muvam_rider/core/services/global_call_service.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
 import '../widgets/call_button.dart';
@@ -38,7 +42,6 @@ class _CallScreenState extends State<CallScreen> with WidgetsBindingObserver {
   @override
   void initState() {
     super.initState();
-    //CallScreen initialized', tag: 'CALL_SCREEN');
 
     WakelockPlus.enable();
 
@@ -50,7 +53,6 @@ class _CallScreenState extends State<CallScreen> with WidgetsBindingObserver {
 
   @override
   void dispose() {
-    //DISPOSE CALLED ON CALL SCREEN', tag: 'CALL_SCREEN');
     WidgetsBinding.instance.removeObserver(this);
     _callTimer?.cancel();
     AppLogger.log(
@@ -60,13 +62,11 @@ class _CallScreenState extends State<CallScreen> with WidgetsBindingObserver {
     _callService?.dispose();
     WakelockPlus.disable();
     super.dispose();
-    //Call screen disposed', tag: 'CALL_SCREEN');
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
-    //App lifecycle state changed: $state', tag: 'CALL_SCREEN');
 
     if (state == AppLifecycleState.paused) {
       AppLogger.log(
@@ -74,44 +74,32 @@ class _CallScreenState extends State<CallScreen> with WidgetsBindingObserver {
         tag: 'CALL_SCREEN',
       );
     } else if (state == AppLifecycleState.detached) {
-      //APP BEING CLOSED - Ending call', tag: 'CALL_SCREEN');
       _endCallProperly();
     }
   }
 
   Future<void> _endCallProperly() async {
-    //_endCallProperly() CALLED', tag: 'CALL_SCREEN');
-
     if (_sessionId != null && _sessionId! > 0) {
       AppLogger.log(
         'Valid session ID exists, proceeding to end call',
         tag: 'CALL_SCREEN',
       );
-
       await _callService?.endCall(_sessionId, _callDuration);
-
-      //CallService.endCall() completed', tag: 'CALL_SCREEN');
     }
-    //_endCallProperly() FINISHED', tag: 'CALL_SCREEN');
   }
 
   Future<void> _requestPermissionsAndInitialize() async {
     try {
-      //Requesting permissions...', tag: 'CALL');
-
       final micStatus = await Permission.microphone.request();
 
       if (micStatus.isGranted) {
-        //Microphone permission granted', tag: 'CALL');
         await _initializeCall();
       } else if (micStatus.isDenied) {
-        //Microphone permission denied', tag: 'CALL');
         setState(() {
           _callStatus = 'Microphone permission required';
         });
         _showPermissionDialog();
       } else if (micStatus.isPermanentlyDenied) {
-        //Microphone permission permanently denied', tag: 'CALL');
         setState(() {
           _callStatus = 'Permission denied';
         });
@@ -130,22 +118,40 @@ class _CallScreenState extends State<CallScreen> with WidgetsBindingObserver {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Text('Microphone Permission Required'),
-        content: Text('This app needs microphone access to make voice calls.'),
+        title: MuvamTexts.titleMedium18(
+          context,
+          text: 'Microphone Permission Required',
+          isTextWidget: true,
+        ),
+        content: MuvamTexts.bodyMedium14(
+          context,
+          text: 'This app needs microphone access to make voice calls.',
+          isTextWidget: true,
+        ),
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
+              context.pop();
+              context.pop();
             },
-            child: Text('Cancel'),
+            child: MuvamTexts.button16(
+              context,
+              text: 'Cancel',
+              isTextWidget: true,
+              color: AppColors.kGreyColor,
+            ),
           ),
           TextButton(
             onPressed: () async {
-              Navigator.pop(context);
+              context.pop();
               await _requestPermissionsAndInitialize();
             },
-            child: Text('Allow'),
+            child: MuvamTexts.button16(
+              context,
+              text: 'Allow',
+              isTextWidget: true,
+              color: AppColors.kMainColor,
+            ),
           ),
         ],
       ),
@@ -157,24 +163,41 @@ class _CallScreenState extends State<CallScreen> with WidgetsBindingObserver {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Text('Permission Required'),
-        content: Text(
-          'Please enable microphone permission in app settings to make calls.',
+        title: MuvamTexts.titleMedium18(
+          context,
+          text: 'Permission Required',
+          isTextWidget: true,
+        ),
+        content: MuvamTexts.bodyMedium14(
+          context,
+          text:
+              'Please enable microphone permission in app settings to make calls.',
+          isTextWidget: true,
         ),
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
-              Navigator.pop(context);
+              context.pop();
+              context.pop();
             },
-            child: Text('Cancel'),
+            child: MuvamTexts.button16(
+              context,
+              text: 'Cancel',
+              isTextWidget: true,
+              color: AppColors.kGreyColor,
+            ),
           ),
           TextButton(
             onPressed: () async {
               await openAppSettings();
-              Navigator.pop(context);
+              context.pop();
             },
-            child: Text('Open Settings'),
+            child: MuvamTexts.button16(
+              context,
+              text: 'Open Settings',
+              isTextWidget: true,
+              color: AppColors.kMainColor,
+            ),
           ),
         ],
       ),
@@ -183,13 +206,7 @@ class _CallScreenState extends State<CallScreen> with WidgetsBindingObserver {
 
   Future<void> _initializeCall() async {
     try {
-      //Starting call initialization...', tag: 'CALL');
-      //Driver: ${widget.driverName}', tag: 'CALL');
-      //Ride ID: ${widget.rideId}', tag: 'CALL');
-      //Session ID: ${widget.sessionId}', tag: 'CALL');
-
       _callService = CallService();
-      //CallService instance created', tag: 'CALL');
 
       final success = await _callService?.initialize();
       if (success != true) {
@@ -199,11 +216,8 @@ class _CallScreenState extends State<CallScreen> with WidgetsBindingObserver {
         });
         return;
       }
-      //CallService initialized', tag: 'CALL');
 
       _callService?.onCallStateChanged = (state) {
-        //Call state changed to: $state', tag: 'CALL');
-
         if (!mounted) return;
 
         setState(() {
@@ -211,16 +225,15 @@ class _CallScreenState extends State<CallScreen> with WidgetsBindingObserver {
 
           if (state == 'Connected' || state == 'Connecting...') {
             if (state == 'Connected' && !_isCallActive) {
-              //Starting call timer', tag: 'CALL');
               _isCallActive = true;
               _startCallTimer();
               _callService?.stopRingtone();
             }
           } else if (state == 'Call ended' || state == 'Call rejected') {
             _isCallActive = false;
-            Future.delayed(Duration(seconds: 2), () {
+            Future.delayed(const Duration(seconds: 2), () {
               if (mounted) {
-                Navigator.pop(context);
+                context.pop();
               }
             });
           }
@@ -228,16 +241,13 @@ class _CallScreenState extends State<CallScreen> with WidgetsBindingObserver {
       };
 
       if (widget.sessionId != null) {
-        //Answering incoming call...', tag: 'CALL');
         _sessionId = widget.sessionId;
         _callService?.setIncomingCallContext(_sessionId!, widget.rideId, null);
-        //Using session ID: $_sessionId', tag: 'CALL');
 
         GlobalCallService.instance.clearPendingMessages();
 
         await _callService?.answerCall(_sessionId!, widget.rideId);
       } else {
-        //Initiating call to driver...', tag: 'CALL');
         final session = await _callService?.initiateCall(widget.rideId);
 
         if (session != null && session['session_id'] != null) {
@@ -249,7 +259,6 @@ class _CallScreenState extends State<CallScreen> with WidgetsBindingObserver {
             tag: 'CALL',
           );
         } else {
-          //No session ID received from server', tag: 'CALL');
           setState(() {
             _callStatus = 'Call initiation failed';
           });
@@ -260,7 +269,6 @@ class _CallScreenState extends State<CallScreen> with WidgetsBindingObserver {
       setState(() {
         _callStatus = 'Ringing...';
       });
-      //Call status updated to: Ringing...', tag: 'CALL');
     } catch (e) {
       AppLogger.error('Failed to initialize call', error: e, tag: 'CALL');
       setState(() {
@@ -271,7 +279,7 @@ class _CallScreenState extends State<CallScreen> with WidgetsBindingObserver {
 
   void _startCallTimer() {
     _callTimer?.cancel();
-    _callTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+    _callTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {
         setState(() {
           _callDuration++;
@@ -301,17 +309,12 @@ class _CallScreenState extends State<CallScreen> with WidgetsBindingObserver {
   }
 
   void _endCall() async {
-    //END CALL BUTTON PRESSED', tag: 'CALL_SCREEN');
-
-    //Cancelling call timer...', tag: 'CALL_SCREEN');
     _callTimer?.cancel();
 
-    //Calling _endCallProperly()...', tag: 'CALL_SCREEN');
     await _endCallProperly();
 
-    //Navigating back...', tag: 'CALL_SCREEN');
     if (mounted) {
-      Navigator.pop(context);
+      context.pop();
     }
   }
 
@@ -322,8 +325,8 @@ class _CallScreenState extends State<CallScreen> with WidgetsBindingObserver {
         await _endCallProperly();
         return true;
       },
-      child: Scaffold(
-        backgroundColor: Colors.white,
+      child: AppScaffold(
+        backgroundColor: AppColors.kWhiteColor,
         body: SafeArea(
           child: Stack(
             children: [
@@ -345,12 +348,12 @@ class _CallScreenState extends State<CallScreen> with WidgetsBindingObserver {
                           child: GestureDetector(
                             onTap: () async {
                               await _endCallProperly();
-                              Navigator.pop(context);
+                              context.pop();
                             },
                             child: Icon(
                               Icons.arrow_back,
                               size: 20.sp,
-                              color: Colors.black,
+                              color: AppColors.kBlackColor,
                             ),
                           ),
                         ),
@@ -358,46 +361,33 @@ class _CallScreenState extends State<CallScreen> with WidgetsBindingObserver {
                       Center(
                         child: Column(
                           children: [
-                            Text(
-                              widget.driverName,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 18.sp,
-                                fontWeight: FontWeight.w500,
-                                height: 21 / 18,
-                                letterSpacing: -0.32,
-                                color: Colors.black,
-                              ),
+                            MuvamTexts.titleMedium18(
+                              context,
+                              text: widget.driverName,
+                              isTextWidget: true,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.kBlackColor,
                             ),
                             SizedBox(height: 5.h),
-                            Text(
-                              _callStatus,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontFamily: 'Inter',
-                                fontSize: 14.sp,
-                                fontWeight: FontWeight.w400,
-                                height: 21 / 14,
-                                letterSpacing: -0.32,
-                                color: _isCallActive
-                                    ? Colors.green
-                                    : Colors.grey,
-                              ),
+                            MuvamTexts.bodyMedium14(
+                              context,
+                              text: _callStatus,
+                              isTextWidget: true,
+                              fontWeight: FontWeight.w400,
+                              color: _isCallActive
+                                  ? Colors.green
+                                  : AppColors.kGreyColor,
                             ),
-                            if (_callDuration > 0) ...{
+                            if (_callDuration > 0) ...[
                               SizedBox(height: 5.h),
-                              Text(
-                                _formatDuration(_callDuration),
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontSize: 16.sp,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.black,
-                                ),
+                              MuvamTexts.bodyLarge16(
+                                context,
+                                text: _formatDuration(_callDuration),
+                                isTextWidget: true,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.kBlackColor,
                               ),
-                            },
+                            ],
                           ],
                         ),
                       ),
@@ -414,7 +404,7 @@ class _CallScreenState extends State<CallScreen> with WidgetsBindingObserver {
                       ),
                     ),
                   ),
-                  Spacer(),
+                  const Spacer(),
                   Container(
                     width: 353.w,
                     height: 72.h,
@@ -425,7 +415,7 @@ class _CallScreenState extends State<CallScreen> with WidgetsBindingObserver {
                     ),
                     padding: EdgeInsets.symmetric(horizontal: 20.w),
                     decoration: BoxDecoration(
-                      color: Color(0xFFF7F9F8),
+                      color: AppColors.kFormFieldColor,
                       borderRadius: BorderRadius.circular(25.r),
                     ),
                     child: Row(
@@ -433,27 +423,31 @@ class _CallScreenState extends State<CallScreen> with WidgetsBindingObserver {
                       children: [
                         CallButton(
                           icon: Icons.chat,
-                          iconColor: Colors.black,
+                          iconColor: AppColors.kBlackColor,
                           onTap: () async {
                             await _endCallProperly();
-                            Navigator.pop(context);
+                            context.pop();
                           },
                         ),
                         CallButton(
                           icon: _isSpeakerOn
                               ? Icons.volume_up
                               : Icons.volume_down,
-                          iconColor: _isSpeakerOn ? Colors.blue : Colors.black,
+                          iconColor: _isSpeakerOn
+                              ? Colors.blue
+                              : AppColors.kBlackColor,
                           onTap: _toggleSpeaker,
                         ),
                         CallButton(
                           icon: _isMuted ? Icons.mic_off : Icons.mic,
-                          iconColor: _isMuted ? Colors.red : Colors.black,
+                          iconColor: _isMuted
+                              ? AppColors.kError
+                              : AppColors.kBlackColor,
                           onTap: _toggleMute,
                         ),
                         CallButton(
                           icon: Icons.call_end,
-                          iconColor: Colors.white,
+                          iconColor: AppColors.kWhiteColor,
                           onTap: _endCall,
                           isEndCall: true,
                         ),

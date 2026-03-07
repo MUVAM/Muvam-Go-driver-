@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
 
 class CallButton extends StatelessWidget {
   final IconData icon;
@@ -23,13 +24,13 @@ class CallButton extends StatelessWidget {
         width: 38.w,
         height: 38.h,
         decoration: BoxDecoration(
-          color: isEndCall ? Colors.red : Colors.transparent,
+          color: isEndCall ? AppColors.kError : Colors.transparent,
           borderRadius: isEndCall ? BorderRadius.circular(200.r) : null,
         ),
         child: Icon(
           icon,
           size: 38.sp,
-          color: isEndCall ? Colors.white : iconColor,
+          color: isEndCall ? AppColors.kWhiteColor : iconColor,
         ),
       ),
     );

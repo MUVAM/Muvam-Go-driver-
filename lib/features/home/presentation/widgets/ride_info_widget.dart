@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 
 class RideInfoWidget extends StatefulWidget {
   final String eta;
@@ -38,11 +39,9 @@ class _RideInfoWidgetState extends State<RideInfoWidget> {
         childWhenDragging: Container(),
         onDragEnd: (details) {
           setState(() {
-            // Update position based on drag offset
             _topPosition = details.offset.dy;
             _leftPosition = details.offset.dx;
 
-            // Keep widget within screen bounds
             if (_topPosition < 60) _topPosition = 60;
             if (_leftPosition < 0) _leftPosition = 0;
             if (_leftPosition > MediaQuery.of(context).size.width - 353.w) {
@@ -64,13 +63,13 @@ class _RideInfoWidgetState extends State<RideInfoWidget> {
       width: 353.w,
       padding: EdgeInsets.all(16.w),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.kWhiteColor,
         borderRadius: BorderRadius.circular(12.r),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDragging ? 0.3 : 0.1),
+            color: AppColors.kBlackColor.withOpacity(isDragging ? 0.3 : 0.1),
             blurRadius: isDragging ? 20 : 10,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -78,7 +77,6 @@ class _RideInfoWidgetState extends State<RideInfoWidget> {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Drag handle indicator
           Center(
             child: Container(
               width: 40.w,
@@ -96,20 +94,19 @@ class _RideInfoWidgetState extends State<RideInfoWidget> {
                 width: 40.w,
                 height: 40.h,
                 decoration: BoxDecoration(
-                  color: Color(ConstColors.mainColor),
+                  color: AppColors.kMainColor,
                   shape: BoxShape.circle,
                 ),
                 child: Center(
-                  child: Text(
-                    widget.eta
+                  child: MuvamTexts.bodyMedium14(
+                    context,
+                    text: widget.eta
                         .replaceAll(' min', '')
                         .replaceAll('< ', '')
                         .replaceAll('s', 'm'),
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    isTextWidget: true,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.kWhiteColor,
                   ),
                 ),
               ),
@@ -118,22 +115,20 @@ class _RideInfoWidgetState extends State<RideInfoWidget> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        fontSize: 16.sp,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black,
-                      ),
+                    MuvamTexts.bodyLarge16(
+                      context,
+                      text: title,
+                      isTextWidget: true,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.kBlackColor,
                     ),
                     SizedBox(height: 2.h),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 12.sp,
-                        fontWeight: FontWeight.w400,
-                        color: Colors.grey[600],
-                      ),
+                    MuvamTexts.bodySmall12(
+                      context,
+                      text: subtitle,
+                      isTextWidget: true,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.grey[600],
                     ),
                   ],
                 ),
@@ -156,13 +151,12 @@ class _RideInfoWidgetState extends State<RideInfoWidget> {
                 ),
                 SizedBox(width: 8.w),
                 Expanded(
-                  child: Text(
-                    widget.location,
-                    style: TextStyle(
-                      fontSize: 14.sp,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black87,
-                    ),
+                  child: MuvamTexts.bodyMedium14(
+                    context,
+                    text: widget.location,
+                    isTextWidget: true,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.kBlackColor.withOpacity(0.87),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -217,11 +211,11 @@ class _RideInfoWidgetState extends State<RideInfoWidget> {
     switch (widget.rideStatus) {
       case 'accepted':
       case 'arrived':
-        return Colors.green;
+        return AppColors.kSuccessColor;
       case 'started':
-        return Colors.red;
+        return AppColors.kFailureColor;
       default:
-        return Colors.blue;
+        return AppColors.kMainColor;
     }
   }
 }

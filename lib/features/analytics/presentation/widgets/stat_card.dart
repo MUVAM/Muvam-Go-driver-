@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 
 class StatCard extends StatelessWidget {
   final String value;
@@ -27,28 +28,20 @@ class StatCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(
-            value,
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w600,
-              fontSize: 20.sp,
-              height: 1.0,
-              letterSpacing: -0.41,
-              color: valueColor,
-            ),
+          MuvamTexts.titleLarge22(
+            context,
+            text: value,
+            isTextWidget: true,
+            fontWeight: FontWeight.w600,
+            color: valueColor,
           ),
           SizedBox(height: 5.h),
-          Text(
-            label,
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w500,
-              fontSize: 12.sp,
-              height: 1.0,
-              letterSpacing: -0.41,
-              color: Color(0xFF5B5B5B),
-            ),
+          MuvamTexts.bodySmall12(
+            context,
+            text: label,
+            isTextWidget: true,
+            fontWeight: FontWeight.w500,
+            color: const Color(0xFF5B5B5B),
           ),
         ],
       ),

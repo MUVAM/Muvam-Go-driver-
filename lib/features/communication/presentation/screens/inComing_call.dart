@@ -2,9 +2,11 @@ import 'dart:async';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
 import 'package:muvam_rider/core/utils/app_logger.dart';
+import 'package:muvam_rider/layouts/presentation/shared/bottom_padding.dart';
 
 class IncomingCallScreen extends StatefulWidget {
   final String callerName;
@@ -40,7 +42,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
     super.initState();
 
     _pulseController = AnimationController(
-      duration: Duration(milliseconds: 1500),
+      duration: const Duration(milliseconds: 1500),
       vsync: this,
     )..repeat(reverse: true);
 
@@ -57,7 +59,6 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
       await _ringtonePlayer.setReleaseMode(ReleaseMode.loop);
       await _ringtonePlayer.setVolume(1.0);
       await _ringtonePlayer.play(AssetSource('sounds/calling.mp3'));
-      //Ringtone started playing', tag: 'INCOMING_CALL');
     } catch (e) {
       AppLogger.error(
         'Failed to play ringtone',
@@ -71,7 +72,6 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
     if (_isPlaying) {
       await _ringtonePlayer.stop();
       _isPlaying = false;
-      //Ringtone stopped', tag: 'INCOMING_CALL');
     }
   }
 
@@ -104,33 +104,33 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF1a1a2e), Color(0xFF16213e), Color(0xFF0f3460)],
+            colors: [
+              const Color(0xFF1a1a2e),
+              const Color(0xFF16213e),
+              const Color(0xFF0f3460),
+            ],
           ),
         ),
         child: SafeArea(
           child: Column(
             children: [
               SizedBox(height: 80.h),
-              Text(
-                widget.callerName,
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 28.sp,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                  letterSpacing: 0.5,
-                ),
-                textAlign: TextAlign.center,
+              MuvamTexts.headlineMedium28(
+                context,
+                text: widget.callerName,
+                isTextWidget: true,
+                fontWeight: FontWeight.w600,
+                color: AppColors.kWhiteColor,
+                center: true,
               ),
               SizedBox(height: 10.h),
-              Text(
-                'Incoming call...',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 16.sp,
-                  fontWeight: FontWeight.w400,
-                  color: Colors.white70,
-                ),
+              MuvamTexts.bodyLarge16(
+                context,
+                text: 'Incoming call...',
+                isTextWidget: true,
+                fontWeight: FontWeight.w400,
+                color: Colors.white70,
+                center: true,
               ),
               SizedBox(height: 60.h),
               Stack(
@@ -145,7 +145,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.3),
+                            color: AppColors.kWhiteColor.withOpacity(0.3),
                             width: 2,
                           ),
                         ),
@@ -161,7 +161,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Colors.white.withOpacity(0.2),
+                            color: AppColors.kWhiteColor.withOpacity(0.2),
                             width: 1,
                           ),
                         ),
@@ -173,10 +173,13 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                     height: 160.h,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 4),
+                      border: Border.all(
+                        color: AppColors.kWhiteColor,
+                        width: 4,
+                      ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
+                          color: AppColors.kBlackColor.withOpacity(0.3),
                           blurRadius: 20,
                           spreadRadius: 5,
                         ),
@@ -201,7 +204,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                   ),
                 ],
               ),
-              Spacer(),
+              const Spacer(),
               Padding(
                 padding: EdgeInsets.symmetric(horizontal: 40.w),
                 child: Row(
@@ -215,7 +218,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                             width: 70.w,
                             height: 70.h,
                             decoration: BoxDecoration(
-                              color: Colors.red,
+                              color: AppColors.kError,
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
@@ -227,20 +230,18 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                             ),
                             child: Icon(
                               Icons.call_end,
-                              color: Colors.white,
+                              color: AppColors.kWhiteColor,
                               size: 35.sp,
                             ),
                           ),
                         ),
                         SizedBox(height: 12.h),
-                        Text(
-                          'Decline',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white,
-                          ),
+                        MuvamTexts.bodyMedium14(
+                          context,
+                          text: 'Decline',
+                          isTextWidget: true,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.kWhiteColor,
                         ),
                       ],
                     ),
@@ -257,13 +258,13 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                                   width: 70.w,
                                   height: 70.h,
                                   decoration: BoxDecoration(
-                                    color: Color(ConstColors.mainColor),
+                                    color: AppColors.kMainColor,
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Color(
-                                          ConstColors.mainColor,
-                                        ).withOpacity(0.6),
+                                        color: AppColors.kMainColor.withOpacity(
+                                          0.6,
+                                        ),
                                         blurRadius: 20,
                                         spreadRadius: 5,
                                       ),
@@ -271,7 +272,7 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                                   ),
                                   child: Icon(
                                     Icons.call,
-                                    color: Colors.white,
+                                    color: AppColors.kWhiteColor,
                                     size: 35.sp,
                                   ),
                                 ),
@@ -280,21 +281,19 @@ class _IncomingCallScreenState extends State<IncomingCallScreen>
                           },
                         ),
                         SizedBox(height: 12.h),
-                        Text(
-                          'Accept',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.w500,
-                            color: Colors.white,
-                          ),
+                        MuvamTexts.bodyMedium14(
+                          context,
+                          text: 'Accept',
+                          isTextWidget: true,
+                          fontWeight: FontWeight.w500,
+                          color: AppColors.kWhiteColor,
                         ),
                       ],
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: 80.h),
+              DeviceBottomPadding(),
             ],
           ),
         ),

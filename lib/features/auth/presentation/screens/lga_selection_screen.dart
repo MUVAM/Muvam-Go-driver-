@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
-import 'package:muvam_rider/core/constants/colors.dart';
+import 'package:muvam_rider/core/constants/app_colors.dart';
 import 'package:muvam_rider/core/constants/images.dart';
+import 'package:muvam_rider/core/constants/muvam_text.dart';
+import 'package:muvam_rider/core/utils/extension.dart';
+import 'package:muvam_rider/layouts/presentation/shared/app_scaffold.dart';
 import 'package:nigerian_states_and_lga/nigerian_states_and_lga.dart';
 
 class LgaSelectionScreen extends StatefulWidget {
@@ -28,7 +31,6 @@ class _LgaSelectionScreenState extends State<LgaSelectionScreen> {
   }
 
   void _initializeLgas() {
-    // Get LGAs for the selected state
     _allLgas = NigerianStatesAndLGA.getStateLGAs(widget.selectedState);
     _filteredLgas = List.from(_allLgas);
     _groupLgas(_filteredLgas);
@@ -89,8 +91,8 @@ class _LgaSelectionScreenState extends State<LgaSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
+    return AppScaffold(
+      backgroundColor: AppColors.kWhiteColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -99,24 +101,22 @@ class _LgaSelectionScreenState extends State<LgaSelectionScreen> {
               child: Row(
                 children: [
                   GestureDetector(
-                    onTap: () => Navigator.pop(context),
+                    onTap: () => context.pop(),
                     child: Image.asset(
                       ConstImages.back,
                       width: 33.w,
                       height: 33.h,
                     ),
                   ),
-                  Spacer(),
-                  Text(
-                    'Select LGA',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontWeight: FontWeight.w600,
-                      fontSize: 20.sp,
-                      color: Colors.black,
-                    ),
+                  const Spacer(),
+                  MuvamTexts.titleLarge22(
+                    context,
+                    text: 'Select LGA',
+                    isTextWidget: true,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.kBlackColor,
                   ),
-                  Spacer(),
+                  const Spacer(),
                 ],
               ),
             ),
@@ -125,20 +125,18 @@ class _LgaSelectionScreenState extends State<LgaSelectionScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'State: ${widget.selectedState}',
-                    style: TextStyle(
-                      fontFamily: 'Inter',
-                      fontSize: 14.sp,
-                      color: Colors.grey,
-                      fontWeight: FontWeight.w500,
-                    ),
+                  MuvamTexts.bodyMedium14(
+                    context,
+                    text: 'State: ${widget.selectedState}',
+                    isTextWidget: true,
+                    fontWeight: FontWeight.w500,
+                    color: AppColors.kFieldColor,
                   ),
                   SizedBox(height: 12.h),
                   Container(
                     height: 48.h,
                     decoration: BoxDecoration(
-                      color: Color(ConstColors.fieldColor).withOpacity(0.12),
+                      color: AppColors.kFieldColor.withOpacity(0.12),
                       borderRadius: BorderRadius.circular(8.r),
                     ),
                     child: TextField(
@@ -147,7 +145,7 @@ class _LgaSelectionScreenState extends State<LgaSelectionScreen> {
                       style: TextStyle(
                         fontFamily: 'Inter',
                         fontSize: 14.sp,
-                        color: Colors.black,
+                        color: AppColors.kBlackColor,
                       ),
                       decoration: InputDecoration(
                         hintText: 'Search LGA',
@@ -177,13 +175,11 @@ class _LgaSelectionScreenState extends State<LgaSelectionScreen> {
             Expanded(
               child: _filteredLgas.isEmpty
                   ? Center(
-                      child: Text(
-                        'No LGAs found',
-                        style: TextStyle(
-                          fontFamily: 'Inter',
-                          fontSize: 14.sp,
-                          color: Colors.black,
-                        ),
+                      child: MuvamTexts.bodyMedium14(
+                        context,
+                        text: 'No LGAs found',
+                        isTextWidget: true,
+                        color: AppColors.kBlackColor,
                       ),
                     )
                   : ListView.builder(
@@ -201,14 +197,12 @@ class _LgaSelectionScreenState extends State<LgaSelectionScreen> {
                                 top: index == 0 ? 0 : 24.h,
                                 bottom: 8.h,
                               ),
-                              child: Text(
-                                header,
-                                style: TextStyle(
-                                  fontFamily: 'Inter',
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 14.sp,
-                                  color: Colors.black,
-                                ),
+                              child: MuvamTexts.bodyMedium14(
+                                context,
+                                text: header,
+                                isTextWidget: true,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.kBlackColor,
                               ),
                             ),
                             ...lgasInGroup.map((lga) {
@@ -227,14 +221,11 @@ class _LgaSelectionScreenState extends State<LgaSelectionScreen> {
                                       ),
                                     ),
                                   ),
-                                  child: Text(
-                                    lga,
-                                    style: TextStyle(
-                                      fontFamily: 'Inter',
-                                      fontWeight: FontWeight.w400,
-                                      fontSize: 16.sp,
-                                      color: Colors.black,
-                                    ),
+                                  child: MuvamTexts.bodyLarge16(
+                                    context,
+                                    text: lga,
+                                    isTextWidget: true,
+                                    color: AppColors.kBlackColor,
                                   ),
                                 ),
                               );
